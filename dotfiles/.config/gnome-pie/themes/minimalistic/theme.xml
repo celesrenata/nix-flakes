@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<theme name="Minimalistic" description="Edited from ubuntu theme" author="David Ochoa" email="">
+    <pie radius="50" maxZoom="1.1" zoomRange="0.1" transitionTime="0.2" springiness="1.5" 
+          fadeInTime="0.3" fadeOutTime="0.3" fadeInZoom="1.5" fadeOutZoom="0.7" fadeInRotation="0" fadeOutRotation="0">
+        <slices radius="24" minGap="6">
+            <activeSlice>
+                <slice_layer type="icon" scale="1.2" colorize="false" />
+            </activeSlice>
+            <inactiveSlice>
+                <slice_layer type="icon" scale="0.9" colorize="false" />
+            </inactiveSlice>
+        </slices>
+    </pie>
+</theme>
+

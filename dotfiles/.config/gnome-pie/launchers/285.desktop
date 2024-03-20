@@ -1,0 +1,8 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Window
+Exec=/usr/bin/gnome-pie -o 285
+Encoding=UTF-8
+Type=Application
+Icon=preferences-system-windows
+StartupWMClass=gnome-pie-285
