@@ -190,7 +190,7 @@ from setuptools import setup
 
 setup(
     name='toshy',
-    version='0.0.1',
+    version='24.0.3',
     packages=['lib', 'wlroots-dbus-service', 'wlroots-dbus-service.wayland_protocols',
               'wlroots-dbus-service.wayland_protocols.wayland',
               'wlroots-dbus-service.wayland_protocols.wlr_foreign_toplevel_management_unstable_v1'],
@@ -323,7 +323,7 @@ from setuptools import setup
 
 setup(
     name='toshy',
-    version='0.0.1',
+    version='24.0.3',
     packages=['lib', 'wlroots-dbus-service', 'wlroots-dbus-service.wayland_protocols',
               'wlroots-dbus-service.wayland_protocols.wayland',
               'wlroots-dbus-service.wayland_protocols.wlr_foreign_toplevel_management_unstable_v1'],
