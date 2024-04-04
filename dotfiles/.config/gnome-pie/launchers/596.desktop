@@ -1,8 +1,0 @@
-#!/usr/bin/env xdg-open
-[Desktop Entry]
-Name=Bookmarks
-Exec=/usr/bin/gnome-pie -o 596
-Encoding=UTF-8
-Type=Application
-Icon=user-bookmarks
-StartupWMClass=gnome-pie-596

@@ -1,8 +1,0 @@
-#!/usr/bin/env xdg-open
-[Desktop Entry]
-Name=Multimedia
-Exec=/usr/bin/gnome-pie -o 329
-Encoding=UTF-8
-Type=Application
-Icon=media-playback-start
-StartupWMClass=gnome-pie-329

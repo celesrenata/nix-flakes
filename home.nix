@@ -1,4 +1,16 @@
-{ config, nixpkgs, pkgs, ... }: {
+{ inputs, pkgs, ... }: {
+  imports = [ inputs.ags.homeManagerModules.default ];
+
+  programs.ags = {
+    enable = true;
+    configDir = null;
+    extraPackages = with pkgs; [
+      gtksourceview
+      webkitgtk
+      accountsservice
+    ];
+  };
+ 
   # TODO please change the username & home directory to your own
   home.username = "celes";
   home.homeDirectory = "/home/celes";
@@ -7,21 +19,12 @@
   # home.file.".config/i3/wallpaper.jpg".source = ./wallpaper.jpg;
 
   # link all files in `./scripts` to `~/.config/i3/scripts`
-  home.file.".dots-version" = {
-    source = ./dotfiles/.dots-version;
-    recursive = false;   # link recursively
-    executable = false;  # make all files executable
-    onChange = ''
-      rsync --update -raz /etc/nixos/dotfiles/.config/ .config
-    '';
-  };
-/*
   home.file.".config" = {
     source = ./dotfiles/.config;
-    recursive = true;
-    executable = true;
+    recursive = true;   # link recursively
+    executable = true;  # make all files executable
   };
-*/
+
   # encode the file content in nix configuration file directly
   # home.file.".xxx".text = ''
   #     xxx
@@ -44,53 +47,17 @@
       ms-python.python
       oderwat.indent-rainbow
       eamodio.gitlens
+      jnoortheen.nix-ide
     ];
   };
 
-#  # Anyrun (Used by Hyprland and AGS)
-#  programs.anyrun = {
-#    enable = true;
-#    config = {
-#      plugins = [
-#        # An array of all the plugins you want, which either can be paths to the .so files, or their packages
-#        #inputs.anyrun.packages.${pkgs.system}.applications
-#        #./some_plugin.so
-#        #"${inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins}/lib/kidex"
-#      ];
-#      width = { fraction = 0.3; };
-#      position = "top";
-#      verticalOffset = { absolute = 0; };
-#      hideIcons = false;
-#      ignoreExclusiveZones = false;
-#      layer = "overlay";
-#      hidePluginInfo = false;
-#      closeOnClick = false;
-#      showResultsImmediately = false;
-#      maxEntries = null;
-#    };
-#    extraCss = ''
-#      .some_class {
-#        background: red;
-#      }
-#    '';
-#
-#    extraConfigFiles."some-plugin.ron".text = ''
-#      Config(
-#        // for any other plugin
-#        // this file will be put in ~/.config/anyrun/some-plugin.ron
-#        // refer to docs of xdg.configFile for available options
-#      )
-#    '';
-#  };
-#
-
-  
   # Packages that should be installed to the user profile.
   home.packages = with pkgs; [
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
 
     neofetch
+    macchina
     nnn # terminal file manager
 
     # archives
@@ -111,6 +78,8 @@
     tidal-hifi
     discord
 
+    # Extra Launchers.
+
     # networking tools
     mtr # A network diagnostic tool
     iperf3
@@ -122,6 +91,10 @@
     ipcalc  # it is a calculator for the IPv4/v6 addresses
     nmap
 
+    # Graphical Editing.
+    gimp
+    darktable
+
     # misc
     cowsay
     file
@@ -132,6 +105,9 @@
     gawk
     zstd
     gnupg
+
+    # Gaming.
+    antimicrox
 
     # nix related
     #
@@ -158,13 +134,11 @@
     ethtool
     pciutils # lspci
     usbutils # lsusb
+    toshy
+    openrgb-with-all-plugins
+    KeyboardVisualizer
 
     # Development
-    jetbrains-toolbox
-    jetbrains.webstorm
-    jetbrains.pycharm-professional
-    # Java.
-
     # MicroTex Deps
     tinyxml-2
     gtkmm3
@@ -179,7 +153,8 @@
       poetry-core
       pywal
       setuptools-scm
-      wheel pywayland
+      wheel
+      pywayland
       psutil
       pydbus
       dbus-python
@@ -193,6 +168,8 @@
       hatchling
       python-xlib
       python-keyszer
+      python-hyprpy
+      pycairo
     ]))
  
     # Player and Audio
@@ -202,6 +179,8 @@
     plasma-browser-integration
     playerctl
     swww
+    mpv
+    vlc
 
     # GTK
     webp-pixbuf-loader
@@ -221,6 +200,9 @@
     gnome.gnome-keyring
     gnome.gnome-control-center
     gnome.gnome-bluetooth
+    gnome.gnome-shell
+    gnome-pie
+    yaru-theme
     blueberry
     networkmanager
     brightnessctl
@@ -247,6 +229,7 @@
     lexend
     nerdfonts
     material-symbols
+    bibata-cursors
 
     # Shells and Terminals
     foot

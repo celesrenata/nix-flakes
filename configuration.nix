@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 {
   # Licences.
   nixpkgs.config.allowUnfree = true;
@@ -12,86 +12,28 @@
     "python-2.7.18.7"
   ];
 
-  # Overlays.
-  nixpkgs.overlays = [
-    (import ./overlays/python-xlib/python-xlib.nix)
-    (import ./overlays/python-keyszer/python-keyszer.nix)
-  ];
-
   imports =
-    [ # Include the results of the hardware scan.ot
-      #"${builtins.fetchGit { url = "https://github.com/NixOS/nixos-hardware.git";}}/apple/t2"
+    [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
 
-  # File Systems.
-  fileSystems."/" = {
-    device = "/dev/nvme0n1p3";
-    fsType = "ext4";
-  };
-  fileSystems."/boot/EFI" = {
-    device = "/dev/nvme0n1p4";
-    fsType = "vfat";
-  };
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  # Enable GPUs.
-  /*
-  systemd.tmpfiles.rules = [
-    "L+    /opt/rocm/hip   -    -    -     -    ${pkgs.rocmPackages.clr}"
-  ];
-  hardware.opengl.driSupport = true; # This is already enabled by default
-  hardware.opengl.driSupport32Bit = true; # For 32 bit applications
-  hardware.opengl.extraPackages = with pkgs; [
-    amdvlk
-    rocmPackages.clr.icd
-  ];
-  # For 32 bit applications 
-  hardware.opengl.extraPackages32 = with pkgs; [
-    driversi686Linux.amdvlk
-  ];
-  */
   # Bootloader.
-  boot.initrd.kernelModules = [ "amdgpu" ];
-  boot.kernelModules = [ "uinput" ];
-  # for Southern Islands (SI i.e. GCN 1) cards
-  #boot.kernelParams = [ "radeon.si_support=0" "amdgpu.si_support=1" ];
-  # for Sea Islands (CIK i.e. GCN 2) cards
-  #boot.kernelParams = [ "radeon.cik_support=0" "amdgpu.cik_support=1" ];
+  # boot.loader.systemd-boot.enable = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
+  #boot.kernelPackages = lib.mkForce pkgs.linuxPackages_6_6;
+  boot.plymouth.enable = true;
+  # Use the Grub EFI boot loader.
 
-   # Use the Grub EFI boot loader.
-   boot.loader = {
-     efi = {
-       efiSysMountPoint = "/boot/EFI";
-     };
-
-     grub = {
-       efiSupport = true;
-       efiInstallAsRemovable = true;
-       device = "nodev";
-     };
-   };
- 
   # Udev rules.
   hardware.uinput.enable = true;
 
-  # Networking.
-  networking.hostName = "macland"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable NetworkManager.
-  networking.networkmanager.enable = true;
-
-  # Enable Bluetooth
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
-
   # Set your time zone.
+
+  #services.automatic-timezoned.enable = true;
+  #location.provider = "geoclue2";
   time.timeZone = "America/Los_Angeles";
 
   # Select internationalisation properties.
@@ -109,15 +51,17 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  # Enable the Sddm Display Manager
-  services.xserver.displayManager.sddm.enable = true;
+  # Enable the GDM Display Manager.
+  services.xserver.displayManager.gdm.enable = true;
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  services.xserver.videoDrivers = [ "amdgpu" ];
 
   # Enable the Enlightenment Desktop Environment.
   services.xserver.desktopManager.enlightenment.enable = true;
+
+  # Enable OpenRGB.
+  #services.hardware.openrgb.enable = true;
 
   programs.hyprland = {
     # Install the packages from nixpkgs
@@ -125,6 +69,9 @@
     # Whether to enable Xwayland
     xwayland.enable = true;
   };
+
+  # Enable Location.
+  services.geoclue2.enable = true;
 
   # Enable acpid
   services.acpid.enable = true;
@@ -142,20 +89,30 @@
   sound.enable = true;
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
+  
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
+    wireplumber.enable = true;
   };
- 
-  # Enable fonts.
+
+  services.jack = {
+    #jackd.enable = true;
+    # support ALSA only programs via ALSA JACK PCM plugin
+    alsa.enable = true;
+    # support ALSA only programs via loopback device (supports programs like Steam)
+    loopback = {
+      enable = true;
+      # buffering parameters for dmix device to work with ALSA only semi-professional sound programs
+      #dmixConfig = ''
+      #  period_size 2048
+      #'';
+    };
+  };
+
+  # Enable Fonts.
   fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-cjk
@@ -185,6 +142,16 @@
   services.xserver.libinput.enable = true;
   services.touchegg.enable = true;
 
+  # Steam.
+  programs.steam.package = pkgs.steam.override {
+    extraPkgs = pkgs: [ pkgs.steamcmd pkgs.glxinfo pkgs.steam-tui ];
+  };
+
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
@@ -198,6 +165,10 @@
   };
 
   # List packages installed in system profile. To search, run:
+  # Enable Wayland for Electron.
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment.variables.VDPAU_DRIVER = "va_gl";
+
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     # Editors.
@@ -208,17 +179,23 @@
     curl
     rsync
     nmap
+    tmate
+
+    # Audio.
+    ladspaPlugins
+    calf
+    lsp-plugins
+    easyeffects
+    alsa-utils
 
     # System Tools.
     btop
     nvtop
+    glxinfo
     blueman
     networkmanagerapplet
     nix-index
     mlocate
-
-    # Other Stuff.
-    sqlite
 
     # Shells.
     fish
@@ -260,6 +237,7 @@
     linux-pam
     cliphist
     sudo
+    xwaylandvideobridge
 
     # Wayland.
     xdg-desktop-portal-hyprland
@@ -272,7 +250,7 @@
     wtype
     wl-clipboard
     xorg.xhost
-    blender-hip
+    wev
 
     # GTK
     gtk3
@@ -293,23 +271,20 @@
     # Terminals.
     kitty
     foot
-  ];
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+    # Mac Sound.
+    libspatialaudio
+    pulseaudio
+    #t2AppleAudioDSP
+
+    # Mac Camera.
+    libcamera
+  ];
 
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
-
-  # Enable VMWare Tools.
-  virtualisation.vmware.guest.enable = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -317,12 +292,6 @@
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
   system.stateVersion = "24.05"; # Did you read the comment?
-  # home-manager.users.celes = import ./home.nix;
 }

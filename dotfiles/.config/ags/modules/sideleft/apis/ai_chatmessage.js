@@ -7,12 +7,12 @@ const { Box, Button, Label, Icon, Scrollable } = Widget;
 const { execAsync, exec } = Utils;
 import { MaterialIcon } from '../../.commonwidgets/materialicon.js';
 import md2pango from '../../.miscutils/md2pango.js';
+import { darkMode } from "../../.miscutils/system.js";
 
 const LATEX_DIR = `${GLib.get_user_cache_dir()}/ags/media/latex`;
-const CUSTOM_SOURCEVIEW_SCHEME_PATH = `${App.configDir}/assets/themes/sourceviewtheme.xml`;
-const CUSTOM_SCHEME_ID = 'custom';
+const CUSTOM_SOURCEVIEW_SCHEME_PATH = `${App.configDir}/assets/themes/sourceviewtheme${darkMode.value ? '' : '-light'}.xml`;
+const CUSTOM_SCHEME_ID = `custom${darkMode.value ? '' : '-light'}`;
 const USERNAME = GLib.get_user_name();
-Gtk.IconTheme.get_default().append_search_path(LATEX_DIR);
 
 /////////////////////// Custom source view colorscheme /////////////////////////
 
@@ -77,11 +77,12 @@ const TextBlock = (content = '') => Label({
 
 Utils.execAsync(['bash', '-c', `rm ${LATEX_DIR}/*`])
     .then(() => Utils.execAsync(['bash', '-c', `mkdir -p ${LATEX_DIR}`]))
-    .catch(() => {});
+    .catch(() => {  });
 const Latex = (content = '') => {
     const latexViewArea = Box({
         // vscroll: 'never',
         // hscroll: 'automatic',
+        // homogeneous: true,
         attribute: {
             render: async (self, text) => {
                 if (text.length == 0) return;
@@ -91,6 +92,7 @@ const Latex = (content = '') => {
                 const timeSinceEpoch = Date.now();
                 const fileName = `${timeSinceEpoch}.tex`;
                 const outFileName = `${timeSinceEpoch}-symbolic.svg`;
+                const outIconName = `${timeSinceEpoch}-symbolic`;
                 const scriptFileName = `${timeSinceEpoch}-render.sh`;
                 const filePath = `${LATEX_DIR}/${fileName}`;
                 const outFilePath = `${LATEX_DIR}/${outFileName}`;
@@ -104,13 +106,17 @@ const Latex = (content = '') => {
                 const renderScript = `#!/usr/bin/env bash
 text=$(cat ${filePath} | sed 's/$/ \\\\\\\\/g' | sed 's/&=/=/g')
 LaTeX -headless -input="$text" -output=${outFilePath} -textsize=${fontSize * 1.1} -padding=0 -maxwidth=${latexViewArea.get_allocated_width() * 0.85}
+sed -i 's/fill="rgb(0%, 0%, 0%)"/style="fill:#000000"/g' ${outFilePath}
+sed -i 's/stroke="rgb(0%, 0%, 0%)"/stroke="${darkMode.value ? '#ffffff' : '#000000'}"/g' ${outFilePath}
 `;
                 Utils.writeFile(renderScript, scriptFilePath).catch(print);
                 Utils.exec(`chmod a+x ${scriptFilePath}`)
                 Utils.timeout(100, () => {
                     Utils.exec(`bash ${scriptFilePath}`);
+                    Gtk.IconTheme.get_default().append_search_path(LATEX_DIR);
+
                     self.child?.destroy();
-                    self.child = Gtk.Image.new_from_file(outFilePath);
+                    self.child = Gtk.Image.new_from_icon_name(outIconName, 0);
                 })
             }
         },
@@ -216,7 +222,7 @@ const MessageContent = (content) => {
                     child.destroy();
                 }
                 contentBox.add(TextBlock())
-                // Loop lines. Put normal text in markdown parser 
+                // Loop lines. Put normal text in markdown parser
                 // and put code into code highlighter (TODO)
                 let lines = content.split('\n');
                 let lastProcessed = 0;
@@ -283,19 +289,15 @@ export const ChatMessage = (message, modelName = 'Model') => {
     const messageContentBox = MessageContent(message.content);
     const thisMessage = Box({
         className: 'sidebar-chat-message',
+        homogeneous: true,
         children: [
             Box({
-                className: `sidebar-chat-indicator ${message.role == 'user' ? 'sidebar-chat-indicator-user' : 'sidebar-chat-indicator-bot'}`,
-            }),
-            Box({
                 vertical: true,
-                hpack: 'fill',
-                hexpand: true,
                 children: [
                     Label({
-                        hpack: 'fill',
+                        hpack: 'start',
                         xalign: 0,
-                        className: 'txt txt-bold sidebar-chat-name',
+                        className: `txt txt-bold sidebar-chat-name sidebar-chat-name-${message.role == 'user' ? 'user' : 'bot'}`,
                         wrap: true,
                         useMarkup: true,
                         label: (message.role == 'user' ? USERNAME : modelName),
@@ -325,16 +327,12 @@ export const SystemMessage = (content, commandName, scrolledWindow) => {
         className: 'sidebar-chat-message',
         children: [
             Box({
-                className: `sidebar-chat-indicator sidebar-chat-indicator-System`,
-            }),
-            Box({
                 vertical: true,
-                hpack: 'fill',
-                hexpand: true,
                 children: [
                     Label({
                         xalign: 0,
-                        className: 'txt txt-bold sidebar-chat-name',
+                        hpack: 'start',
+                        className: 'txt txt-bold sidebar-chat-name sidebar-chat-name-system',
                         wrap: true,
                         label: `System  •  ${commandName}`,
                     }),

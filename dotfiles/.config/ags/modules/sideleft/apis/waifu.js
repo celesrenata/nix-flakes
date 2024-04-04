@@ -11,6 +11,8 @@ import { MaterialIcon } from '../../.commonwidgets/materialicon.js';
 import { MarginRevealer } from '../../.widgethacks/advancedrevealers.js';
 import { setupCursorHover, setupCursorHoverInfo } from '../../.widgetutils/cursorhover.js';
 import WaifuService from '../../../services/waifus.js';
+import { darkMode } from '../../.miscutils/system.js';
+import { chatEntry } from '../apiwidgets.js';
 
 async function getImageViewerApp(preferredApp) {
     Utils.execAsync(['bash', '-c', `command -v ${preferredApp}`])
@@ -37,11 +39,62 @@ const CommandButton = (command) => Button({
 
 export const waifuTabIcon = Box({
     hpack: 'center',
-    className: 'sidebar-chat-apiswitcher-icon',
-    homogeneous: true,
     children: [
-        MaterialIcon('photo_library', 'norm'),
+        MaterialIcon('photo', 'norm'),
     ]
+});
+
+const WaifuInfo = () => {
+    const waifuLogo = Label({
+        hpack: 'center',
+        className: 'sidebar-chat-welcome-logo',
+        label: 'photo',
+    })
+    return Box({
+        vertical: true,
+        vexpand: true,
+        className: 'spacing-v-15',
+        children: [
+            waifuLogo,
+            Label({
+                className: 'txt txt-title-small sidebar-chat-welcome-txt',
+                wrap: true,
+                justify: Gtk.Justification.CENTER,
+                label: 'Waifus',
+            }),
+            Box({
+                className: 'spacing-h-5',
+                hpack: 'center',
+                children: [
+                    Label({
+                        className: 'txt-smallie txt-subtext',
+                        wrap: true,
+                        justify: Gtk.Justification.CENTER,
+                        label: 'Powered by waifu.im + other APIs',
+                    }),
+                    Button({
+                        className: 'txt-subtext txt-norm icon-material',
+                        label: 'info',
+                        tooltipText: 'Type tags for a random pic.\nNSFW content will not be returned unless\nyou explicitly request such a tag.\n\nDisclaimer: Not affiliated with the providers\nnor responsible for any of their content.',
+                        setup: setupCursorHoverInfo,
+                    }),
+                ]
+            }),
+        ]
+    });
+}
+
+const waifuWelcome = Box({
+    vexpand: true,
+    homogeneous: true,
+    child: Box({
+        className: 'spacing-v-15',
+        vpack: 'center',
+        vertical: true,
+        children: [
+            WaifuInfo(),
+        ]
+    })
 });
 
 const WaifuImage = (taglist) => {
@@ -64,13 +117,10 @@ const WaifuImage = (taglist) => {
         onClicked: action,
         setup: setupCursorHover,
     })
-    const colorIndicator = Box({
-        className: `sidebar-chat-indicator`,
-    });
     const downloadState = Stack({
         homogeneous: false,
         transition: 'slide_up_down',
-        transitionDuration: 150,
+        transitionDuration: userOptions.animations.durationSmall,
         children: {
             'api': ImageState('api', 'Calling API'),
             'download': ImageState('downloading', 'Downloading image'),
@@ -86,7 +136,7 @@ const WaifuImage = (taglist) => {
     });
     const blockHeading = Box({
         hpack: 'fill',
-        className: 'sidebar-waifu-content spacing-h-5',
+        className: 'spacing-h-5',
         children: [
             ...taglist.map((tag) => CommandButton(tag)),
             Box({ hexpand: true }),
@@ -111,7 +161,11 @@ const WaifuImage = (taglist) => {
                         ImageAction({
                             name: 'Hoard',
                             icon: 'save',
-                            action: () => execAsync(['bash', '-c', `mkdir -p ~/Pictures/homework${thisBlock.attribute.isNsfw ? '/🌶️' : ''} && cp ${thisBlock.attribute.imagePath} ~/Pictures/homework${thisBlock.attribute.isNsfw ? '/🌶️/' : ''}`]).catch(print),
+                            action: (self) => {
+                                execAsync(['bash', '-c', `mkdir -p ~/Pictures/homework${thisBlock.attribute.isNsfw ? '/🌶️' : ''} && cp ${thisBlock.attribute.imagePath} ~/Pictures/homework${thisBlock.attribute.isNsfw ? '/🌶️/' : ''}`])
+                                    .then(() => self.label = 'done')
+                                    .catch(print);
+                            },
                         }),
                         ImageAction({
                             name: 'Open externally',
@@ -128,7 +182,7 @@ const WaifuImage = (taglist) => {
     });
     const blockImageRevealer = Revealer({
         transition: 'slide_down',
-        transitionDuration: 150,
+        transitionDuration: userOptions.animations.durationLarge,
         revealChild: false,
         child: Overlay({
             child: Box({
@@ -195,14 +249,10 @@ const WaifuImage = (taglist) => {
                 else Utils.execAsync(['bash', '-c', `wget -O '${thisBlock.attribute.imagePath}' '${url}'`])
                     .then(showImage)
                     .catch(print);
-                blockHeading.get_children().forEach((child) => {
-                    child.setCss(`border-color: ${dominant_color};`);
-                })
-                colorIndicator.css = `background-color: ${dominant_color};`;
+                thisBlock.css = `background-color: mix(${darkMode.value ? 'black' : 'white'}, ${dominant_color}, 0.97);`;
             },
         },
         children: [
-            colorIndicator,
             Box({
                 vertical: true,
                 className: 'spacing-v-5',
@@ -219,59 +269,6 @@ const WaifuImage = (taglist) => {
     });
     return thisBlock;
 }
-
-const WaifuInfo = () => {
-    const waifuLogo = Label({
-        hpack: 'center',
-        className: 'sidebar-chat-welcome-logo',
-        label: 'photo_library',
-    })
-    return Box({
-        vertical: true,
-        vexpand: true,
-        className: 'spacing-v-15',
-        children: [
-            waifuLogo,
-            Label({
-                className: 'txt txt-title-small sidebar-chat-welcome-txt',
-                wrap: true,
-                justify: Gtk.Justification.CENTER,
-                label: 'Waifus',
-            }),
-            Box({
-                className: 'spacing-h-5',
-                hpack: 'center',
-                children: [
-                    Label({
-                        className: 'txt-smallie txt-subtext',
-                        wrap: true,
-                        justify: Gtk.Justification.CENTER,
-                        label: 'Powered by waifu.im',
-                    }),
-                    Button({
-                        className: 'txt-subtext txt-norm icon-material',
-                        label: 'info',
-                        tooltipText: 'A free Waifu API. An alternative to waifu.pics.',
-                        setup: setupCursorHoverInfo,
-                    }),
-                ]
-            }),
-        ]
-    });
-}
-
-const waifuWelcome = Box({
-    vexpand: true,
-    homogeneous: true,
-    child: Box({
-        className: 'spacing-v-15',
-        vpack: 'center',
-        vertical: true,
-        children: [
-            WaifuInfo(),
-        ]
-    })
-});
 
 const waifuContent = Box({
     className: 'spacing-v-15',
@@ -320,6 +317,7 @@ export const waifuView = Scrollable({
         // Always scroll to bottom with new content
         const adjustment = scrolledWindow.get_vadjustment();
         adjustment.connect("changed", () => {
+            if (!chatEntry.hasFocus) return;
             adjustment.set_value(adjustment.get_upper() - adjustment.get_page_size());
         })
     }
@@ -328,7 +326,7 @@ export const waifuView = Scrollable({
 const waifuTags = Revealer({
     revealChild: false,
     transition: 'crossfade',
-    transitionDuration: 150,
+    transitionDuration: userOptions.animations.durationLarge,
     child: Box({
         className: 'spacing-h-5',
         children: [
@@ -398,7 +396,6 @@ function newSimpleImageCall(name, url, width, height, dominantColor = '#9392A6')
 }
 
 export const sendMessage = (text) => {
-    // Do something on send
     // Commands
     if (text.startsWith('/')) {
         if (text.startsWith('/clear')) clearChat();

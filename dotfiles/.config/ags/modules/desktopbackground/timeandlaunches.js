@@ -17,17 +17,17 @@ const TimeAndDate = () => Box({
         Label({
             className: 'bg-time-clock',
             xalign: 0,
-            label: GLib.DateTime.new_now_local().format("%H:%M"),
-            setup: (self) => self.poll(5000, label => {
-                label.label = GLib.DateTime.new_now_local().format("%H:%M");
+            label: GLib.DateTime.new_now_local().format(userOptions.time.format),
+            setup: (self) => self.poll(userOptions.time.interval, label => {
+                label.label = GLib.DateTime.new_now_local().format(userOptions.time.format);
             }),
         }),
         Label({
             className: 'bg-time-date',
             xalign: 0,
-            label: GLib.DateTime.new_now_local().format("%A, %d/%m/%Y"),
-            setup: (self) => self.poll(5000, label => {
-                label.label = GLib.DateTime.new_now_local().format("%A, %d/%m/%Y");
+            label: GLib.DateTime.new_now_local().format(userOptions.time.dateFormatLong),
+            setup: (self) => self.poll(userOptions.time.dateInterval, (label) => {
+                label.label = GLib.DateTime.new_now_local().format(userOptions.time.dateFormatLong);
             }),
         }),
     ]

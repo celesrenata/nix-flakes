@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/run/current-system/sw/bin/bash
 set -x
 SWIPE_DIRECTION=$1
 WINDOW_NAME=$2

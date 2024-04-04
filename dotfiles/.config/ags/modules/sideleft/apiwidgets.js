@@ -4,15 +4,19 @@ import * as Utils from 'resource:///com/github/Aylur/ags/utils.js';
 const { Box, Button, CenterBox, Entry, EventBox, Icon, Label, Overlay, Revealer, Scrollable, Stack } = Widget;
 const { execAsync, exec } = Utils;
 import { setupCursorHover, setupCursorHoverInfo } from '../.widgetutils/cursorhover.js';
-import { widgetContent } from './sideleft.js';
 // APIs
 import GPTService from '../../services/gpt.js';
 import Gemini from '../../services/gemini.js';
 import { geminiView, geminiCommands, sendMessage as geminiSendMessage, geminiTabIcon } from './apis/gemini.js';
 import { chatGPTView, chatGPTCommands, sendMessage as chatGPTSendMessage, chatGPTTabIcon } from './apis/chatgpt.js';
 import { waifuView, waifuCommands, sendMessage as waifuSendMessage, waifuTabIcon } from './apis/waifu.js';
+import { booruView, booruCommands, sendMessage as booruSendMessage, booruTabIcon } from './apis/booru.js';
 import { enableClickthrough } from "../.widgetutils/clickthrough.js";
+import { checkKeybind } from '../.widgetutils/keybind.js';
 const TextView = Widget.subclass(Gtk.TextView, "AgsTextView");
+
+import { widgetContent } from './sideleft.js';
+import { IconTabContainer } from '../.commonwidgets/tabcontainer.js';
 
 const EXPAND_INPUT_THRESHOLD = 30;
 const APIS = [
@@ -40,9 +44,16 @@ const APIS = [
         tabIcon: waifuTabIcon,
         placeholderText: 'Enter tags',
     },
+    {
+        name: 'Booru',
+        sendCommand: booruSendMessage,
+        contentWidget: booruView,
+        commandBar: booruCommands,
+        tabIcon: booruTabIcon,
+        placeholderText: 'Enter tags',
+    },
 ];
 let currentApiId = 0;
-APIS[currentApiId].tabIcon.toggleClassName('sidebar-chat-apiswitcher-icon-enabled', true);
 
 function apiSendMessage(textView) {
     // Get text
@@ -64,6 +75,11 @@ export const chatEntry = TextView({
     acceptsTab: false,
     className: 'sidebar-chat-entry txt txt-smallie',
     setup: (self) => self
+        .hook(App, (self, currentName, visible) => {
+            if (visible && currentName === 'sideleft') {
+                self.grab_focus();
+            }
+        })
         .hook(GPTService, (self) => {
             if (APIS[currentApiId].name != 'Assistant (GPTs)') return;
             self.placeholderText = (GPTService.key.length > 0 ? 'Message the model...' : 'Enter API Key...');
@@ -73,19 +89,25 @@ export const chatEntry = TextView({
             self.placeholderText = (Gemini.key.length > 0 ? 'Message Gemini...' : 'Enter Google AI API Key...');
         }, 'hasKey')
         .on("key-press-event", (widget, event) => {
-            const keyval = event.get_keyval()[1];
+            // Don't send when Shift+Enter
             if (event.get_keyval()[1] === Gdk.KEY_Return && event.get_state()[1] == Gdk.ModifierType.MOD2_MASK) {
                 apiSendMessage(widget);
                 return true;
             }
-            // Global keybinds
-            if (!(event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK) &&
-                event.get_keyval()[1] === Gdk.KEY_Page_Down) {
+            // Keybinds
+            if (checkKeybind(event, userOptions.keybinds.sidebar.cycleTab))
+                widgetContent.cycleTab();
+            else if (checkKeybind(event, userOptions.keybinds.sidebar.nextTab))
                 widgetContent.nextTab();
+            else if (checkKeybind(event, userOptions.keybinds.sidebar.prevTab))
+                widgetContent.prevTab();
+            else if (checkKeybind(event, userOptions.keybinds.sidebar.apis.nextTab)) {
+                apiWidgets.attribute.nextTab();
+                return true;
             }
-            else if (!(event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK) &&
-                event.get_keyval()[1] === Gdk.KEY_Page_Up) {
-                    widgetContent.prevTab();
+            else if (checkKeybind(event, userOptions.keybinds.sidebar.apis.prevTab)) {
+                apiWidgets.attribute.prevTab();
+                return true;
             }
         })
     ,
@@ -135,7 +157,7 @@ const chatPlaceholder = Label({
 const chatPlaceholderRevealer = Revealer({
     revealChild: true,
     transition: 'crossfade',
-    transitionDuration: 200,
+    transitionDuration: userOptions.animations.durationLarge,
     child: chatPlaceholder,
     setup: enableClickthrough,
 });
@@ -153,57 +175,33 @@ const textboxArea = Box({ // Entry area
     ]
 });
 
-const apiContentStack = Stack({
-    vexpand: true,
-    transition: 'slide_left_right',
-    transitionDuration: 160,
-    children: APIS.reduce((acc, api) => {
-        acc[api.name] = api.contentWidget;
-        return acc;
-    }, {}),
-})
-
 const apiCommandStack = Stack({
     transition: 'slide_up_down',
-    transitionDuration: 160,
+    transitionDuration: userOptions.animations.durationLarge,
     children: APIS.reduce((acc, api) => {
         acc[api.name] = api.commandBar;
         return acc;
     }, {}),
 })
 
+export const apiContentStack = IconTabContainer({
+    tabSwitcherClassName: 'sidebar-icontabswitcher',
+    className: 'margin-top-5',
+    iconWidgets: APIS.map((api) => api.tabIcon),
+    names: APIS.map((api) => api.name),
+    children: APIS.map((api) => api.contentWidget),
+    onChange: (self, id) => {
+        apiCommandStack.shown = APIS[id].name;
+        chatPlaceholder.label = APIS[id].placeholderText;
+        currentApiId = id;
+    }
+});
+
 function switchToTab(id) {
-    APIS[currentApiId].tabIcon.toggleClassName('sidebar-chat-apiswitcher-icon-enabled', false);
-    APIS[id].tabIcon.toggleClassName('sidebar-chat-apiswitcher-icon-enabled', true);
-    apiContentStack.shown = APIS[id].name;
-    apiCommandStack.shown = APIS[id].name;
-    chatPlaceholder.label = APIS[id].placeholderText;
-    currentApiId = id;
+    apiContentStack.shown.value = id;
 }
 
-const apiSwitcher = CenterBox({
-    centerWidget: Box({
-        className: 'sidebar-chat-apiswitcher spacing-h-5',
-        hpack: 'center',
-        children: APIS.map((api, id) => Button({
-            child: api.tabIcon,
-            tooltipText: api.name,
-            setup: setupCursorHover,
-            onClicked: () => {
-                switchToTab(id);
-            }
-        })),
-    }),
-    endWidget: Button({
-        hpack: 'end',
-        className: 'txt-subtext txt-norm icon-material',
-        label: 'lightbulb',
-        tooltipText: 'Use PageUp/PageDown to switch between API pages',
-        setup: setupCursorHoverInfo,
-    }),
-})
-
-export default Widget.Box({
+const apiWidgets = Widget.Box({
     attribute: {
         'nextTab': () => switchToTab(Math.min(currentApiId + 1, APIS.length - 1)),
         'prevTab': () => switchToTab(Math.max(0, currentApiId - 1)),
@@ -212,9 +210,10 @@ export default Widget.Box({
     className: 'spacing-v-10',
     homogeneous: false,
     children: [
-        apiSwitcher,
         apiContentStack,
         apiCommandStack,
         textboxArea,
     ],
 });
+
+export default apiWidgets;

@@ -1,5 +1,4 @@
 // This file is for the actual widget for each single notification
-
 const { GLib, Gdk, Gtk } = imports.gi;
 import Widget from 'resource:///com/github/Aylur/ags/widget.js'
 import * as Utils from 'resource:///com/github/Aylur/ags/utils.js'
@@ -9,14 +8,16 @@ import { setupCursorHover } from "../.widgetutils/cursorhover.js";
 import { AnimatedCircProg } from "./cairo_circularprogress.js";
 
 function guessMessageType(summary) {
-    if (summary.includes('recording')) return 'screen_record';
-    if (summary.includes('battery') || summary.includes('power')) return 'power';
-    if (summary.includes('screenshot')) return 'screenshot_monitor';
-    if (summary.includes('welcome')) return 'waving_hand';
-    if (summary.includes('time')) return 'scheduleb';
-    if (summary.includes('installed')) return 'download';
-    if (summary.includes('update')) return 'update';
-    if (summary.startsWith('file')) return 'folder_copy';
+    const str = summary.toLowerCase();
+    if (str.includes('reboot')) return 'restart_alt';
+    if (str.includes('recording')) return 'screen_record';
+    if (str.includes('battery') || summary.includes('power')) return 'power';
+    if (str.includes('screenshot')) return 'screenshot_monitor';
+    if (str.includes('welcome')) return 'waving_hand';
+    if (str.includes('time')) return 'scheduleb';
+    if (str.includes('installed')) return 'download';
+    if (str.includes('update')) return 'update';
+    if (str.startsWith('file')) return 'folder_copy';
     return 'chat';
 }
 
@@ -79,10 +80,10 @@ export default ({
     const destroyWithAnims = () => {
         widget.sensitive = false;
         notificationBox.setCss(middleClickClose);
-        Utils.timeout(200, () => {
+        Utils.timeout(userOptions.animations.durationSmall, () => {
             if (wholeThing) wholeThing.revealChild = false;
         }, wholeThing);
-        Utils.timeout(400, () => {
+        Utils.timeout(userOptions.animations.durationSmall * 2, () => {
             command();
             if (wholeThing) {
                 wholeThing.destroy();
@@ -135,7 +136,7 @@ export default ({
         },
         revealChild: false,
         transition: 'slide_down',
-        transitionDuration: 200,
+        transitionDuration: userOptions.animations.durationLarge,
         child: Box({ // Box to make sure css-based spacing works
             homogeneous: true,
         }),
@@ -144,7 +145,7 @@ export default ({
     const display = Gdk.Display.get_default();
     const notifTextPreview = Revealer({
         transition: 'slide_down',
-        transitionDuration: 120,
+        transitionDuration: userOptions.animations.durationSmall,
         revealChild: true,
         child: Label({
             xalign: 0,
@@ -159,7 +160,7 @@ export default ({
     });
     const notifTextExpanded = Revealer({
         transition: 'slide_up',
-        transitionDuration: 120,
+        transitionDuration: userOptions.animations.durationSmall,
         revealChild: false,
         child: Box({
             vertical: true,
@@ -182,17 +183,19 @@ export default ({
                             hexpand: true,
                             className: `notif-action notif-action-${notifObject.urgency}`,
                             onClicked: () => destroyWithAnims(),
+                            setup: setupCursorHover,
                             child: Label({
                                 label: 'Close',
-                            })
+                            }),
                         }),
                         ...notifObject.actions.map(action => Widget.Button({
                             hexpand: true,
                             className: `notif-action notif-action-${notifObject.urgency}`,
                             onClicked: () => notifObject.invoke(action.id),
+                            setup: setupCursorHover,
                             child: Label({
                                 label: action.label,
-                            })
+                            }),
                         }))
                     ],
                 })
@@ -218,11 +221,11 @@ export default ({
     let notifTime = '';
     const messageTime = GLib.DateTime.new_from_unix_local(notifObject.time);
     if (messageTime.get_day_of_year() == GLib.DateTime.new_now_local().get_day_of_year())
-        notifTime = messageTime.format('%H:%M');
+        notifTime = messageTime.format(userOptions.time.format);
     else if (messageTime.get_day_of_year() == GLib.DateTime.new_now_local().get_day_of_year() - 1)
         notifTime = 'Yesterday';
     else
-        notifTime = messageTime.format('%d/%m');
+        notifTime = messageTime.format(userOptions.time.dateFormat);
     const notifTextSummary = Label({
         xalign: 0,
         className: 'txt-small txt-semibold titlefont',
@@ -305,17 +308,17 @@ export default ({
     const maxOffset = 10.227;
     const endMargin = 20.455;
     const disappearHeight = 6.818;
-    const leftAnim1 = `transition: 200ms cubic-bezier(0.05, 0.7, 0.1, 1);
+    const leftAnim1 = `transition: ${userOptions.animations.durationSmall}ms cubic-bezier(0.05, 0.7, 0.1, 1);
                        margin-left: -${Number(maxOffset + endMargin)}rem;
                        margin-right: ${Number(maxOffset + endMargin)}rem;
                        opacity: 0;`;
 
-    const rightAnim1 = `transition: 200ms cubic-bezier(0.05, 0.7, 0.1, 1);
+    const rightAnim1 = `transition: ${userOptions.animations.durationSmall}ms cubic-bezier(0.05, 0.7, 0.1, 1);
                         margin-left:   ${Number(maxOffset + endMargin)}rem;
                         margin-right: -${Number(maxOffset + endMargin)}rem;
                         opacity: 0;`;
 
-    const middleClickClose = `transition: 200ms cubic-bezier(0.85, 0, 0.15, 1);
+    const middleClickClose = `transition: ${userOptions.animations.durationSmall}ms cubic-bezier(0.85, 0, 0.15, 1);
                               margin-left:   ${Number(maxOffset + endMargin)}rem;
                               margin-right: -${Number(maxOffset + endMargin)}rem;
                               opacity: 0;`;
@@ -400,10 +403,10 @@ export default ({
                         self.setCss(leftAnim1);
                         widget.sensitive = false;
                     }
-                    Utils.timeout(200, () => {
+                    Utils.timeout(userOptions.animations.durationSmall, () => {
                         if (wholeThing) wholeThing.revealChild = false;
                     }, wholeThing);
-                    Utils.timeout(400, () => {
+                    Utils.timeout(userOptions.animations.durationSmall * 2, () => {
                         command();
                         if (wholeThing) {
                             wholeThing.destroy();
@@ -432,7 +435,7 @@ export default ({
     if (isPopup) Utils.timeout(popupTimeout, () => {
         if (wholeThing) {
             wholeThing.revealChild = false;
-            Utils.timeout(200, () => {
+            Utils.timeout(userOptions.animations.durationSmall, () => {
                 if (wholeThing) {
                     wholeThing.destroy();
                     wholeThing = null;

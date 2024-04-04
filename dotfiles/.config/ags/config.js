@@ -5,7 +5,8 @@ import GLib from 'gi://GLib';
 import App from 'resource:///com/github/Aylur/ags/app.js'
 import * as Utils from 'resource:///com/github/Aylur/ags/utils.js'
 // Stuff
-import userOptions from './user_options.js';
+import userOptions from './modules/.configuration/user_options.js';
+import { firstRunWelcome } from './services/messages.js';
 // Widgets
 import { Bar, BarCornerTopleft, BarCornerTopright } from './modules/bar/main.js';
 import Cheatsheet from './modules/cheatsheet/main.js';
@@ -57,7 +58,7 @@ const Windows = () => [
     forMonitors((id) => Corner(id, 'bottom right')),
 ];
 const CLOSE_ANIM_TIME = 210; // Longer than actual anim time to make sure widgets animate fully
-export default {
+App.config({
     css: `${COMPILED_STYLE_DIR}/style.css`,
     stackTraceOnError: true,
     closeWindowDelay: { // For animations
@@ -66,12 +67,12 @@ export default {
         'osk': CLOSE_ANIM_TIME,
     },
     windows: Windows().flat(1),
-};
+});
 
 // Stuff that don't need to be toggled. And they're async so ugh...
-// Bar().catch(print); // Use this to debug the bar. Single monitor only.
+Bar().catch(print); // Use this to debug the bar. Single monitor only.
 // BarCornerTopleft().catch(print); // Use this to debug the bar. Single monitor only.
 // BarCornerTopright().catch(print); // Use this to debug the bar. Single monitor only.
-forMonitors(Bar);
+// forMonitors(Bar);
 forMonitors(BarCornerTopleft);
 forMonitors(BarCornerTopright);

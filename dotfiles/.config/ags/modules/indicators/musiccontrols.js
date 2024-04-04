@@ -1,4 +1,4 @@
-const { Gdk, GdkPixbuf, GLib, Gtk } = imports.gi;
+const { GLib } = imports.gi;
 import App from 'resource:///com/github/Aylur/ags/app.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import * as Utils from 'resource:///com/github/Aylur/ags/utils.js';
@@ -9,18 +9,24 @@ const { Box, EventBox, Icon, Scrollable, Label, Button, Revealer } = Widget;
 import { fileExists } from '../.miscutils/files.js';
 import { AnimatedCircProg } from "../.commonwidgets/cairo_circularprogress.js";
 import { showMusicControls } from '../../variables.js';
+import { darkMode, hasPlasmaIntegration } from '../.miscutils/system.js';
 
 const COMPILED_STYLE_DIR = `${GLib.get_user_cache_dir()}/ags/user/generated`
 const LIGHTDARK_FILE_LOCATION = `${GLib.get_user_cache_dir()}/ags/user/colormode.txt`;
-const lightDark = Utils.readFile(LIGHTDARK_FILE_LOCATION).trim();
+const colorMode = Utils.exec('bash -c "sed -n \'1p\' $HOME/.cache/ags/user/colormode.txt"');
+const lightDark = (colorMode == "light") ? '-l' : '';
 const COVER_COLORSCHEME_SUFFIX = '_colorscheme.css';
 var lastCoverPath = '';
 
 function isRealPlayer(player) {
     return (
-        !player.busName.startsWith('org.mpris.MediaPlayer2.firefox') && // Firefox mpris dbus is useless
-        !player.busName.startsWith('org.mpris.MediaPlayer2.playerctld') && // Doesn't have cover art
-        !player.busName.endsWith('.mpd') // Non-instance mpd bus
+        // Remove unecessary native buses from browsers if there's plasma integration
+        !(hasPlasmaIntegration && player.busName.startsWith('org.mpris.MediaPlayer2.firefox')) &&
+        !(hasPlasmaIntegration && player.busName.startsWith('org.mpris.MediaPlayer2.chromium')) &&
+        // playerctld just copies other buses and we don't need duplicates
+        !player.busName.startsWith('org.mpris.MediaPlayer2.playerctld') &&
+        // Non-instance mpd bus
+        !player.busName.endsWith('.mpd')
     );
 }
 
@@ -119,88 +125,96 @@ const CoverArt = ({ player, ...rest }) => {
             label: 'music_note',
         })]
     });
-    const coverArtDrawingArea = Widget.DrawingArea({ className: 'osd-music-cover-art' });
-    const coverArtDrawingAreaStyleContext = coverArtDrawingArea.get_style_context();
+    // const coverArtDrawingArea = Widget.DrawingArea({ className: 'osd-music-cover-art' });
+    // const coverArtDrawingAreaStyleContext = coverArtDrawingArea.get_style_context();
     const realCoverArt = Box({
         className: 'osd-music-cover-art',
         homogeneous: true,
-        children: [coverArtDrawingArea],
+        // children: [coverArtDrawingArea],
         attribute: {
             'pixbuf': null,
-            'showImage': (self, imagePath) => {
-                const borderRadius = coverArtDrawingAreaStyleContext.get_property('border-radius', Gtk.StateFlags.NORMAL);
-                const frameHeight = coverArtDrawingAreaStyleContext.get_property('min-height', Gtk.StateFlags.NORMAL);
-                const frameWidth = coverArtDrawingAreaStyleContext.get_property('min-width', Gtk.StateFlags.NORMAL);
-                let imageHeight = frameHeight;
-                let imageWidth = frameWidth;
-                // Get image dimensions
-                execAsync(['identify', '-format', '{"w":%w,"h":%h}', imagePath])
-                    .then((output) => {
-                        const imageDimensions = JSON.parse(output);
-                        const imageAspectRatio = imageDimensions.w / imageDimensions.h;
-                        const displayedAspectRatio = imageWidth / imageHeight;
-                        if (imageAspectRatio >= displayedAspectRatio) {
-                            imageWidth = imageHeight * imageAspectRatio;
-                        } else {
-                            imageHeight = imageWidth / imageAspectRatio;
-                        }
-                        // Real stuff
-                        // TODO: fix memory leak(?)
-                        // if (self.attribute.pixbuf) {
-                        //     self.attribute.pixbuf.unref();
-                        //     self.attribute.pixbuf = null;
-                        // }
-                        self.attribute.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(imagePath, imageWidth, imageHeight);
+            // 'showImage': (self, imagePath) => {
+            //     const borderRadius = coverArtDrawingAreaStyleContext.get_property('border-radius', Gtk.StateFlags.NORMAL);
+            //     const frameHeight = coverArtDrawingAreaStyleContext.get_property('min-height', Gtk.StateFlags.NORMAL);
+            //     const frameWidth = coverArtDrawingAreaStyleContext.get_property('min-width', Gtk.StateFlags.NORMAL);
+            //     let imageHeight = frameHeight;
+            //     let imageWidth = frameWidth;
+            //     // Get image dimensions
+            //     execAsync(['identify', '-format', '{"w":%w,"h":%h}', imagePath])
+            //         .then((output) => {
+            //             const imageDimensions = JSON.parse(output);
+            //             const imageAspectRatio = imageDimensions.w / imageDimensions.h;
+            //             const displayedAspectRatio = imageWidth / imageHeight;
+            //             if (imageAspectRatio >= displayedAspectRatio) {
+            //                 imageWidth = imageHeight * imageAspectRatio;
+            //             } else {
+            //                 imageHeight = imageWidth / imageAspectRatio;
+            //             }
+            //             // Real stuff
+            //             // TODO: fix memory leak(?)
+            //             // if (self.attribute.pixbuf) {
+            //             //     self.attribute.pixbuf.unref();
+            //             //     self.attribute.pixbuf = null;
+            //             // }
+            //             self.attribute.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(imagePath, imageWidth, imageHeight);
 
-                        coverArtDrawingArea.set_size_request(frameWidth, frameHeight);
-                        coverArtDrawingArea.connect("draw", (widget, cr) => {
-                            // Clip a rounded rectangle area
-                            cr.arc(borderRadius, borderRadius, borderRadius, Math.PI, 1.5 * Math.PI);
-                            cr.arc(frameWidth - borderRadius, borderRadius, borderRadius, 1.5 * Math.PI, 2 * Math.PI);
-                            cr.arc(frameWidth - borderRadius, frameHeight - borderRadius, borderRadius, 0, 0.5 * Math.PI);
-                            cr.arc(borderRadius, frameHeight - borderRadius, borderRadius, 0.5 * Math.PI, Math.PI);
-                            cr.closePath();
-                            cr.clip();
-                            // Paint image as bg, centered
-                            Gdk.cairo_set_source_pixbuf(cr, self.attribute.pixbuf,
-                                frameWidth / 2 - imageWidth / 2,
-                                frameHeight / 2 - imageHeight / 2
-                            );
-                            cr.paint();
-                        });
-                    }).catch(print)
-            },
+            //             coverArtDrawingArea.set_size_request(frameWidth, frameHeight);
+            //             coverArtDrawingArea.connect("draw", (widget, cr) => {
+            //                 // Clip a rounded rectangle area
+            //                 cr.arc(borderRadius, borderRadius, borderRadius, Math.PI, 1.5 * Math.PI);
+            //                 cr.arc(frameWidth - borderRadius, borderRadius, borderRadius, 1.5 * Math.PI, 2 * Math.PI);
+            //                 cr.arc(frameWidth - borderRadius, frameHeight - borderRadius, borderRadius, 0, 0.5 * Math.PI);
+            //                 cr.arc(borderRadius, frameHeight - borderRadius, borderRadius, 0.5 * Math.PI, Math.PI);
+            //                 cr.closePath();
+            //                 cr.clip();
+            //                 // Paint image as bg, centered
+            //                 Gdk.cairo_set_source_pixbuf(cr, self.attribute.pixbuf,
+            //                     frameWidth / 2 - imageWidth / 2,
+            //                     frameHeight / 2 - imageHeight / 2
+            //                 );
+            //                 cr.paint();
+            //             });
+            //         }).catch(print)
+            // },
             'updateCover': (self) => {
                 // const player = Mpris.getPlayer(); // Maybe no need to re-get player.. can't remember why I had this
                 // Player closed
                 // Note that cover path still remains, so we're checking title
                 if (!player || player.trackTitle == "") {
+                    self.css = `background-image: none;`; // CSS image
                     App.applyCss(`${COMPILED_STYLE_DIR}/style.css`);
                     return;
                 }
 
                 const coverPath = player.coverPath;
-                const stylePath = `${player.coverPath}${lightDark}${COVER_COLORSCHEME_SUFFIX}`;
+                const stylePath = `${player.coverPath}${darkMode.value ? '' : '-l'}${COVER_COLORSCHEME_SUFFIX}`;
                 if (player.coverPath == lastCoverPath) { // Since 'notify::cover-path' emits on cover download complete
-                    Utils.timeout(200, () => self.attribute.showImage(self, coverPath));
+                    Utils.timeout(200, () => {
+                        // self.attribute.showImage(self, coverPath);
+                        self.css = `background-image: url('${coverPath}');`; // CSS image
+                    });
                 }
                 lastCoverPath = player.coverPath;
 
                 // If a colorscheme has already been generated, skip generation
                 if (fileExists(stylePath)) {
-                    self.attribute.showImage(self, coverPath)
+                    // self.attribute.showImage(self, coverPath)
+                    self.css = `background-image: url('${coverPath}');`; // CSS image
                     App.applyCss(stylePath);
                     return;
                 }
 
                 // Generate colors
                 execAsync(['bash', '-c',
-                    `${App.configDir}/scripts/color_generation/generate_colors_material.py --path '${coverPath}' > ${App.configDir}/scss/_musicmaterial.scss ${lightDark}`])
+                    `${App.configDir}/scripts/color_generation/generate_colors_material.py --path '${coverPath}' --mode ${darkMode.value ? 'dark' : 'light'} > ${App.configDir}/scss/_musicmaterial.scss`])
                     .then(() => {
-                        exec(`wal -i "${player.coverPath}" -n -t -s -e -q ${lightDark}`)
+                        exec(`wal -i "${player.coverPath}" -n -t -s -e -q ${darkMode.value ? '' : '-l'}`)
                         exec(`cp ${GLib.get_user_cache_dir()}/wal/colors.scss ${App.configDir}/scss/_musicwal.scss`);
                         exec(`sass ${App.configDir}/scss/_music.scss ${stylePath}`);
-                        Utils.timeout(200, () => self.attribute.showImage(self, coverPath));
+                        Utils.timeout(200, () => {
+                            // self.attribute.showImage(self, coverPath)
+                            self.css = `background-image: url('${coverPath}');`; // CSS image
+                        });
                         App.applyCss(`${stylePath}`);
                     })
                     .catch(print);
@@ -227,7 +241,7 @@ const CoverArt = ({ player, ...rest }) => {
 const TrackControls = ({ player, ...rest }) => Widget.Revealer({
     revealChild: false,
     transition: 'slide_right',
-    transitionDuration: 200,
+    transitionDuration: userOptions.animations.durationLarge,
     child: Widget.Box({
         ...rest,
         vpack: 'center',
@@ -263,7 +277,7 @@ const TrackControls = ({ player, ...rest }) => Widget.Revealer({
 const TrackSource = ({ player, ...rest }) => Widget.Revealer({
     revealChild: false,
     transition: 'slide_left',
-    transitionDuration: 200,
+    transitionDuration: userOptions.animations.durationLarge,
     child: Widget.Box({
         ...rest,
         className: 'osd-music-pill spacing-h-5',
@@ -292,7 +306,7 @@ const TrackTime = ({ player, ...rest }) => {
     return Widget.Revealer({
         revealChild: false,
         transition: 'slide_left',
-        transitionDuration: 200,
+        transitionDuration: userOptions.animations.durationLarge,
         child: Widget.Box({
             ...rest,
             vpack: 'center',
@@ -371,7 +385,7 @@ const MusicControlsWidget = (player) => Box({
                     setup: (box) => {
                         box.pack_start(TrackControls({ player: player }), false, false, 0);
                         box.pack_end(PlayState({ player: player }), false, false, 0);
-                        box.pack_end(TrackTime({ player: player }), false, false, 0)
+                        if(hasPlasmaIntegration || player.busName.startsWith('org.mpris.MediaPlayer2.chromium')) box.pack_end(TrackTime({ player: player }), false, false, 0)
                         // box.pack_end(TrackSource({ vpack: 'center', player: player }), false, false, 0);
                     }
                 })
@@ -382,60 +396,13 @@ const MusicControlsWidget = (player) => Box({
 
 export default () => Revealer({
     transition: 'slide_down',
-    transitionDuration: 150,
+    transitionDuration: userOptions.animations.durationLarge,
     revealChild: false,
     child: Box({
-        setup: (self) => self.hook(Mpris, box => {
-            box.children.forEach(child => {
-                child.destroy();
-                child = null;
-            });
-            Mpris.players.forEach((player, i) => {
-                if (isRealPlayer(player)) {
-                    const newInstance = MusicControlsWidget(player);
-                    box.add(newInstance);
-                }
-            });
-        }, 'notify::players'),
+        children: Mpris.bind("players")
+            .as(players => players.map((player) => (isRealPlayer(player) ? MusicControlsWidget(player) : null)))
     }),
     setup: (self) => self.hook(showMusicControls, (revealer) => {
         revealer.revealChild = showMusicControls.value;
     }),
 })
-
-// export default () => MarginRevealer({
-//     transition: 'slide_down',
-//     revealChild: false,
-//     showClass: 'osd-show',
-//     hideClass: 'osd-hide',
-//     child: Box({
-//         setup: (self) => self.hook(Mpris, box => {
-//             let foundPlayer = false;
-//             Mpris.players.forEach((player, i) => {
-//                 if (isRealPlayer(player)) {
-//                     foundPlayer = true;
-//                     box.children.forEach(child => {
-//                         child.destroy();
-//                         child = null;
-//                     });
-//                     const newInstance = MusicControlsWidget(player);
-//                     box.children = [newInstance];
-//                 }
-//             });
-
-//             if (!foundPlayer) {
-//                 const children = box.get_children();
-//                 for (let i = 0; i < children.length; i++) {
-//                     const child = children[i];
-//                     child.destroy();
-//                     child = null;
-//                 }
-//                 return;
-//             }
-//         }, 'notify::players'),
-//     }),
-//     setup: (self) => self.hook(showMusicControls, (revealer) => {
-//         if (showMusicControls.value) revealer.attribute.show();
-//         else revealer.attribute.hide();
-//     }),
-// })

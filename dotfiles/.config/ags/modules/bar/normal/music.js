@@ -36,9 +36,9 @@ const BarGroup = ({ child }) => Box({
     ]
 });
 
-const BarResource = (name, icon, command) => {
+const BarResource = (name, icon, command, circprogClassName = 'bar-batt-circprog', textClassName = 'txt-onSurfaceVariant', iconClassName = 'bar-batt') => {
     const resourceCircProg = AnimatedCircProg({
-        className: 'bar-batt-circprog',
+        className: `${circprogClassName}`,
         vpack: 'center',
         hpack: 'center',
     });
@@ -47,7 +47,7 @@ const BarResource = (name, icon, command) => {
         children: [Overlay({
             child: Box({
                 vpack: 'center',
-                className: 'bar-batt',
+                className: `${iconClassName}`,
                 homogeneous: true,
                 children: [
                     MaterialIcon(icon, 'small'),
@@ -57,22 +57,25 @@ const BarResource = (name, icon, command) => {
         })]
     });
     const resourceLabel = Label({
-        className: 'txt-smallie txt-onSurfaceVariant',
+        className: `txt-smallie ${textClassName}`,
     });
-    const widget = Box({
-        className: 'spacing-h-4 txt-onSurfaceVariant',
-        children: [
-            resourceProgress,
-            resourceLabel,
-        ],
-        setup: (self) => self
-            .poll(5000, () => execAsync(['bash', '-c', command])
-                .then((output) => {
-                    resourceCircProg.css = `font-size: ${Number(output)}px;`;
-                    resourceLabel.label = `${Math.round(Number(output))}%`;
-                    widget.tooltipText = `${name}: ${Math.round(Number(output))}%`;
-                }).catch(print))
-        ,
+    const widget = Button({
+        onClicked: () => Utils.execAsync(['bash', '-c', `${userOptions.apps.taskManager}`]).catch(print),
+        child: Box({
+            className: `spacing-h-4 ${textClassName}`,
+            children: [
+                resourceProgress,
+                resourceLabel,
+            ],
+            setup: (self) => self
+                .poll(5000, () => execAsync(['bash', '-c', command])
+                    .then((output) => {
+                        resourceCircProg.css = `font-size: ${Number(output)}px;`;
+                        resourceLabel.label = `${Math.round(Number(output))}%`;
+                        widget.tooltipText = `${name}: ${Math.round(Number(output))}%`;
+                    }).catch(print))
+            ,
+        })
     });
     return widget;
 }
@@ -133,18 +136,18 @@ export default () => {
             ]
         })]
     });
-    const trackTitle = Scrollable({
+    const trackTitle = Label({
         hexpand: true,
-        child: Label({
-            className: 'txt-smallie txt-onSurfaceVariant',
-            setup: (self) => self.hook(Mpris, label => {
-                const mpris = Mpris.getPlayer('');
-                if (mpris)
-                    label.label = `${trimTrackTitle(mpris.trackTitle)} • ${mpris.trackArtists.join(', ')}`;
-                else
-                    label.label = 'No media';
-            }),
-        })
+        className: 'txt-smallie bar-music-txt',
+        truncate: 'end',
+        maxWidthChars: 10, // Doesn't matter, just needs to be non negative
+        setup: (self) => self.hook(Mpris, label => {
+            const mpris = Mpris.getPlayer('');
+            if (mpris)
+                label.label = `${trimTrackTitle(mpris.trackTitle)} • ${mpris.trackArtists.join(', ')}`;
+            else
+                label.label = 'No media';
+        }),
     })
     const musicStuff = Box({
         className: 'spacing-h-10',
@@ -178,43 +181,50 @@ export default () => {
                     onScrollDown: () => execAsync(CUSTOM_MODULE_SCROLLDOWN_SCRIPT).catch(print),
                 })
             });
-        } else {
-            return BarGroup({
-                child: Box({
-                    children: [
-                        BarResource('RAM Usage', 'memory', `LANG=C free | awk '/^Mem/ {printf("%.2f\\n", ($3/$2) * 100)}'`),
-                        Revealer({
-                            revealChild: true,
-                            transition: 'slide_left',
-                            transitionDuration: 200,
-                            child: Box({
-                                className: 'spacing-h-10 margin-left-10',
-                                children: [
-                                    BarResource('Swap Usage', 'swap_horiz', `LANG=C free | awk '/^Swap/ {if ($2 > 0) printf("%.2f\\n", ($3/$2) * 100); else print "0";}'`),
-                                    BarResource('CPU Usage', 'settings_motion_mode', `LANG=C top -bn1 | grep Cpu | sed 's/\\,/\\./g' | awk '{print $2}'`),
-                                ]
-                            }),
-                            setup: (self) => self.hook(Mpris, label => {
-                                const mpris = Mpris.getPlayer('');
-                                self.revealChild = (!mpris);
-                            }),
-                        })
-                    ],
-                })
-            });
-        }
+        } else return BarGroup({
+            child: Box({
+                children: [
+                    BarResource('RAM Usage', 'memory', `LANG=C free | awk '/^Mem/ {printf("%.2f\\n", ($3/$2) * 100)}'`,
+                        'bar-ram-circprog', 'bar-ram-txt', 'bar-ram-icon'),
+                    Revealer({
+                        revealChild: true,
+                        transition: 'slide_left',
+                        transitionDuration: userOptions.animations.durationLarge,
+                        child: Box({
+                            className: 'spacing-h-10 margin-left-10',
+                            children: [
+                                BarResource('Swap Usage', 'swap_horiz', `LANG=C free | awk '/^Swap/ {if ($2 > 0) printf("%.2f\\n", ($3/$2) * 100); else print "0";}'`,
+                                    'bar-swap-circprog', 'bar-swap-txt', 'bar-swap-icon'),
+                                BarResource('CPU Usage', 'settings_motion_mode', `LANG=C top -bn1 | grep Cpu | sed 's/\\,/\\./g' | awk '{print $2}'`,
+                                    'bar-cpu-circprog', 'bar-cpu-txt', 'bar-cpu-icon'),
+                            ]
+                        }),
+                        setup: (self) => self.hook(Mpris, label => {
+                            const mpris = Mpris.getPlayer('');
+                            self.revealChild = (!mpris);
+                        }),
+                    })
+                ],
+            })
+        });
     }
     return EventBox({
         onScrollUp: (self) => switchToRelativeWorkspace(self, -1),
         onScrollDown: (self) => switchToRelativeWorkspace(self, +1),
-        onPrimaryClickRelease: () => showMusicControls.setValue(!showMusicControls.value),
-        onSecondaryClickRelease: () => execAsync(['bash', '-c', 'playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"` &']).catch(print),
-        onMiddleClickRelease: () => execAsync('playerctl play-pause').catch(print),
         child: Box({
             className: 'spacing-h-4',
             children: [
                 SystemResourcesOrCustomModule(),
-                BarGroup({ child: musicStuff }),
+                EventBox({
+                    child: BarGroup({ child: musicStuff }),
+                    onPrimaryClick: () => showMusicControls.setValue(!showMusicControls.value),
+                    onSecondaryClick: () => execAsync(['bash', '-c', 'playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"` &']).catch(print),
+                    onMiddleClick: () => execAsync('playerctl play-pause').catch(print),
+                    setup: (self) => self.on('button-press-event', (self, event) => {
+                        if (event.get_button()[1] === 8) // Side button
+                            execAsync('playerctl previous').catch(print)
+                    }),
+                })
             ]
         })
     });

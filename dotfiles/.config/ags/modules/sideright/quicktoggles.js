@@ -15,7 +15,7 @@ export const ToggleIconWifi = (props = {}) => Widget.Button({
     tooltipText: 'Wifi | Right-click to configure',
     onClicked: () => Network.toggleWifi(),
     onSecondaryClickRelease: () => {
-        execAsync(['bash', '-c', 'XDG_CURRENT_DESKTOP="gnome" gnome-control-center wifi', '&']);
+        execAsync(['bash', '-c', `${userOptions.apps.network}`, '&']);
         App.closeWindow('sideright');
     },
     child: NetworkIndicator(),
@@ -40,7 +40,7 @@ export const ToggleIconBluetooth = (props = {}) => Widget.Button({
             exec('rfkill unblock bluetooth');
     },
     onSecondaryClickRelease: () => {
-        execAsync(['bash', '-c', 'blueberry &']);
+        execAsync(['bash', '-c', `${userOptions.apps.bluetooth}`]).catch(print);
         App.closeWindow('sideright');
     },
     child: BluetoothIndicator(),
@@ -130,6 +130,36 @@ export const ModuleInvertColors = async (props = {}) => {
     };
 }
 
+export const ModuleRawInput = async (props = {}) => {
+    try {
+        const Hyprland = (await import('resource:///com/github/Aylur/ags/service/hyprland.js')).default;
+        return Widget.Button({
+            className: 'txt-small sidebar-iconbutton',
+            tooltipText: 'Raw input',
+            onClicked: (button) => {
+                Hyprland.messageAsync('j/getoption input:accel_profile')
+                    .then((output) => {
+                        const value = JSON.parse(output)["str"].trim();
+                        if (value != "[[EMPTY]]" && value != "") {
+                            execAsync(['bash', '-c', `hyprctl keyword input:accel_profile '[[EMPTY]]'`]).catch(print);
+                            button.toggleClassName('sidebar-button-active', false);
+                        }
+                        else {
+                            Hyprland.messageAsync(`j/keyword input:accel_profile flat`)
+                                .catch(print);
+                            button.toggleClassName('sidebar-button-active', true);
+                        }
+                    })
+            },
+            child: MaterialIcon('mouse', 'norm'),
+            setup: setupCursorHover,
+            ...props,
+        })
+    } catch {
+        return null;
+    };
+}
+
 export const ModuleIdleInhibitor = (props = {}) => Widget.Button({ // TODO: Make this work
     attribute: {
         enabled: false,
@@ -183,7 +213,7 @@ export const ModuleSettingsIcon = (props = {}) => Widget.Button({
     className: 'txt-small sidebar-iconbutton',
     tooltipText: 'Open Settings',
     onClicked: () => {
-        execAsync(['bash', '-c', 'XDG_CURRENT_DESKTOP="gnome" gnome-control-center', '&']);
+        execAsync(['bash', '-c', `${userOptions.apps.settings}`, '&']);
         App.toggleWindow('sideright');
     },
     child: MaterialIcon('settings', 'norm'),

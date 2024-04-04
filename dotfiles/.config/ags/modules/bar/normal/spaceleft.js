@@ -14,14 +14,18 @@ const WindowTitle = async () => {
                 children: [
                     Widget.Label({
                         xalign: 0,
-                        className: 'txt-smaller bar-topdesc txt',
+                        truncate: 'end',
+                        maxWidthChars: 10, // Doesn't matter, just needs to be non negative
+                        className: 'txt-smaller bar-wintitle-topdesc txt',
                         setup: (self) => self.hook(Hyprland.active.client, label => { // Hyprland.active.client
                             label.label = Hyprland.active.client.class.length === 0 ? 'Desktop' : Hyprland.active.client.class;
                         }),
                     }),
                     Widget.Label({
                         xalign: 0,
-                        className: 'txt txt-smallie',
+                        truncate: 'end',
+                        maxWidthChars: 10, // Doesn't matter, just needs to be non negative
+                        className: 'txt-smallie bar-wintitle-txt',
                         setup: (self) => self.hook(Hyprland.active.client, label => { // Hyprland.active.client
                             label.label = Hyprland.active.client.title.length === 0 ? `Workspace ${Hyprland.active.workspace.id}` : Hyprland.active.client.title;
                         }),

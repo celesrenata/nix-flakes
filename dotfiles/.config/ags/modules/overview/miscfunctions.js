@@ -3,6 +3,7 @@ import App from 'resource:///com/github/Aylur/ags/app.js';
 import * as Utils from 'resource:///com/github/Aylur/ags/utils.js';
 const { execAsync, exec } = Utils;
 import Todo from "../../services/todo.js";
+import { darkMode } from '../.miscutils/system.js';
 
 export function hasUnterminatedBackslash(inputString) {
     // Use a regular expression to match a trailing odd number of backslashes
@@ -11,28 +12,41 @@ export function hasUnterminatedBackslash(inputString) {
 }
 
 export function launchCustomCommand(command) {
-    const args = command.split(' ');
+    const args = command.toLowerCase().split(' ');
     if (args[0] == '>raw') { // Mouse raw input
-        execAsync([`bash`, `-c`, `hyprctl keyword input:force_no_accel $(( 1 - $(hyprctl getoption input:force_no_accel -j | gojq ".int") ))`, `&`]).catch(print);
+        Utils.execAsync('hyprctl -j getoption input:accel_profile')
+            .then((output) => {
+                const value = JSON.parse(output)["str"].trim();
+                if (value != "[[EMPTY]]" && value != "") {
+                    execAsync(['bash', '-c', `hyprctl keyword input:accel_profile '[[EMPTY]]'`]).catch(print);
+                }
+                else {
+                    execAsync(['bash', '-c', `hyprctl keyword input:accel_profile flat`]).catch(print);
+                }
+            })
     }
     else if (args[0] == '>img') { // Change wallpaper
         execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/switchwall.sh`, `&`]).catch(print);
     }
     else if (args[0] == '>color') { // Generate colorscheme from color picker
-        execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/switchcolor.sh`, `&`]).catch(print);
+        execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/switchcolor.sh --pick`, `&`]).catch(print);
     }
     else if (args[0] == '>light') { // Light mode
-        execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_cache_dir()}/ags/user && echo "-l" > ${GLib.get_user_cache_dir()}/ags/user/colormode.txt`])
-            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchwall.sh --noswitch`]))
+        darkMode.value = false;
+        execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_cache_dir()}/ags/user && sed -i "1s/.*/light/"  ${GLib.get_user_cache_dir()}/ags/user/colormode.txt`])
+            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchcolor.sh`]))
             .catch(print);
     }
     else if (args[0] == '>dark') { // Dark mode
-        execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_cache_dir()}/ags/user && echo "" > ${GLib.get_user_cache_dir()}/ags/user/colormode.txt`])
-            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchwall.sh --noswitch`]))
+        darkMode.value = true;
+        execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_cache_dir()}/ags/user && sed -i "1s/.*/dark/"  ${GLib.get_user_cache_dir()}/ags/user/colormode.txt`])
+            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchcolor.sh`]))
             .catch(print);
     }
     else if (args[0] == '>badapple') { // Black and white
-        execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/applycolor.sh --bad-apple`]).catch(print)
+        execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_cache_dir()}/ags/user && sed -i "3s/.*/monochrome/" ${GLib.get_user_cache_dir()}/ags/user/colormode.txt`])
+                .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchcolor.sh`]))
+                .catch(print);
     }
     else if (args[0] == '>material') { // Use material colors
         execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_cache_dir()}/ags/user && echo "material" > ${GLib.get_user_cache_dir()}/ags/user/colorbackend.txt`]).catch(print)
@@ -48,13 +62,13 @@ export function launchCustomCommand(command) {
         Todo.add(args.slice(1).join(' '));
     }
     else if (args[0] == '>shutdown') { // Shut down
-        execAsync([`bash`, `-c`, `systemctl poweroff`]).catch(print);
+        execAsync([`bash`, `-c`, `systemctl poweroff || loginctl poweroff`]).catch(print);
     }
     else if (args[0] == '>reboot') { // Reboot
-        execAsync([`bash`, `-c`, `systemctl reboot`]).catch(print);
+        execAsync([`bash`, `-c`, `systemctl reboot || loginctl reboot`]).catch(print);
     }
     else if (args[0] == '>sleep') { // Sleep
-        execAsync([`bash`, `-c`, `systemctl suspend`]).catch(print);
+        execAsync([`bash`, `-c`, `systemctl suspend || loginctl suspend`]).catch(print);
     }
     else if (args[0] == '>logout') { // Log out
         execAsync([`bash`, `-c`, `pkill Hyprland || pkill sway`]).catch(print);
@@ -64,7 +78,7 @@ export function launchCustomCommand(command) {
 export function execAndClose(command, terminal) {
     App.closeWindow('overview');
     if (terminal) {
-        execAsync([`bash`, `-c`, `foot fish -C "${command}"`, `&`]).catch(print);
+        execAsync([`bash`, `-c`, `${userOptions.apps.terminal} fish -C "${command}"`, `&`]).catch(print);
     }
     else
         execAsync(command).catch(print);

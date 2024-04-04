@@ -1,8 +1,0 @@
-#!/usr/bin/env xdg-open
-[Desktop Entry]
-Name=Session
-Exec=/usr/bin/gnome-pie -o 143
-Encoding=UTF-8
-Type=Application
-Icon=system-log-out
-StartupWMClass=gnome-pie-143
