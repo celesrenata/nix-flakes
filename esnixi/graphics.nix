@@ -10,7 +10,13 @@
       enable = true;
       driSupport = true;
       driSupport32Bit = true;
-      extraPackages = with pkgs; [ vaapiVdpau libvdpau-va-gl nvidia-vaapi-driver mesa.drivers ];
+      extraPackages = with pkgs; [
+        vaapiVdpau
+        libvdpau-va-gl
+        nvidia-vaapi-driver
+        vulkan-validation-layers
+        mesa.drivers
+      ];
     };
 
     # Load nvidia driver for Xorg and Wayland
@@ -37,6 +43,6 @@
 
     #     patches = [ rcu_patch ];
     #   };
-    hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.vulkan_beta;
+    hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.beta;
   };
 }

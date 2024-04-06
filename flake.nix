@@ -43,6 +43,7 @@
           ./configuration.nix
           ./hardware-configuration.nix
           ./esnixi/boot.nix
+          ./esnixi/games.nix
           ./esnixi/graphics.nix
           ./esnixi/networking.nix
           ./esnixi/virtualisation.nix

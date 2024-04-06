@@ -70,6 +70,16 @@
     xwayland.enable = true;
   };
 
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-wlr
+      xdg-desktop-portal-hyprland
+    ];
+  };
+
   # Enable Location.
   services.geoclue2.enable = true;
 
@@ -157,7 +167,7 @@
   users.users.celes = {
     isNormalUser = true;
     description = "Celes Renata";
-    extraGroups = [ "networkmanager" "wheel" "input" "uinput" "render" "video" "audio" ];
+    extraGroups = [ "networkmanager" "wheel" "input" "uinput" "storage" "render" "video" "audio" ];
     packages = with pkgs; [
       firefox
     #  thunderbird
@@ -250,6 +260,7 @@
     wtype
     wl-clipboard
     xorg.xhost
+    vulkan-tools
     wev
 
     # GTK
