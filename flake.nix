@@ -68,6 +68,7 @@
           ./macland/graphics.nix
           ./macland/networking.nix
           ./macland/sound.nix
+          ./macland/thunderbolt.nix
           ./configuration.nix
           nixos-hardware.nixosModules.apple-t2
           ./hardware-configuration.nix
