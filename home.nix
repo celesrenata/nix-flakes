@@ -20,11 +20,66 @@
 
   # link all files in `./scripts` to `~/.config/i3/scripts`
   home.file.".config" = {
-    source = ./dotfiles/.config;
+    source = pkgs.end-4-dots;
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
-
+  home.file.".config/touchegg/touchegg.conf" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "celesrenata";
+      repo = "dotfiles";
+      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+    } + "/.config/touchegg/touchegg.conf";
+  };
+  home.file.".config/ags/scripts/windowstate/state.sh" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "celesrenata";
+      repo = "dotfiles";
+      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+    } + "/.config/ags/scripts/windowstate/state.sh";
+  };
+  home.file.".config/ags/scripts/templates/foot/foot.ini" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "celesrenata";
+      repo = "dotfiles";
+      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+    } + "/.config/ags/scripts/templates/foot/foot.ini";
+  };
+  home.file.".config/ags/scripts/templates/wofi/style.css" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "celesrenata";
+      repo = "dotfiles";
+      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+    } + "/.config/ags/scripts/templates/wofi/style.css";
+  };
+  home.file.".config/wofi/config" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "celesrenata";
+      repo = "dotfiles";
+      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+    } + "/.config/wofi/config";
+  };
+  home.file.".local/bin/initialSetup.sh" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "celesrenata";
+      repo = "dotfiles";
+      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+    } + "/.local/bin/initialSetup.sh";
+  };
+  home.file."Backgrounds/love-is-love.jpg" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "celesrenata";
+      repo = "dotfiles";
+      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+    } + "/love-is-love.jpg";
+  };
   # encode the file content in nix configuration file directly
   # home.file.".xxx".text = ''
   #     xxx
@@ -32,7 +87,7 @@
 
   # set cursor size and dpi for 4k monitor
   xresources.properties = {
-    "Xcursor.size" = 16;
+    "Xcursor.size" = 24;
     "Xft.dpi" = 172;
   };
 
@@ -148,6 +203,7 @@
     # Python
     pyenv.out
     (python311.withPackages(ps: with ps; [
+      materialyoucolor
       material-color-utilities
       pillow
       poetry-core
@@ -171,7 +227,7 @@
       python-hyprpy
       pycairo
     ]))
- 
+
     # Player and Audio
     pavucontrol
     wireplumber
@@ -223,7 +279,7 @@
     wlogout
     wl-clipboard
     hyprpicker
- 
+
     # Fonts
     fontconfig
     lexend

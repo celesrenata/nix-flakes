@@ -1,6 +1,0 @@
-allow_images=true
-allow_markup=true
-insensitive=true
-image_size=100
-prompt=Case insensitive search
-order=default
