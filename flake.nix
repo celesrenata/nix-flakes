@@ -29,6 +29,8 @@
         (import ./overlays/gnome-pie.nix)
         (import ./overlays/keyboard-visualizer.nix)
         (import ./overlays/toshy.nix)
+        (import ./overlays/materialyoucolor.nix)
+        (import ./overlays/end-4-dots.nix)
       ];
     };
   in {
