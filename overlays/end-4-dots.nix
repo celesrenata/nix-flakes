@@ -49,7 +49,7 @@ rec {
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.hyprland.general.conf.patch";
-        hash = "sha256-lUM0fM5dbgbAtH6v9Avz3s1thoO5FpVwAF3qb//4cqc=";
+        hash = "sha256-9hv5ZeUzMtER4Q39kMBIoQ3xuRNFl9B239fGhjgoANc=";
       })
 
     ];
