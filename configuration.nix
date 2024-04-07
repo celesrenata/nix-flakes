@@ -251,7 +251,13 @@
     wl-clipboard
     xorg.xhost
     wev
+    wf-recorder
+    ffmpeg
 
+    # Media
+    plex-media-player
+    jellyfin-media-player
+    
     # GTK
     gtk3
     gtk3.dev
