@@ -28,15 +28,15 @@
     source = pkgs.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dotfiles";
-      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
-      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
+      sha256 = "sha256-QcWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
     } + "/.config/touchegg/touchegg.conf";
   };
   home.file.".config/ags/scripts/windowstate/state.sh" = {
     source = pkgs.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dotfiles";
-      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
       sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
     } + "/.config/ags/scripts/windowstate/state.sh";
   };
@@ -44,7 +44,7 @@
     source = pkgs.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dotfiles";
-      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
       sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
     } + "/.config/ags/scripts/templates/foot/foot.ini";
   };
@@ -52,7 +52,7 @@
     source = pkgs.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dotfiles";
-      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
       sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
     } + "/.config/ags/scripts/templates/wofi/style.css";
   };
@@ -60,7 +60,7 @@
     source = pkgs.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dotfiles";
-      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
       sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
     } + "/.config/wofi/config";
   };
@@ -68,7 +68,7 @@
     source = pkgs.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dotfiles";
-      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
       sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
     } + "/.local/bin/initialSetup.sh";
   };
@@ -76,7 +76,7 @@
     source = pkgs.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dotfiles";
-      rev = "680eae508a4bb0dd6c6a287ab47a61e6d0e1b1c3";
+      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
       sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
     } + "/love-is-love.jpg";
   };
