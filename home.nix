@@ -29,7 +29,7 @@
       owner = "celesrenata";
       repo = "dotfiles";
       rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-QcWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
     } + "/.config/touchegg/touchegg.conf";
   };
   home.file.".config/ags/scripts/windowstate/state.sh" = {
@@ -37,7 +37,7 @@
       owner = "celesrenata";
       repo = "dotfiles";
       rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
     } + "/.config/ags/scripts/windowstate/state.sh";
   };
   home.file.".config/ags/scripts/templates/foot/foot.ini" = {
@@ -45,7 +45,7 @@
       owner = "celesrenata";
       repo = "dotfiles";
       rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
     } + "/.config/ags/scripts/templates/foot/foot.ini";
   };
   home.file.".config/ags/scripts/templates/wofi/style.css" = {
@@ -53,7 +53,7 @@
       owner = "celesrenata";
       repo = "dotfiles";
       rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
     } + "/.config/ags/scripts/templates/wofi/style.css";
   };
   home.file.".config/wofi/config" = {
@@ -61,7 +61,7 @@
       owner = "celesrenata";
       repo = "dotfiles";
       rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
     } + "/.config/wofi/config";
   };
   home.file.".local/bin/initialSetup.sh" = {
@@ -69,7 +69,7 @@
       owner = "celesrenata";
       repo = "dotfiles";
       rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
     } + "/.local/bin/initialSetup.sh";
   };
   home.file."Backgrounds/love-is-love.jpg" = {
@@ -77,7 +77,7 @@
       owner = "celesrenata";
       repo = "dotfiles";
       rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-QCWcOEfIwrFQ2ApeRAaLuYwyVH7gzc9eS+cKXpswiNU=";
+      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
     } + "/love-is-love.jpg";
   };
   # encode the file content in nix configuration file directly
