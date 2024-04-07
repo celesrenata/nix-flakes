@@ -13,7 +13,7 @@ rec {
     patches = (prev.patches or []) ++ [
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/applycolor.sh.patch";
-        hash = "sha256-5zRF4VuRXg3v3ePXVgQbdEZkMcMg5wBvTz8BP8cZByA=";
+        hash = "sha256-dxwn/o8QJOljoccG0o8cNvWKu8cLk5RBGmJhgmqEwto=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.data_keybinds.js.patch";
