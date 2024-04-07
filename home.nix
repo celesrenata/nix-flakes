@@ -1,4 +1,13 @@
-{ inputs, pkgs, ... }: {
+{ inputs, pkgs, ... }: 
+let
+  celes-dots = pkgs.fetchFromGitHub {
+    owner = "celesrenata";
+    repo = "dotfiles";
+    rev = "f2976a649ec2a23c8db0f41499065817720609e2";
+    sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
+  };
+  in
+  {
   imports = [ inputs.ags.homeManagerModules.default ];
 
   programs.ags = {
@@ -10,7 +19,7 @@
       accountsservice
     ];
   };
- 
+
   # TODO please change the username & home directory to your own
   home.username = "celes";
   home.homeDirectory = "/home/celes";
@@ -19,67 +28,34 @@
   # home.file.".config/i3/wallpaper.jpg".source = ./wallpaper.jpg;
 
   # link all files in `./scripts` to `~/.config/i3/scripts`
+
   home.file.".config" = {
     source = pkgs.end-4-dots;
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
   home.file.".config/touchegg/touchegg.conf" = {
-    source = pkgs.fetchFromGitHub {
-      owner = "celesrenata";
-      repo = "dotfiles";
-      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
-    } + "/.config/touchegg/touchegg.conf";
+    source = celes-dots + "/.config/touchegg/touchegg.conf";
   };
   home.file.".config/ags/scripts/windowstate/state.sh" = {
-    source = pkgs.fetchFromGitHub {
-      owner = "celesrenata";
-      repo = "dotfiles";
-      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
-    } + "/.config/ags/scripts/windowstate/state.sh";
+    source = celes-dots + "/.config/ags/scripts/windowstate/state.sh";
   };
   home.file.".config/ags/scripts/templates/foot/foot.ini" = {
-    source = pkgs.fetchFromGitHub {
-      owner = "celesrenata";
-      repo = "dotfiles";
-      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
-    } + "/.config/ags/scripts/templates/foot/foot.ini";
+    source = celes-dots + "/.config/ags/scripts/templates/foot/foot.ini";
   };
   home.file.".config/ags/scripts/templates/wofi/style.css" = {
-    source = pkgs.fetchFromGitHub {
-      owner = "celesrenata";
-      repo = "dotfiles";
-      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
-    } + "/.config/ags/scripts/templates/wofi/style.css";
+    source = celes-dots + "/.config/ags/scripts/templates/wofi/style.css";
   };
   home.file.".config/wofi/config" = {
-    source = pkgs.fetchFromGitHub {
-      owner = "celesrenata";
-      repo = "dotfiles";
-      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
-    } + "/.config/wofi/config";
+    source = celes-dots + "/.config/wofi/config";
   };
   home.file.".local/bin/initialSetup.sh" = {
-    source = pkgs.fetchFromGitHub {
-      owner = "celesrenata";
-      repo = "dotfiles";
-      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
-    } + "/.local/bin/initialSetup.sh";
+    source = celes-dots + "/.local/bin/initialSetup.sh";
   };
   home.file."Backgrounds/love-is-love.jpg" = {
-    source = pkgs.fetchFromGitHub {
-      owner = "celesrenata";
-      repo = "dotfiles";
-      rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-      sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
-    } + "/love-is-love.jpg";
+    source = celes-dots + "/love-is-love.jpg";
   };
+
   # encode the file content in nix configuration file directly
   # home.file.".xxx".text = ''
   #     xxx
