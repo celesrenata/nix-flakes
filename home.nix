@@ -3,8 +3,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "f2976a649ec2a23c8db0f41499065817720609e2";
-    sha256 = "sha256-VDUKImyEgHpqOtHhX/gdlXirrlHpjpeTbwxitiYfqE8=";
+    rev = "bef0ee728a1531d357e69dbebd49cf424f103a03";
+    sha256 = "sha256-pyBJZERwIiuMPMqjE8XTzzhGFRDA1C6xIlXomnylUB4=";
   };
   in
   {
