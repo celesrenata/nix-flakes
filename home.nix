@@ -199,7 +199,7 @@ let
       six
       hatchling
       python-xlib
-      python-keyszer
+      python-xwaykeyz
       python-hyprpy
       pycairo
     ]))
@@ -264,9 +264,9 @@ let
     bibata-cursors
 
     # Shells and Terminals
-    foot
     fish
     starship
+    foot
 
     # Themes
     adw-gtk3
