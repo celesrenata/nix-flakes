@@ -34,43 +34,80 @@ rec {
       sha256 = "sha256-dNg6CB9TK8B/bXr81kFuw4QD1o9oubncnh8o+/LXmek=";
     };
   };
-  python-keyszer-init = prev.python311.override {
+  dbus-python-init = prev.pkgs.python311Packages.dbus-python.overrideAttrs ( rec {
+    name = "dbus-python-${version}";
+    pname = "dbus-python";
+    version = "1.3.2";
+    src = prev.pkgs.fetchPypi {
+      inherit pname version;
+      sha256 = "sha256-rWeBkwhhi1BpU3viN/jmjKHH/Mle5KEh/mhFsUGCSPg=";
+  };
+  });
+  dbus-python = dbus-python-init.overrideAttrs ( rec {
+    name = "dbus-python-${version}";
+    pname = "dbus-python";
+    version = "1.3.2";
+    src = prev.pkgs.fetchPypi {
+      inherit pname version;
+      sha256 = "sha256-rWeBkwhhi1BpU3viN/jmjKHH/Mle5KEh/mhFsUGCSPg=";
+    };
+  });
+  python-xwaykeyz-init = prev.python311.override {
     packageOverrides = final: prev: {
-      python-keyszer = prev.buildPythonPackage rec {
-        pname = "keyszer";
-        version = "0.6.0";
+      python-xwaykeyz = prev.buildPythonPackage {
+        pname = "python-xwaykeyz";
+        version = "1.0.0";
         format = "pyproject";
         doCheck = false;
         BuildInputs = with prev.pkgs.python311Packages; [
+          python-xlib
           hatchling
           appdirs
+          final.dbus-python
           evdev
+          hyprpy
+          i3ipc
           inotify-simple
           ordered-set
-          python-xlib
+          pywayland
         ];
-        src = prev.fetchPypi {
-          inherit pname version;
-          sha256 = "sha256-xaR63lEJFZdS9FQSZ8Q4uIpXxXU4F/sRRfzwCcmac/M=";
+        propagatedBuildInputs = [
+          final.dbus-python
+        ];
+        src = prev.pkgs.fetchFromGitHub {
+          owner = "RedBearAK";
+          repo = "xwaykeyz";
+          rev = "335cf7490e286e981d11687a93d119b516482376";
+          sha256 = "sha256-JX8VLjEopH2MFf65hxKcjbRAPLtNLUh6dWm0pzh/hJg=";
         };
       };
     };
   };
-  python-keyszer = python-keyszer-init.pkgs.buildPythonPackage rec {
-    pname = "keyszer";
-    version = "0.6.0";
+  python-xwaykeyz = python-xwaykeyz-init.pkgs.buildPythonPackage {
+    pname = "python-xwaykeyz";
+    version = "1.0.0";
     format = "pyproject";
     doCheck = false;
-    nativeBuildInputs = with python-keyszer-init.pkgs; [
+    nativeBuildInputs = with python-xwaykeyz-init.pkgs; [
+      final.python-xlib
       hatchling
       appdirs
+      final.dbus-python
       evdev
+      final.python-hyprpy
+      final.python-i3ipc
       inotify-simple
       ordered-set
-      final.python-xlib
+      pywayland
     ];
-    src = python-keyszer-init.pkgs.fetchPypi {                                                           inherit pname version;
-      sha256 = "sha256-xaR63lEJFZdS9FQSZ8Q4uIpXxXU4F/sRRfzwCcmac/M=";
+    propagatedNativeBuildInputs = [
+      final.dbus-python
+    ];
+    src = prev.pkgs.fetchFromGitHub {
+      owner = "RedBearAK";
+      repo = "xwaykeyz";
+      rev = "335cf7490e286e981d11687a93d119b516482376";
+      sha256 = "sha256-JX8VLjEopH2MFf65hxKcjbRAPLtNLUh6dWm0pzh/hJg=";
     };
   };
 
@@ -182,7 +219,7 @@ rec {
   };
   python-toshy-init = prev.python311.override {
     packageOverrides = final: prev: {
-      keyszer = with prev.pkgs.python3Packages; toPythonApplication final.python-keyszer;
+      xwaykeyz = with prev.pkgs.python3Packages; toPythonApplication final.python-xwaykeyz;
       toshy = prev.buidPythonPackages {
         preBuild = ''
 cat > setup.py << EOF
@@ -200,47 +237,6 @@ setup(
     author_email='RedBearAK@github.com',
     description='Mac Keybindings for Linux'
 )
-EOF
-cat > requirements.txt << EOF
-# The Toshy installer upgrades these first, to avoid showing error messages in the log.
-pip
-wheel
-setuptools
-pillow
-pygobject
-
-# Standard packages required for the application.
-lockfile
-dbus-python
-systemd-python
-tk
-sv_ttk
-watchdog
-psutil
-hyprpy
-i3ipc
-pywayland
-
-# Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
-# pywlroots
-
-# All dependencies below here are to smooth out the installation of the custom
-# development branch of `keyszer` needed to make Toshy work.
-# Will leave these exposed here even if they are not technically 
-# direct dependencies of Toshy, since Toshy functionality 
-# depends entirely on `keyszer`.
-
-inotify-simple
-evdev
-appdirs
-ordered-set
-six
-
-# TODO: Check on 'python-xlib' project by early-mid 2024 for a bug fix related to:
-# [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-# If the bug is fixed, consider updating the version pinning.
-python-xlib==0.31
-keyszer==0.6.0
 EOF
         '';
         pname = "toshy";
@@ -278,7 +274,7 @@ EOF
           pywlroots
           pydantic
           final.python-xlib
-          python-keyszer
+          python-xwaykeyz
         ];
         nativeBuildInputs = with prev.pkgs; [
           gtk3
@@ -286,14 +282,14 @@ EOF
         ];
         dependencies = with prev.pkgs; [
           gtk3
-          python311Packages.python-keyszer
+          python311Packages.python-xwaykeyz
         ];
 
         src = prev.fetchFromGitHub {
           owner = "RedBearAK";
           repo = "toshy";
-          rev = "39ed934b9a700a58e796f7a45b9a8dbaabec393c";
-          sha256 = "sha256-ZpJti27TA0XXMCyBrguEKvlYI+SQvVmbQYKqbpiJWQk=";
+          rev = "4f528488aeae9a7def52b5a696458b4b310bc512";
+          sha256 = "sha256-ZpJti27TA0XXMCyBrguEKvLYI+SQvVmbQYKqbpiJWQk=";
         };
         installPhase = ''
           HOME=$TEMPDIR
@@ -315,7 +311,7 @@ EOF
     };
   };
       
-  keyszer = with prev.pkgs.python3Packages; toPythonApplication final.python-keyszer;
+  xwaykeyz = with prev.pkgs.python3Packages; toPythonApplication final.python-xwaykeyz;
   toshy = prev.pkgs.python311Packages.buildPythonApplication {
     preBuild = ''
 cat > setup.py << EOF
@@ -333,47 +329,6 @@ setup(
     author_email='RedBearAk@github.com',
     description='Mac Keybindings for Linux'
 )
-EOF
-cat > requirements.txt << EOF
-# The Toshy installer upgrades these first, to avoid showing error messages in the log.
-pip
-wheel
-setuptools
-pillow
-pygobject
-
-# Standard packages required for the application.
-lockfile
-dbus-python
-systemd-python
-tk
-sv_ttk
-watchdog
-psutil
-hyprpy
-i3ipc
-pywayland
-
-# Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
-# pywlroots
-
-# All dependencies below here are to smooth out the installation of the custom
-# development branch of `keyszer` needed to make Toshy work.
-# Will leave these exposed here even if they are not technically 
-# direct dependencies of Toshy, since Toshy functionality 
-# depends entirely on `keyszer`.
-
-inotify-simple
-evdev
-appdirs
-ordered-set
-six
-
-# TODO: Check on 'python-xlib' project by early-mid 2024 for a bug fix related to:
-# [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-# If the bug is fixed, consider updating the version pinning.
-python-xlib==0.31
-keyszer==0.6.0
 EOF
     '';
     pname = "toshy";
@@ -410,7 +365,7 @@ EOF
       pywlroots
       pydantic
       final.python-xlib
-      final.python-keyszer
+      final.python-xwaykeyz
     ];
     nativeBuildInputs = with prev.pkgs; [
       gtk3
@@ -418,7 +373,7 @@ EOF
     ];
     dependencies = [
       prev.pkgs.gtk3
-      keyszer
+      xwaykeyz
     ];
     installPhase = ''
       HOME=$TEMPDIR
