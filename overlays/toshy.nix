@@ -259,6 +259,8 @@ EOF
           evdev
           inotify-simple
           pillow
+          pkgs.gtk3
+          pkgs.wrapGAppsHook
           pygobject3
           lockfile
           dbus-python
@@ -278,6 +280,7 @@ EOF
         ];
         nativeBuildInputs = with prev.pkgs; [
           gtk3
+          gobject-introspection
           wrapGAppsHook
         ];
         dependencies = with prev.pkgs; [
@@ -288,8 +291,8 @@ EOF
         src = prev.fetchFromGitHub {
           owner = "RedBearAK";
           repo = "toshy";
-          rev = "4f528488aeae9a7def52b5a696458b4b310bc512";
-          sha256 = "sha256-ZpJti27TA0XXMCyBrguEKvLYI+SQvVmbQYKqbpiJWQk=";
+          rev = "f8e79efd1e67d287f699430e609b70eba6c9cbc1";
+          sha256 = "sha256-cU6827eQk+Yu0+hFV0lhRaPoTe9EzrFppOZoY1M0qUY=";
         };
         installPhase = ''
           HOME=$TEMPDIR
@@ -351,6 +354,8 @@ EOF
       six
       ordered-set
       pillow
+      pkgs.gtk3
+      pkgs.wrapGAppsHook
       pygobject3
       lockfile
       dbus-python
@@ -369,6 +374,7 @@ EOF
     ];
     nativeBuildInputs = with prev.pkgs; [
       gtk3
+      gobject-introspection
       wrapGAppsHook
     ];
     dependencies = [
@@ -394,8 +400,8 @@ EOF
     src = prev.pkgs.fetchFromGitHub {
       owner = "RedBearAK";
       repo = "toshy";
-      rev = "39ed934b9a700a58e796f7a45b9a8dbaabec393c";
-      sha256 = "sha256-ZpJti27TA0XXMCyBrguEKvlYI+SQvVmbQYKqbpiJWQk=";
+      rev = "f8e79efd1e67d287f699430e609b70eba6c9cbc1";
+      sha256 = "sha256-cU6827eQk+Yu0+hFV0lhRaPoTe9EzrFppOZoY1M0qUY=";
     }; 
   };
 }
