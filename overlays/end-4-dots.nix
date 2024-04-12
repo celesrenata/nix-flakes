@@ -41,11 +41,11 @@ rec {
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.keybinds.conf.patch";
-        hash = "sha256-e/LQmcNpkiyzmYY6Uc8mRsesg8PmhVCZm89tb3khlTg=";
+        hash = "sha256-Q/7cT2O3OJK5XtlG30tLT6GKisD357F8N8D3h8Tjrqg=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.general.conf.patch";
-        hash = "sha256-lUM0fM5dbgbAtH6v9Avz3s1thoO5FpVwAF3qb//4cQc=";
+        hash = "sha256-1B138v++TXzsK0pdL83XMIaIPM3xlf7YSeSDQT0/34E=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.hyprland.general.conf.patch";
