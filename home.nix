@@ -176,6 +176,9 @@ let
     gtksourceviewmm
     cairomm
 
+    # Other
+    graphviz
+
     # Python
     pyenv.out
     (python311.withPackages(ps: with ps; [
@@ -190,6 +193,7 @@ let
       psutil
       pydbus
       dbus-python
+      pygobject3
       watchdog
       pip
       evdev
@@ -223,6 +227,7 @@ let
     yad
     ydotool
     gobject-introspection
+    wrapGAppsHook
 
     # QT
     libsForQt5.qwt
@@ -255,6 +260,8 @@ let
     wlogout
     wl-clipboard
     hyprpicker
+    nwg-dock-hyprland
+    nwg-launchers
 
     # Fonts
     fontconfig

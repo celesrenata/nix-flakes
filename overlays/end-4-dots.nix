@@ -6,14 +6,14 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "dc6089976509b3e89911b51f84edd194abdd3012";
-      sha256 = "sha256-ORDLej0Kw8uU9deRUocN2s8nrdMC5isSyuQb6qYhRho=";
+      rev = "0d3fc19e572c69ecfc87d606c7f291c67315dae1";
+      sha256 = "sha256-LgBSN0PBhnvl/BfEQt80ClQBsdF2zhPPQcJORusgUVU=";
     };
 
     patches = (prev.patches or []) ++ [
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/applycolor.sh.patch";
-        hash = "sha256-dxwn/o8QJOljoccG0o8cNvWKu8cLk5RBGmJhgmqEwto=";
+        hash = "sha256-kltBCtkmxQeiCXAAZiuzQMHw2WwS02BSSaF6IME33ms=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.data_keybinds.js.patch";
@@ -37,7 +37,7 @@ rec {
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.execs.conf.patch";
-        hash = "sha256-/52kJyTLXVjYhCel/ZlNXMNBucPBeMBy6Wl1UXygT1s=";
+        hash = "sha256-Oa+muH7ptbXdne6lPGdyZZqW6N2uZkkhR9Wvr4O/vVg=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.keybinds.conf.patch";
@@ -50,6 +50,10 @@ rec {
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.hyprland.general.conf.patch";
         hash = "sha256-9hv5ZeUzMtER4Q39kMBIoQ3xuRNFl9B239fGhjgoANc=";
+      })
+      (prev.fetchpatch {
+        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/fish.config.fish.patch";
+        hash = "sha256-118vYJHSRHZ8g1zqXyrTJMR631i6QoJMoNZoQg5ZAE0=";
       })
 
     ];
@@ -64,8 +68,8 @@ rec {
       find qt5ct -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find wlogout -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find zshrc.d -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
-      install -m755 -D starship.toml $out/starship.toml
-      install -m755 -D thorium-flags.conf $out/thorium-flags.conf
+      install -m755 -D starship.toml $out/.config/starship.toml
+      install -m755 -D thorium-flags.conf $out/.config/thorium-flags.conf
     '';
   };
 }
