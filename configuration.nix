@@ -167,7 +167,6 @@
   # List packages installed in system profile. To search, run:
   # Enable Wayland for Electron.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
-  environment.variables.VDPAU_DRIVER = "va_gl";
 
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -245,6 +244,7 @@
     brightnessctl
     ydotool
     swww
+    hyprpaper
     fcitx5
     wlsunset
     wtype
@@ -252,7 +252,10 @@
     xorg.xhost
     wev
     wf-recorder
-    ffmpeg
+    ffmpeg_5-full
+    mkvtoolnix-cli
+    vulkan-tools
+    libva-utils
 
     # Media
     plex-media-player
@@ -277,6 +280,10 @@
     # Terminals.
     kitty
     foot
+
+    # Emulation
+    bottles
+    wine
 
     # Mac Sound.
     libspatialaudio
