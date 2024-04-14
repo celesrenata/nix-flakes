@@ -31,6 +31,7 @@
         (import ./overlays/toshy.nix)
         (import ./overlays/materialyoucolor.nix)
         (import ./overlays/end-4-dots.nix)
+        (import ./overlays/xivlauncher.nix)
       ];
     };
   in {

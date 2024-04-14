@@ -6,6 +6,12 @@ let
     rev = "bef0ee728a1531d357e69dbebd49cf424f103a03";
     sha256 = "sha256-pyBJZERwIiuMPMqjE8XTzzhGFRDA1C6xIlXomnylUB4=";
   };
+  wofi-calc = pkgs.fetchFromGitHub {
+    owner = "Zeioth";
+    repo = "wofi-calc";
+    rev = "edd316f3f40a6fcb2afadf5b6d9b14cc75a901e0";
+    sha256 = "sha256-y8GoTHm0zPkeXhYS/enNAIrU+RhrUMnQ41MdHWWTPas=";
+  };
   in
   {
   imports = [ inputs.ags.homeManagerModules.default ];
@@ -51,6 +57,9 @@ let
   };
   home.file.".local/bin/initialSetup.sh" = {
     source = celes-dots + "/.local/bin/initialSetup.sh";
+  };
+  home.file.".local/bin/wofi-calc" = {
+    source = wofi-calc + "/wofi-calc.sh";
   };
   home.file."Backgrounds/love-is-love.jpg" = {
     source = celes-dots + "/love-is-love.jpg";
@@ -173,6 +182,7 @@ let
     pciutils # lspci
     usbutils # lsusb
     toshy
+    wofi-calc
     openrgb-with-all-plugins
     KeyboardVisualizer
 
@@ -213,6 +223,7 @@ let
       python-xwaykeyz
       python-hyprpy
       pycairo
+      xkeysnail
     ]))
 
     # Player and Audio

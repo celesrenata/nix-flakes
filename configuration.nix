@@ -140,6 +140,24 @@
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput.enable = true;
+  services.keyd = {
+    enable = true;
+    keyboards.mac.settings = {
+      main = {
+        control = "layer(meta)";
+        meta = "layer(control)";
+        rightcontrol = "layer(meta)";
+      };
+      meta = {
+        left =  "C-left";
+        right = "C-right";
+      };
+    };
+    keyboards.mac.ids = [
+      "*"
+    ];
+  };
+
   services.touchegg.enable = true;
 
   # Steam.
@@ -256,6 +274,8 @@
     mkvtoolnix-cli
     vulkan-tools
     libva-utils
+    wofi
+    libqalculate
 
     # Media
     plex-media-player
