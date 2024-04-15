@@ -17,6 +17,8 @@
 11. `cp -r nix-flakes/* /mnt/etc/nixos/`
 11. Consider creating your own brance to track changes from my base code for things like, your username
 11. `sudo nixos-install --root /mnt --flake /mnt/etc/nixos#esnixi`
+11. `sudo nixos-enter`
+11. `sudo passwd celes`
 1. Reboot!
 1. `Ctrl + Alt + F7 + F6 + F7 + F1` :)
 1. Login as root and setup your user password
