@@ -147,10 +147,12 @@
         control = "layer(meta)";
         meta = "layer(control)";
         rightcontrol = "layer(meta)";
+        rightmeta = "layer(control)";
       };
       meta = {
-        left =  "C-left";
-        right = "C-right";
+        left =  "control-left";
+        right = "control-right";
+        space = "overload(meta, control-space)";
       };
     };
     keyboards.mac.ids = [

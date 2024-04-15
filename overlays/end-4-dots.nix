@@ -17,11 +17,11 @@ rec {
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.data_keybinds.js.patch";
-        hash = "sha256-zLCfjGJY0Acs4vDUnHsW+xClF3Z2jq5EE50pFP4lEHM=";
+        hash = "sha256-tvMdjrFMv+6GfCT3JgoJlCYAN5quzRfNhV2UAU+3/NY=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.main.js.patch";
-        hash = "sha256-emI+7p0Vmb3Unht9vH/YqCJ+EMyhUMhj+XcLcM1GyMA";
+        hash = "sha256-TCjs5rEZYyaTGbNUSoUJQOeHyY2UiSJlnuNVCNDePKc=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/data_keyboardlayouts.js.patch";
@@ -41,7 +41,7 @@ rec {
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.keybinds.conf.patch";
-        hash = "sha256-LWLoUgmSrddamN6G2WWgATPmEEUtYU6fJ0kCluG2sHk=";
+        hash = "sha256-Sed1E5oE1i3EH9mX/RrZDLDkNHOJ+rEurDHPJb1TIJU=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.general.conf.patch";
