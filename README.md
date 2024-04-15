@@ -20,9 +20,6 @@
 11. `sudo nixos-enter`
 11. `sudo passwd celes`
 1. Reboot!
-1. `Ctrl + Alt + F7 + F6 + F7 + F1` :)
-1. Login as root and setup your user password
-1. `pkill gdm`
 1. Login as your user, don't forget to select hyprland! englightment is a fallback.
 1. 'Command + Control + H' to start a terminal and run initial setup: `.local/bin/initialSetup.sh`
 1. 'Command + Option + /' to open the cheatsheet.
