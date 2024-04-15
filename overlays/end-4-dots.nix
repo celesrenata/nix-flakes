@@ -37,11 +37,11 @@ rec {
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.execs.conf.patch";
-        hash = "sha256-j2sWmiX1ymQ4U6GDAJ8qUofO3QgzeQbpbrKvCcnsBv4=";
+        hash = "sha256-Oa+muH7ptbXdne6lPGdyZZqW6N2uZkkhR9Wvr4O/vVg=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.keybinds.conf.patch";
-        hash = "sha256-Q/7cT2O3OJK5XtlG30tLT6GKisD357F8N8D3h8Tjrqg=";
+        hash = "sha256-LWLoUgmSrddamN6G2WWgATPmEEUtYU6fJ0kCluG2sHk=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.general.conf.patch";
