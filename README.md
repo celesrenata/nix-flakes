@@ -19,7 +19,9 @@
 11. `sudo nixos-install --root /mnt --flake /mnt/etc/nixos#esnixi`
 11. `sudo nixos-enter`
 11. `sudo passwd celes`
-1. Reboot!
+11. `sudo poweroff`
+1. Map your video cards pci addresses
+1. Boot the virt
 1. Login as your user, don't forget to select hyprland! englightment is a fallback.
 1. 'Command + Control + H' to start a terminal and run initial setup: `.local/bin/initialSetup.sh`
 1. 'Command + Option + /' to open the cheatsheet.
