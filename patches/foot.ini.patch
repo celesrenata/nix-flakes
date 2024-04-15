@@ -1,0 +1,26 @@
+--- /home/celes/sources/end-4/dots-hyprland/.config/foot/foot.ini	2024-03-03 00:22:06.260946689 -0800
++++ /home/celes/.config/foot/foot.ini	2024-03-03 20:56:23.227925625 -0800
+@@ -21,7 +21,7 @@
+ 
+ bold-text-in-bright=no
+ # word-delimiters=,│`|:"'()[]{}<>
+-# selection-target=primary
++selection-target=both
+ # workers=<number of logical CPUs>
+ 
+ [scrollback]
+ # preferred=server
+@@ -131,3 +131,13 @@
+ # select-word=BTN_LEFT-2
+ # select-word-whitespace=Control+BTN_LEFT-2
+ # select-row=BTN_LEFT-3
++
++[text-bindings]
++\x01 = Mod4+a
++\x03 = Mod4+c
++\x0C = Mod4+l
++\x0f = Mod4+w
++\x12 = Mod4+r
++\x1A = Mod4+z
++\x16 = Mod4+v
++\x18 = Mod4+x

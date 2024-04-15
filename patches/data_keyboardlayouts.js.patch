@@ -1,0 +1,23 @@
+--- /home/celes/sources/end-4/dots-hyprland/.config/ags/modules/onscreenkeyboard/data_keyboardlayouts.js	2024-03-03 20:27:25.570628926 -0800
++++ /.config/ags/modules/onscreenkeyboard/data_keyboardlayouts.js	2024-03-03 20:33:09.957304806 -0800
+@@ -103,11 +103,11 @@
+             ],
+             [
+                 { keytype: "modkey", label: "Ctrl", shape: "control", keycode: 29 },
+-                // { label: "Super", shape: "normal", keycode: 125 }, // dangerous
++                { keytype: "modkey", label: "Super", shape: "normal", keycode: 125 }, // dangerous
+                 { keytype: "modkey", label: "Alt", shape: "normal", keycode: 56 },
+                 { keytype: "normal", label: "Space", shape: "space", keycode: 57 },
+                 { keytype: "modkey", label: "Alt", shape: "normal", keycode: 100 },
+-                // { label: "Super", shape: "normal", keycode: 126 }, // dangerous
++                { keytype: "modkey", label: "Super", shape: "normal", keycode: 126 }, // dangerous
+                 { keytype: "normal", label: "Menu", shape: "normal", keycode: 139 },
+                 { keytype: "modkey", label: "Ctrl", shape: "control", keycode: 97 }
+             ]
+@@ -215,4 +215,4 @@
+             ]
+         ]
+     }
+-}
+\ No newline at end of file
++}

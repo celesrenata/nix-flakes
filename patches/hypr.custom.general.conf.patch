@@ -1,0 +1,21 @@
+--- a/.config/hypr/custom/general.conf
++++ b/.config/hypr/custom/general.conf
+@@ -1,2 +1,16 @@
+ # Put general config stuff here
+-# Here's a list of every variable: https://wiki.hyprland.org/Configuring/Variables/
+\ No newline at end of file
++# Here's a list of every variable: https://wiki.hyprland.org/Configuring/Variables/
++
++general {
++    sensitivity = 0.5
++}
++
++input {
++    scroll_factor = 0.6
++    accel_profile = adaptive
++}
++
++gestures {
++    workspace_swipe_fingers = 3
++}
++

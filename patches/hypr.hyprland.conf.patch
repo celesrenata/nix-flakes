@@ -1,0 +1,24 @@
+diff --git a/.config/hypr/hyprland.conf b/.config/hypr/hyprland.conf
+index 2a8706b..b91a20f 100644
+--- a/.config/hypr/hyprland.conf
++++ b/.config/hypr/hyprland.conf
+@@ -3,11 +3,9 @@
+ 
+ # Defaults
+ source=~/.config/hypr/hyprland/env.conf
+-source=~/.config/hypr/hyprland/execs.conf
+ source=~/.config/hypr/hyprland/general.conf
+ source=~/.config/hypr/hyprland/rules.conf
+ source=~/.config/hypr/hyprland/colors.conf
+-source=~/.config/hypr/hyprland/keybinds.conf
+ 
+ # Custom 
+ source=~/.config/hypr/custom/env.conf
+@@ -15,6 +13,7 @@ source=~/.config/hypr/custom/execs.conf
+ source=~/.config/hypr/custom/general.conf
+ source=~/.config/hypr/custom/rules.conf
+ source=~/.config/hypr/custom/keybinds.conf
++source=~/.config/hypr/custom/custom.conf
+ 
+ # Why is this even here?? cuz 🤓
+ debug { 

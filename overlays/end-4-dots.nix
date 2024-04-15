@@ -10,53 +10,66 @@ rec {
       sha256 = "sha256-LgBSN0PBhnvl/BfEQt80ClQBsdF2zhPPQcJORusgUVU=";
     };
 
-    patches = (prev.patches or []) ++ [
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/applycolor.sh.patch";
-        hash = "sha256-kltBCtkmxQeiCXAAZiuzQMHw2WwS02BSSaF6IME33ms=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.data_keybinds.js.patch";
-        hash = "sha256-tvMdjrFMv+6GfCT3JgoJlCYAN5quzRfNhV2UAU+3/NY=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.main.js.patch";
-        hash = "sha256-TCjs5rEZYyaTGbNUSoUJQOeHyY2UiSJlnuNVCNDePKc=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/data_keyboardlayouts.js.patch";
-        hash = "sha256-5u1urGWxs66/e3dqlYWu9tjHKmM45JkWexhYjRVdXrY=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/system.js.patch";
-        hash = "sha256-Lp71lv6RSEpgEw21m8mjWSVU7XYXpQgcd95rFaAhaG4=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.hyprland.conf.patch";
-        hash = "sha256-y8kkpWmF7Z4oYX1pz35lLKMqegD6pM++/Tqbc9VIBMg=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.execs.conf.patch";
-        hash = "sha256-j2sWmiX1ymQ4U6GDAJ8qUofO3QgzeQbpbrKvCcnsBv4=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.keybinds.conf.patch";
-        hash = "sha256-Sed1E5oE1i3EH9mX/RrZDLDkNHOJ+rEurDHPJb1TIJU=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.general.conf.patch";
-        hash = "sha256-1B138v++TXzsK0pdL83XMIaIPM3xlf7YSeSDQT0/34E=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.hyprland.general.conf.patch";
-        hash = "sha256-9hv5ZeUzMtER4Q39kMBIoQ3xuRNFl9B239fGhjgoANc=";
-      })
-      (prev.fetchpatch {
-        url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/fish.config.fish.patch";
-        hash = "sha256-118vYJHSRHZ8g1zqXyrTJMR631i6QoJMoNZoQg5ZAE0=";
-      })
-
+    patches = [
+      ../patches/applycolor.sh.patch
+      ../patches/cheatsheet.data_keybinds.js.patch
+      ../patches/cheatsheet.main.js.patch
+      ../patches/data_keyboardlayouts.js.patch
+      ../patches/system.js.patch
+      ../patches/hypr.hyprland.conf.patch
+      ../patches/hypr.custom.execs.conf.patch
+      ../patches/hypr.custom.keybinds.conf.patch
+      ../patches/hypr.custom.general.conf.patch
+      ../patches/hypr.hyprland.general.conf.patch
+      ../patches/fish.config.fish.patch
     ];
+    # patches = (prev.patches or []) ++ [
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/applycolor.sh.patch";
+    #     hash = "sha256-kltBCtkmxQeiCXAAZiuzQMHw2WwS02BSSaF6IME33ms=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.data_keybinds.js.patch";
+    #     hash = "sha256-zLCfjGJY0Acs4vDUnHsW+xClF3Z2jq5EE50pFP4lEHM=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/cheatsheet.main.js.patch";
+    #     hash = "sha256-emI+7p0Vmb3Unht9vH/YqCJ+EMyhUMhj+XcLcM1GyMA";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/data_keyboardlayouts.js.patch";
+    #     hash = "sha256-5u1urGWxs66/e3dqlYWu9tjHKmM45JkWexhYjRVdXrY=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/system.js.patch";
+    #     hash = "sha256-Lp71lv6RSEpgEw21m8mjWSVU7XYXpQgcd95rFaAhaG4=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.hyprland.conf.patch";
+    #     hash = "sha256-y8kkpWmF7Z4oYX1pz35lLKMqegD6pM++/Tqbc9VIBMg=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.execs.conf.patch";
+    #     hash = "sha256-Oa+muH7ptbXdne6lPGdyZZqW6N2uZkkhR9Wvr4O/vVg=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.keybinds.conf.patch";
+    #     hash = "sha256-LWLoUgmSrddamN6G2WWgATPmEEUtYU6fJ0kCluG2sHk=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.general.conf.patch";
+    #     hash = "sha256-1B138v++TXzsK0pdL83XMIaIPM3xlf7YSeSDQT0/34E=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.hyprland.general.conf.patch";
+    #     hash = "sha256-9hv5ZeUzMtER4Q39kMBIoQ3xuRNFl9B239fGhjgoANc=";
+    #   })
+    #   (prev.fetchpatch {
+    #     url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/fish.config.fish.patch";
+    #     hash = "sha256-118vYJHSRHZ8g1zqXyrTJMR631i6QoJMoNZoQg5ZAE0=";
+    #   })
+    #
+    #];
     installPhase = ''
       cd .config
       find ags -type f | grep -v "_material.scss" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
