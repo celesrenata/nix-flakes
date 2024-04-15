@@ -37,7 +37,7 @@ rec {
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.execs.conf.patch";
-        hash = "sha256-Oa+muH7ptbXdne6lPGdyZZqW6N2uZkkhR9Wvr4O/vVg=";
+        hash = "sha256-j2sWmiX1ymQ4U6GDAJ8qUofO3QgzeQbpbrKvCcnsBv4=";
       })
       (prev.fetchpatch {
         url = "https://raw.githubusercontent.com/celesrenata/dotfiles/nix-patches/hypr.custom.keybinds.conf.patch";
