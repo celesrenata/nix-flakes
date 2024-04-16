@@ -147,12 +147,10 @@
         control = "layer(meta)";
         meta = "layer(control)";
         rightcontrol = "layer(meta)";
-        rightmeta = "layer(control)";
       };
       meta = {
-        left =  "control-left";
-        right = "control-right";
-        space = "overload(meta, control-space)";
+        left =  "C-left";
+        right = "C-right";
       };
     };
     keyboards.mac.ids = [
@@ -171,6 +169,14 @@
     enable = true;
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+  };
+
+  # Remote Desktop
+  security.wrappers.sunshine = {
+      owner = "root";
+      group = "root";
+      capabilities = "cap_sys_admin+p";
+      source = "${pkgs.sunshine}/bin/sunshine";
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -278,6 +284,8 @@
     libva-utils
     wofi
     libqalculate
+    sunshine
+    moonlight-qt
 
     # Media
     plex-media-player
