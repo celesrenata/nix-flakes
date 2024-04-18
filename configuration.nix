@@ -151,6 +151,7 @@
       meta = {
         left =  "control-left";
         right = "control-right";
+        space = "control-space";
       };
     };
     keyboards.mac.ids = [
@@ -207,7 +208,6 @@
 
     # System Tools.
     btop
-    nvtop
     glxinfo
     blueman
     networkmanagerapplet
