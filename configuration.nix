@@ -282,6 +282,7 @@
     # Media
     plex-media-player
     jellyfin-media-player
+    kdenlive
     
     # GTK
     gtk3
