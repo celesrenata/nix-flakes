@@ -171,14 +171,6 @@
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
   };
 
-  # Remote Desktop
-  security.wrappers.sunshine = {
-      owner = "root";
-      group = "root";
-      capabilities = "cap_sys_admin+p";
-      source = "${pkgs.sunshine}/bin/sunshine";
-  };
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
     isNormalUser = true;

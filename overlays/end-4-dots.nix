@@ -17,13 +17,13 @@ rec {
       ../patches/data_keyboardlayouts.js.patch
       ../patches/system.js.patch
       ../patches/hypr.hyprland.conf.patch
+      ../patches/hypr.custom.env.conf.patch
       ../patches/hypr.custom.execs.conf.patch
       ../patches/hypr.custom.keybinds.conf.patch
       ../patches/hypr.custom.general.conf.patch
       ../patches/hypr.hyprland.general.conf.patch
       ../patches/fish.config.fish.patch
     ];
-    
     installPhase = ''
       cd .config
       find ags -type f | grep -v "_material.scss" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
