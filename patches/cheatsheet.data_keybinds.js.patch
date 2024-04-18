@@ -12,7 +12,7 @@
 -            { "keys": ["", "+", "PageUp"], "action": "Go to workspace on the left" },
 -            { "keys": ["", "+", "PageDown"], "action": "Go to workspace on the right" }
 +            { "keys": ["󰘳", "+", "#"], "action": "Go to workspace #" },
-+            { "keys": ["󰘳", "+", "S"], "action": "Toggle special workspace" },
++            { "keys": ["Ctrl", "󰘳", "+", "S"], "action": "Toggle special workspace" },
 +            { "keys": ["󰘳", "+", "(Scroll ↑↓)"], "action": "Go to workspace -1/+1" },
 +            { "keys": ["Ctrl", "󰘳", "+", "←"], "action": "Go to workspace on the left" },
 +            { "keys": ["Ctrl", "󰘳", "+", "→"], "action": "Go to workspace on the right" },
