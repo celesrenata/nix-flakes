@@ -149,8 +149,8 @@
         rightcontrol = "layer(meta)";
       };
       meta = {
-        left =  "C-left";
-        right = "C-right";
+        left =  "control-left";
+        right = "control-right";
       };
     };
     keyboards.mac.ids = [
