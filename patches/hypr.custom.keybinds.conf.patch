@@ -1,6 +1,6 @@
 --- a/.config/hypr/custom/keybinds.conf
 +++ b/.config/hypr/custom/keybinds.conf
-@@ -1,2 +1,228 @@
+@@ -1,2 +1,227 @@
 -# You can put your preferred keybinds here
 -# https://wiki.hyprland.org/Configuring/Binds/
 \ No newline at end of file
@@ -198,7 +198,6 @@
 +bind = $Secondary, 8, workspace, 8
 +bind = $Secondary, 9, workspace, 9
 +bind = $Secondary, 0, workspace, 10
-+bind = $Secondary, S, togglespecialworkspace,
 +bind = $Primary$Secondary, S, togglespecialworkspace,
 +bind = $Alternate, Tab, cyclenext
 +bind = $Alternate, Tab, bringactivetotop,   # bring it to the top
