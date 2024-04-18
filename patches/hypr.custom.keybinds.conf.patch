@@ -110,7 +110,7 @@
 +bindr = $Primary$Secondary, R, exec, hyprctl reload; pkill ags activewin.sh activews.sh gohypr bash ydotool; ags &
 +bind = $Primary$Secondary, T, exec, ~/.config/ags/scripts/color_generation/switchwall.sh
 +bind = $Alternate, Tab, exec, ags -t 'overview'
-+bind = $Primary, Space, exec, ags -t 'overview'
++bind = $Secondary, Space, exec, ags -t 'overview'
 +bind = $Secondary$Alternate, Slash, exec, ags -t 'cheatsheet0'
 +bind = $Secondary, B, exec, ags -t 'sideleft'
 +bind = $Secondary, N, exec, ags -t 'sideright'
