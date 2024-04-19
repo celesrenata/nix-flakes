@@ -1,6 +1,6 @@
 --- a/.config/hypr/custom/keybinds.conf
 +++ b/.config/hypr/custom/keybinds.conf
-@@ -1,2 +1,227 @@
+@@ -1,2 +1,228 @@
 -# You can put your preferred keybinds here
 -# https://wiki.hyprland.org/Configuring/Binds/
 \ No newline at end of file
@@ -49,6 +49,7 @@
 +
 +# calculator
 +bind = $Primary$Secondary, 3, exec, ~/.local/bin/wofi-calc
++bind = XF86Calculator, exec ~/.local/bin/wofi-calc
 +# Flux
 +bind = $Primary$Secondary, N, exec, gammastep -O +3000 &
 +bind = $Primary$Secondary$Alternate, N, exec, gammastep -0 +6500 &
