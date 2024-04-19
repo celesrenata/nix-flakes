@@ -15,6 +15,7 @@ rec {
       ../patches/cheatsheet.data_keybinds.js.patch
       ../patches/cheatsheet.main.js.patch
       ../patches/data_keyboardlayouts.js.patch
+      ../patches/sequences.txt.patch
       ../patches/system.js.patch
       ../patches/hypr.hyprland.conf.patch
       ../patches/hypr.custom.env.conf.patch
