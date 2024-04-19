@@ -92,9 +92,9 @@
 +
 +# Media
 +bind = $Secondary$Tertiary, N, exec, playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"`
-+bindl  = , XF86AudioNext,           exec, ags run-js "Mpris.getPlayer()?.next()"
-+bindl  = , XF86AudioPrev,           exec, ags run-js "Mpris.getPlayer()?.previous()"
-+bindl  = , XF86AudioPlay,           exec, ags run-js "Mpris.getPlayer()?.playPause()"
++bindl  = , XF86AudioNext,           exec, playerctl next 
++bindl  = , XF86AudioPrev,           exec, playerctl previous
++bindl  = , XF86AudioPlay,           exec, playerctl play-pause
 +bind = $Secondary$Tertiary, B, exec, playerctl previous
 +bind = $Secondary$Tertiary, P, exec, playerctl play-pause
 +
