@@ -49,7 +49,7 @@
 +
 +# calculator
 +bind = $Primary$Secondary, 3, exec, ~/.local/bin/wofi-calc
-+bind = ,XF86Calculator, exec ~/.local/bin/wofi-calc
++bind = ,XF86Calculator, exec, ~/.local/bin/wofi-calc
 +# Flux
 +bind = $Primary$Secondary, N, exec, gammastep -O +3000 &
 +bind = $Primary$Secondary$Alternate, N, exec, gammastep -0 +6500 &
