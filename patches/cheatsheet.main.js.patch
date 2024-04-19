@@ -4,7 +4,7 @@
                      Widget.Label({
                          vpack: 'center',
                          className: "cheatsheet-key txt-small",
--                        label: "",
+-                        label: "󰖳",
 +                        label: "󰘳",
 +                    }),
 +                    Widget.Label({

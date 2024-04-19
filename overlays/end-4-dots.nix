@@ -6,8 +6,8 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "0d3fc19e572c69ecfc87d606c7f291c67315dae1";
-      sha256 = "sha256-LgBSN0PBhnvl/BfEQt80ClQBsdF2zhPPQcJORusgUVU=";
+      rev = "75e73896adab30573d9efd71d0656e8a409b4efd";
+      sha256 = "sha256-GI0itmldpjofvllwCHMksvsZHQwmQ+JzovZC9fT3C/Q=";
     };
 
     patches = [
@@ -24,6 +24,7 @@ rec {
       ../patches/hypr.hyprland.general.conf.patch
       ../patches/fish.config.fish.patch
     ];
+    
     installPhase = ''
       cd .config
       find ags -type f | grep -v "_material.scss" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
