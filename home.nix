@@ -97,6 +97,11 @@ let
       jnoortheen.nix-ide
     ];
   };
+  programs.btop.settings = {
+    color_theme = "Default";
+    theme_background = false;
+  };
+  programs.fish.enable = true;
 
   # Packages that should be installed to the user profile.
   home.packages = with pkgs; [
@@ -105,6 +110,7 @@ let
 
     neofetch
     macchina
+    btop
     nnn # terminal file manager
 
     # archives
@@ -124,6 +130,7 @@ let
     firefox
     tidal-hifi
     discord
+    darktable
 
     # Extra Launchers.
 
@@ -289,7 +296,6 @@ let
     bibata-cursors
 
     # Shells and Terminals
-    fish
     starship
     foot
 
@@ -345,7 +351,7 @@ let
     enableCompletion = true;
     # TODO add your custom bashrc here
     bashrcExtra = ''
-      export PATH="$PATH:$HOME/bin:$HOME/.local/bin:$HOME/go/bin"
+      export PATH="$PATH:$HOME/bin:$HOME/.local/bin:$HOME/go/bin:"
     '';
 
     # set some aliases, feel free to add more or remove some
@@ -357,6 +363,13 @@ let
     sessionVariables = {
       EDITOR = "vim";
     };
+  };
+  
+  home.sessionPath = [
+    ".local/bin"
+  ];
+  home.sessionVariables = {
+    LD_LIBRARY_PATH = "/run/opengl-driver/lib";
   };
 
   # This value determines the home Manager release that your

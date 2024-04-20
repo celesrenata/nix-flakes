@@ -159,8 +159,12 @@
     ];
   };
 
+  # Gestures.
   services.touchegg.enable = true;
 
+  # Garbage Collection.
+  nix.optimise.automatic = true;
+ 
   # Steam.
   programs.steam.package = pkgs.steam.override {
     extraPkgs = pkgs: [ pkgs.steamcmd pkgs.glxinfo pkgs.steam-tui ];
@@ -207,7 +211,6 @@
     alsa-utils
 
     # System Tools.
-    btop
     glxinfo
     blueman
     networkmanagerapplet
