@@ -166,8 +166,14 @@
   nix.optimise.automatic = true;
  
   # Steam.
+  
   programs.steam.package = pkgs.steam.override {
-    extraPkgs = pkgs: [ pkgs.steamcmd pkgs.glxinfo pkgs.steam-tui ];
+    extraPkgs = pkgs: [
+      pkgs.steamcmd
+      pkgs.glxinfo
+      pkgs.steam-tui
+      #pkgs.proton-ge-bin
+    ];
   };
 
   programs.steam = {
@@ -218,6 +224,7 @@
     nix-index
     mlocate
     barrier
+    openssl
 
     # Shells.
     fish
@@ -312,6 +319,7 @@
     # Emulation
     bottles
     wine
+    protonup-qt
 
     # Mac Sound.
     libspatialaudio

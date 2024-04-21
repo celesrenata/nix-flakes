@@ -174,6 +174,7 @@ let
 
     # Gaming.
     antimicrox
+    #inputs.nix-gaming.nix-gaming
 
     # nix related
     #
