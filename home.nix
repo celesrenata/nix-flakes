@@ -103,6 +103,17 @@ let
   };
   programs.fish.enable = true;
 
+  # Obs.
+  programs.obs-studio = {
+    enable = true;
+    plugins = with pkgs.obs-studio-plugins; [
+      wlrobs
+      obs-backgroundremoval
+      obs-pipewire-audio-capture
+      obs-vaapi
+    ];
+  };
+
   # Packages that should be installed to the user profile.
   home.packages = with pkgs; [
     # here is some command line tools I use frequently
@@ -130,6 +141,7 @@ let
     firefox
     tidal-hifi
     discord
+    vesktop
     darktable
 
     # Extra Launchers.

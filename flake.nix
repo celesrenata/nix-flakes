@@ -7,6 +7,7 @@
     anyrun.url = "github:Kirottu/anyrun";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     #anyrun.inputs.nixpkgs.follows = "nixpkgs";
+    nix-gl-host.url = "github:numtide/nix-gl-host";
     nixgl.url = "github:nix-community/nixGL";
     ags.url = "github:Aylur/ags";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
@@ -14,7 +15,7 @@
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
 
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, nixgl, nix-vscode-extensions, nixos-hardware, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, nixgl, nix-gl-host, nix-vscode-extensions, nixos-hardware, ... }:
   let
     system = "x86_64-linux";
     lib = nixpkgs.lib;
@@ -29,9 +30,12 @@
         (import ./overlays/gnome-pie.nix)
         (import ./overlays/keyboard-visualizer.nix)
         (import ./overlays/toshy.nix)
+        (import ./overlays/sunshine.nix)
         (import ./overlays/materialyoucolor.nix)
         (import ./overlays/end-4-dots.nix)
+        (import ./overlays/wofi-calc.nix)
         (import ./overlays/xivlauncher.nix)
+        (import ./overlays/onnxruntime.nix)
       ];
     };
   in {
@@ -41,7 +45,9 @@
 	specialArgs = {
 	  inherit pkgs;
 	};
-        system.packages = [ anyrun.packages.${system}.anyrun ];
+        system.packages = [ anyrun.packages.${system}.anyrun
+                            nix-gl-host.defaultPackage.x86_64-linux
+                            nixgl.defaultPackage.x86_64-linux ];
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix

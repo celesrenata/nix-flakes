@@ -190,6 +190,7 @@
   # List packages installed in system profile. To search, run:
   # Enable Wayland for Electron.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment.sessionVariables.MOZ_ENABLE_WAYLAND = "1";
 
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -216,6 +217,7 @@
     networkmanagerapplet
     nix-index
     mlocate
+    barrier
 
     # Shells.
     fish

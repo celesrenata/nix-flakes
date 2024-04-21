@@ -1,4 +1,4 @@
-{ config, pkgs, nixpkgs,  ... }:
+{ config, lib, pkgs, nixpkgs,  ... }:
 {
   config = {
     # Remote Desktop
@@ -11,25 +11,44 @@
     nixpkgs.config = {
       sunshine = {
         cudaSupport = true;
+        cudaCapabilities = [ "12.4" ];
+        cudaEnableForwardCompat = true;
+        allowUnfree = true;
       };
       btop = {
         cudaSupport = true;
       };
+      onnxruntime = {
+        cudaSupport = true;
+      };
     };
+
     environment.sessionVariables.LIBVA_DRIVER_NAME = "nvidia";
     environment.variables.VDPAU_DRIVER = "nvidia";
+    services.avahi.publish.enable = true;
+    services.avahi.publish.userServices = true;
+    systemd.services.home-assistant.serviceConfig.DeviceAllow = ["/dev/dri/card0"];
+    # systemd.services."jellyfin".serviceConfig = {
+    #   DeviceAllow = pkgs.lib.mkForce [ "char-drm rw" "char-nvidia-frontend rw" "char-nvidia-uvm rw" ];
+    #   PrivateDevices = pkgs.lib.mkForce true;
+    #   RestrictAddressFamilies = pkgs.lib.mkForce [ "AF_UNIX" "AF_NETLINK" "AF_INET" "AF_INET6" ];
+    # };
+    systemd.services.ollama.serviceConfig.DynamicUser = lib.mkForce false;
     services.ollama = {
       enable = true;
       acceleration = "cuda";
+      models = "/opt/ollama/models";
     };
 
     environment.systemPackages = with pkgs; [
       libGL
-      sunshine
+      sunshineOverride
+      onnxruntimeOverride
       kdenlive
       nvtopPackages.full
+      cudaPackages.cudatoolkit
     ];
-hardware.opengl =
+    hardware.opengl =
     let
       fn = oa: {
         nativeBuildInputs = oa.nativeBuildInputs ++ [ pkgs.glslang ];
@@ -52,9 +71,9 @@ hardware.opengl =
     };
 
     # Load nvidia driver for Xorg and Wayland
-    services.xserver.videoDrivers = [ "nvidia" "libcuda" ];
+    services.xserver.videoDrivers = [ "nvidia" ];
     hardware.nvidia = {
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
+      package = config.boot.kernelPackages.nvidiaPackages.production;
       modesetting.enable = true;
       powerManagement.enable = false;
       
