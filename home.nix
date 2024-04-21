@@ -139,7 +139,9 @@ let
 
     # programs
     firefox
+    chromium
     tidal-hifi
+    cider
     discord
     vesktop
     darktable
