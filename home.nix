@@ -3,8 +3,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "bef0ee728a1531d357e69dbebd49cf424f103a03";
-    sha256 = "sha256-pyBJZERwIiuMPMqjE8XTzzhGFRDA1C6xIlXomnylUB4=";
+    rev = "8cbecf5026219053d8c0ffccc21b790331c1ae1e";
+    sha256 = "sha256-a5C662fx7wTmP09lEwnbveHwsJXtwCycaJV6NOOmfoo=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -174,7 +174,6 @@ let
 
     # Gaming.
     antimicrox
-    #inputs.nix-gaming.nix-gaming
 
     # nix related
     #
