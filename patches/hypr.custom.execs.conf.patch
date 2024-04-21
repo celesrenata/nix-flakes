@@ -15,7 +15,7 @@
 +
 +# Input method
 +exec-once = fcitx5
-+exec = ~/.local/bin/toshy-tray
++exec-once = ~/.local/bin/initialSetup.sh
 +exec = wlsunset -l 47.6 -L -122.3
 +# Core components (authentication, lock screen, notification daemon)
 +exec-once = dbus-update-activation-environment --all &
