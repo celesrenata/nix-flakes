@@ -39,7 +39,7 @@ rec {
   wofi-calc = prev.stdenv.mkDerivation {
     pname = "wofi-calc";
     version = "1.1";
-    src =  pkgs.fetchFromGitHub {
+    src =  prev.fetchFromGitHub {
       owner = "Zeioth";
       repo = "wofi-calc";
       rev = "edd316f3f40a6fcb2afadf5b6d9b14cc75a901e0";
