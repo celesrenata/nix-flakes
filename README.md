@@ -23,5 +23,5 @@
 1. Map your video cards pci addresses
 1. Boot the virt
 1. Login as your user, don't forget to select hyprland! englightment is a fallback.
-1. 'Command + Control + H' to start a terminal and run initial setup: `.local/bin/initialSetup.sh`
+1. Initial setup will automatically start, in the file manager, click on Home > Backgrounds > love-is-love.jpg
 1. 'Command + Option + /' to open the cheatsheet.
