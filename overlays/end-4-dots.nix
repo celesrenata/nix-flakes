@@ -6,8 +6,8 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "75e73896adab30573d9efd71d0656e8a409b4efd";
-      sha256 = "sha256-GI0itmldpjofvllwCHMksvsZHQwmQ+JzovZC9fT3C/Q=";
+      rev = "ced3823270fcee9cf9de7b5b25b25db3f7dc9012";
+      sha256 = "sha256-dGZQpcJ1wrWCYBJJK/szOIW6AsqTZHYVkz3EiCwYyqc=";
     };
 
     patches = [
@@ -15,6 +15,7 @@ rec {
       ../patches/cheatsheet.data_keybinds.js.patch
       ../patches/cheatsheet.main.js.patch
       ../patches/data_keyboardlayouts.js.patch
+      ../patches/user_options.js.patch
       ../patches/sequences.txt.patch
       ../patches/system.js.patch
       ../patches/hypr.hyprland.conf.patch
