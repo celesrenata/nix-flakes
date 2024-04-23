@@ -10,6 +10,7 @@
   # Inscure packages allowed.
   nixpkgs.config.permittedInsecurePackages = [
     "python-2.7.18.7"
+    #"openssl-1.1.1w"
   ];
 
   imports =
@@ -197,6 +198,9 @@
   # Enable Wayland for Electron.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
   environment.sessionVariables.MOZ_ENABLE_WAYLAND = "1";
+  environment.interactiveShellInit = ''
+    alias cider_gl='env -u NIXOS_OZONE_WL cider --use-gl=desktop'
+  '';
 
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -253,6 +257,7 @@
     nixStatic.dev
     node2nix
     nil
+    #aws-workspaces
 
     # Session.
     polkit

@@ -14,7 +14,8 @@ let
   };
   in
   {
-  imports = [ inputs.ags.homeManagerModules.default ];
+  imports = [ inputs.ags.homeManagerModules.default
+              inputs.lan-mouse.homeManagerModules.default ];
 
   programs.ags = {
     enable = true;
@@ -216,6 +217,7 @@ let
 
     # Other
     graphviz
+    jetbrains-toolbox
 
     # Python
     pyenv.out
@@ -360,12 +362,17 @@ let
     };
   };
 
+  programs.lan-mouse = {
+    enable = true;
+  };
+
   programs.bash = {
     enable = true;
     enableCompletion = true;
     # TODO add your custom bashrc here
     bashrcExtra = ''
       export PATH="$PATH:$HOME/bin:$HOME/.local/bin:$HOME/go/bin:"
+      alias cider_gl='env -u NIXOS_OZONE_WL cider --use-gl=desktop'
     '';
 
     # set some aliases, feel free to add more or remove some
