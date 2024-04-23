@@ -6,7 +6,9 @@
     home-manager.url = "github:nix-community/home-manager";
     anyrun.url = "github:Kirottu/anyrun";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    lan-mouse.url = "github:feschber/lan-mouse";
     #anyrun.inputs.nixpkgs.follows = "nixpkgs";
+    nix-gaming.url = "github:fufexan/nix-gaming";
     nix-gl-host.url = "github:numtide/nix-gl-host";
     nixgl.url = "github:nix-community/nixGL";
     ags.url = "github:Aylur/ags";
@@ -15,7 +17,7 @@
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
 
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, nixgl, nix-gl-host, nix-vscode-extensions, nixos-hardware, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, lan-mouse, nix-gaming, nixgl, nix-gl-host, nix-vscode-extensions, nixos-hardware, ... }:
   let
     system = "x86_64-linux";
     lib = nixpkgs.lib;
@@ -47,7 +49,10 @@
 	};
         system.packages = [ anyrun.packages.${system}.anyrun
                             nix-gl-host.defaultPackage.x86_64-linux
-                            nixgl.defaultPackage.x86_64-linux ];
+                            nixgl.defaultPackage.x86_64-linux
+                            nix-gaming.packages.${system}
+                            inputs.lan-mouse.packages.${system}
+                          ];
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix
