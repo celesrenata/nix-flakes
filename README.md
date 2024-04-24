@@ -24,4 +24,6 @@
 1. Boot the virt
 1. Login as your user, don't forget to select hyprland! englightment is a fallback.
 1. Initial setup will automatically start, in the file manager, click on Home > Backgrounds > love-is-love.jpg
+1. Type 'Command + Control + R' to reset AGS and hyprland after adding all the dynamic files
+1. Click the top right corner and reboot!
 1. 'Command + Option + /' to open the cheatsheet.
