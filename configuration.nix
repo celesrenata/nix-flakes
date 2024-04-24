@@ -290,6 +290,7 @@
     libqalculate
     sunshine
     moonlight-qt
+    xfce.thunar
 
     # Media
     plex-media-player
