@@ -39,7 +39,7 @@
 +exec=touchegg
 +
 +# Bluetooth
-+exec-once=blueman-applet
++exec-once=blueman-tray
 +#exec-once=antimicrox --tray --hidden
 +
 +# Allow GPU enabled XWayland applications that MUST run as root
