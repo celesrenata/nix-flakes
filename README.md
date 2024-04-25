@@ -11,7 +11,8 @@
 11. `nix-shell -p git`
 1. Follow the setup guide at https://nixos.wiki/wiki/NixOS_Installation_Guide stop before **NixOS config**
 11. `sudo nixos-generate-config --root /mnt`
-11. `mkdir -p /mnt/sources`
+11. `sudo mkdir -p /mnt/sources`
+11. `sudo chown 1000:100 /mnt/sources`
 11. `cd /mnt/sources`
 11. `git clone https://github.com/celesrenata/nix-flakes`
 11. `cp -r nix-flakes/* /mnt/etc/nixos/`
