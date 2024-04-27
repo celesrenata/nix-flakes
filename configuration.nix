@@ -20,7 +20,12 @@
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # Bootloader.
+  # boot.loader.systemd-boot.enable = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
+  #boot.kernelPackages = lib.mkForce pkgs.linuxPackages_6_6;
   boot.plymouth.enable = true;
+  # Use the Grub EFI boot loader.
 
   # Udev rules.
   hardware.uinput.enable = true;
@@ -55,6 +60,9 @@
   # Enable the Enlightenment Desktop Environment.
   services.xserver.desktopManager.enlightenment.enable = true;
 
+  # Enable OpenRGB.
+  #services.hardware.openrgb.enable = true;
+
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
@@ -67,9 +75,6 @@
 
   # Enable acpid
   services.acpid.enable = true;
-
-  # Argonone.
-  services.hardware.argonone.enable = true;
 
   # Configure keymap in X11
   services.xserver = {
@@ -160,6 +165,23 @@
   # Garbage Collection.
   nix.optimise.automatic = true;
  
+  # Steam.
+  
+  programs.steam.package = pkgs.steam.override {
+    extraPkgs = pkgs: [
+      pkgs.steamcmd
+      pkgs.glxinfo
+      pkgs.steam-tui
+      #pkgs.proton-ge-bin
+    ];
+  };
+
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+  };
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
     isNormalUser = true;
@@ -211,25 +233,25 @@
 
     # Development Tools.
     git
-#    nodejs_21
-#    meson
-#    gcc13
-#    cmake
-#    pkg-config
-#    glib.dev
-#    glib
-#    glibc.dev
-#    gobject-introspection.dev
-#    pango.dev
-#    harfbuzz.dev
-#    cairo.dev
-#    gdk-pixbuf.dev
-#    atk.dev
-#    libpulseaudio.dev
-#    typescript
-#    ninja
-#    nixStatic.dev
-#    node2nix
+    nodejs_21
+    meson
+    gcc13
+    cmake
+    pkg-config
+    glib.dev
+    glib
+    glibc.dev
+    gobject-introspection.dev
+    pango.dev
+    harfbuzz.dev
+    cairo.dev
+    gdk-pixbuf.dev
+    atk.dev
+    libpulseaudio.dev
+    typescript
+    ninja
+    nixStatic.dev
+    node2nix
     nil
 
     # Session.
@@ -274,10 +296,6 @@
     plex-media-player
     jellyfin-media-player
     kdenlive
-    (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
-      inputstream-adaptive
-      inputstream-ffmpegdirect
-    ]))
     
     # GTK
     gtk3
@@ -300,6 +318,9 @@
     foot
 
     # Emulation
+    bottles
+    wine
+    protonup-qt
 
     # Mac Sound.
     libspatialaudio

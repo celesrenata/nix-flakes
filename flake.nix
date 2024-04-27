@@ -7,25 +7,26 @@
     anyrun.url = "github:Kirottu/anyrun";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     #anyrun.inputs.nixpkgs.follows = "nixpkgs";
-    #nix-gl-host.url = "github:numtide/nix-gl-host";
-    #nixgl.url = "github:nix-community/nixGL";
+    nix-gl-host.url = "github:numtide/nix-gl-host";
+    nixgl.url = "github:nix-community/nixGL";
     ags.url = "github:Aylur/ags";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     dream2nix.url = "github:nix-community/dream2nix";
-    #nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
+    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
 
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, nixos-hardware, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, nixgl, nix-gl-host, nix-vscode-extensions, nixos-hardware, ... }:
   let
-    system = "aarch64-linux";
+    system = "x86_64-linux";
     lib = nixpkgs.lib;
     pkgs = import inputs.nixpkgs {
       inherit system;
       config.allowUnfree = true;
       config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-        "vscode"
+        "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run"
       ];
       overlays = [
+        nixgl.overlay
         (import ./overlays/gnome-pie.nix)
         (import ./overlays/keyboard-visualizer.nix)
         (import ./overlays/toshy.nix)
@@ -39,20 +40,47 @@
     };
   in {
     nixosConfigurations = {
-      nixberry = nixpkgs.lib.nixosSystem {
+      esnixi = nixpkgs.lib.nixosSystem {
         #inherit system;
 	specialArgs = {
 	  inherit pkgs;
 	};
-        system.packages = [ anyrun.packages.${system}.anyrun ];
-                            #nix-gl-host.defaultPackage.${system}
-                            #nixgl.defaultPackage.${system} ];
+        system.packages = [ anyrun.packages.${system}.anyrun
+                            nix-gl-host.defaultPackage.x86_64-linux
+                            nixgl.defaultPackage.x86_64-linux ];
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix
-          ./nixberry/boot.nix
-          ./nixberry/graphics.nix
-          ./nixberry/networking.nix
+          ./esnixi/boot.nix
+          ./esnixi/games.nix
+          ./esnixi/graphics.nix
+          ./esnixi/networking.nix
+          ./esnixi/virtualisation.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.users.celes = import ./home.nix;
+          }
+        ];
+      };
+      macland = nixpkgs.lib.nixosSystem { 
+        specialArgs = {
+          inherit pkgs;
+        };
+        
+        system.packages = [ anyrun.packages.${system}.anyrun  ];
+        modules = [
+          ./macland/boot.nix
+          ./macland/cpu.nix
+          ./macland/graphics.nix
+          ./macland/networking.nix
+          ./macland/sound.nix
+          ./macland/thunderbolt.nix
+          ./configuration.nix
+          nixos-hardware.nixosModules.apple-t2
+          ./hardware-configuration.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
