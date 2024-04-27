@@ -18,7 +18,8 @@
 11. `mount /dev/mmcblk0p1 /mnt/boot`
 11. `nixos-generate-config --root /mnt`
 11. `vim /mnt/etc/nixos/configuration.nix`
-111. ```
+11.
+```
 # Edit this configuration file to define what should be installed on
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
@@ -46,12 +47,6 @@
     settings.General.EnableNetworkConfiguration = true;
   };
 
-  fileSystems."/mnt/backups" = {
-    device = "192.168.42.8:/volume2/Backups";
-    fsType = "nfs";
-    options = [ "x-systemd.automount" "noauto" ];
-  };
-
   time.timeZone = "America/Los_Angeles";
 
   environment.systemPackages = with pkgs; [
@@ -77,17 +72,14 @@
     displayManager.gdm.enable = true;
     desktopManager.enlightenment.enable = true;
   };
-  programs.hyprland = {
-    enable = true;
-    xwayland.enable = true;
-  };
 
   system.stateVersion = "24.05"; # Did you read the comment?
 
 }
 ```
-111. `vim /boot/config.txt` ### Your mileage may vary
-111. ```
+19. `vim /boot/config.txt` ### Your mileage may vary
+20.
+```
 armstub=RPI_EFI.fd
 device_tree_address=0x1f0000
 device_tree_end=0x210000
@@ -117,9 +109,9 @@ dtparam=pciex1_gen=3
 
 dtoverlay=vc4-kms-v3d-pi5
 ```
-111. copy the overlay directory you got from raspberrypi's github to boot as `/boot/overlay`
-111. nixos-install --root /mnt
-111. Go find something else to do for the next 2 hours as it builds
+21. copy the overlay directory you got from raspberrypi's github to boot as `/boot/overlay`
+22. nixos-install --root /mnt
+23. Go find something else to do for the next 2 hours as it builds
 
 1. Set your password and reboot
 1. Break into the UEFI and locate Device Tree mode,
@@ -132,7 +124,7 @@ dtoverlay=vc4-kms-v3d-pi5
 11. `git checkout rpi5`
 11. `cp -r * /etc/nixos/`
 11. `mkdir /mnt`
-1. Repeat partitioning steps on NVME, if ya got it, otherwise the next step is going to take forever and abuse your SD card.
+1. Repeat partitioning steps on NVME, if ya got it, otherwise the next step is going to take forever and abuse your SD card. Or if you want even more performance, check out using btrfs on your nvme! https://nixos.wiki/wiki/Btrfs
 1. `sudo nixos-install --root /mnt --flake /etc/nixos#nixberry --impure`
 1. `nixos-enter --root /mnt`
 11. `passwd celes`
