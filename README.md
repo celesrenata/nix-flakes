@@ -100,7 +100,7 @@ usb_max_current_enable=1
 over_voltage=delta=50000
 arm_freq=2800
 gpu_freq=950
-armboost=1
+arm_boost=1
 
 # Hardware Interfaces
 dtparam=i2c_arm=on
