@@ -3,8 +3,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "8cbecf5026219053d8c0ffccc21b790331c1ae1e";
-    sha256 = "sha256-a5C662fx7wTmP09lEwnbveHwsJXtwCycaJV6NOOmfoo=";
+    rev = "7fe84dc6c54cb10e57f697b3dcbdd76619cb6e73";
+    sha256 = "sha256-LoRHQWsxXo6fsmS4rVyZ4dhT3eHk40c3OvxrVXmhfGo=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -56,7 +56,7 @@ let
     source = celes-dots + "/.config/wofi/config";
   };
   home.file.".local/bin/initialSetup.sh" = {
-    source = celes-dots + "/.local/bin/initialSetup.sh";
+    source = celes-dots + "/.local/bin/initialSetupRPI5.sh";
   };
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
@@ -88,10 +88,10 @@ let
   programs.vscode = {
     enable = true;
     extensions = with pkgs.vscode-extensions; [
-      #dracula-theme.theme-dracula
+      dracula-theme.theme-dracula
       #vscodevim.vim
-      #yzhang.markdown-all-in-one
-      ms-python.python
+      yzhang.markdown-all-in-one
+      #ms-python.python
       oderwat.indent-rainbow
       eamodio.gitlens
       jnoortheen.nix-ide
@@ -104,15 +104,15 @@ let
   programs.fish.enable = true;
 
   # Obs.
-  programs.obs-studio = {
-    enable = true;
-    plugins = with pkgs.obs-studio-plugins; [
-      wlrobs
-      obs-backgroundremoval
-      obs-pipewire-audio-capture
-      obs-vaapi
-    ];
-  };
+  #programs.obs-studio = {
+  #  enable = true;
+  #  plugins = with pkgs.obs-studio-plugins; [
+  #    #wlrobs
+  #    obs-backgroundremoval
+  #    obs-pipewire-audio-capture
+  #    obs-vaapi
+  #  ];
+  #};
 
   # Packages that should be installed to the user profile.
   home.packages = with pkgs; [
@@ -140,10 +140,7 @@ let
     # programs
     firefox
     chromium
-    tidal-hifi
-    cider
-    discord
-    vesktop
+    armcord
     darktable
 
     # Extra Launchers.
