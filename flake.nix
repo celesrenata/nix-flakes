@@ -8,7 +8,6 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     #anyrun.inputs.nixpkgs.follows = "nixpkgs";
     #nix-gl-host.url = "github:numtide/nix-gl-host";
-    #nixgl.url = "github:nix-community/nixGL";
     ags.url = "github:Aylur/ags";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     dream2nix.url = "github:nix-community/dream2nix";
@@ -22,9 +21,13 @@
     pkgs = import inputs.nixpkgs {
       inherit system;
       config.allowUnfree = true;
+      config.permittedInsecurePackages = [
+        "openssl-1.1.1w"
+      ];
       config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
         "vscode"
       ];
+      config.allowUnsupportedSystem = true;
       overlays = [
         (import ./overlays/gnome-pie.nix)
         (import ./overlays/keyboard-visualizer.nix)
@@ -33,7 +36,8 @@
         (import ./overlays/materialyoucolor.nix)
         (import ./overlays/end-4-dots.nix)
         (import ./overlays/wofi-calc.nix)
-        (import ./overlays/xivlauncher.nix)
+        (import ./overlays/box64.nix)
+        (import ./overlays/argononed.nix)
         (import ./overlays/onnxruntime.nix)
       ];
     };
@@ -44,13 +48,14 @@
 	specialArgs = {
 	  inherit pkgs;
 	};
-        system.packages = [ anyrun.packages.${system}.anyrun ];
-                            #nix-gl-host.defaultPackage.${system}
-                            #nixgl.defaultPackage.${system} ];
+        system.packages = [ anyrun.packages.${system}.anyrun
+                          ];
+        
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix
           ./nixberry/boot.nix
+          ./nixberry/cpu.nix
           ./nixberry/graphics.nix
           ./nixberry/networking.nix
           home-manager.nixosModules.home-manager
