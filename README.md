@@ -1,6 +1,5 @@
-# ESXi Flakes for Nvidia passthroughs
-# &
-# Mac T2 Flakes
+# ESXi  for Nvidia passthroughs / Mac T2 / RPI5 Flakes
+* RPI5 flakes please switch to RPI5 branch
 
 ## Installation
 1. Boot virtual machine to netboot.xyz
