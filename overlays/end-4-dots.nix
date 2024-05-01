@@ -27,6 +27,7 @@ rec {
     ];
     
     installPhase = ''
+      install -m755 -D .local/bin/fuzzel-emoji $out/.local/bin/fuzzel-emoji
       cd .config
       find ags -type f | grep -v "_material.scss" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find anyrun -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash

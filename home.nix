@@ -67,6 +67,9 @@ let
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
+  home.file.".local/bin/fuzzel-emoji" = {
+    source = pkgs.end-4-dots + "/.local/bin/fuzzel-emoji";
+  };
   home.file."Backgrounds/love-is-love.jpg" = {
     source = celes-dots + "/love-is-love.jpg";
   };

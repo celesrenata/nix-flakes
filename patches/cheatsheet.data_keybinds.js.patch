@@ -29,10 +29,10 @@
 -            { "keys": ["󰖳", "Alt", "+", "S"], "action": "Move window to special workspace" },
 -            { "keys": ["󰖳", "Alt", "+", "PageUp"], "action": "Move window to workspace on the left" },
 -            { "keys": ["󰖳", "Alt", "+", "PageDown"], "action": "Move window to workspace on the right" }
-+            { "keys": ["󰘳", "Alt", "+", "#"], "action": "Move window to workspace #" },
-+            { "keys": ["󰘳", "Alt", "+", "S"], "action": "Move window to special workspace" },
-+            { "keys": ["󰘳", "Alt", "+", "PageUp"], "action": "Move window to workspace on the left" },
-+            { "keys": ["󰘳", "Alt", "+", "PageDown"], "action": "Move window to workspace on the right" }
++            { "keys": ["󰘳", "⌥", "+", "#"], "action": "Move window to workspace #" },
++            { "keys": ["󰘳", "⌥", "+", "S"], "action": "Move window to special workspace" },
++            { "keys": ["󰘳", "⌥", "+", "PageUp"], "action": "Move window to workspace on the left" },
++            { "keys": ["󰘳", "⌥", "+", "PageDown"], "action": "Move window to workspace on the right" }
          ],
          "id": 2
      },
@@ -55,7 +55,7 @@
 +            { "keys": ["󰘳", "+", "Lmb"], "action": "Move window" },
 +            { "keys": ["󰘳", "+", "Rmb"], "action": "Resize window" },
 +            { "keys": ["󰘳", "+", "F"], "action": "Fullscreen" },
-+            { "keys": ["󰘳", "Alt", "+", "F"], "action": "Fake fullscreen" }
++            { "keys": ["󰘳", "⌥", "+", "F"], "action": "Fake fullscreen" }
          ],
          "id": 3
      }
@@ -69,17 +69,18 @@
 -            { "keys": ["󰖳", "+", "N"], "action": "Toggle system sidebar" },
 -            { "keys": ["󰖳", "+", "B", "OR", "󰖳", "+", "O"], "action": "Toggle utilities sidebar" },
 -            { "keys": ["󰖳", "+", "K"], "action": "Toggle virtual keyboard" },
+-            { "keys": ["Ctrl", "Alt", "+", "Del"], "action": "Power/Session menu" },
 +            { "keys": ["󰘳", "OR", "󰘳", "+", "Tab"], "action": "Toggle overview/launcher" },
 +            { "keys": ["Ctrl", "󰘳", "+", "R"], "action": "Restart AGS" },
 +            { "keys": ["󰘳", "+", "/"], "action": "Toggle this cheatsheet" },
 +            { "keys": ["󰘳", "+", "N"], "action": "Toggle system sidebar" },
 +            { "keys": ["󰘳", "+", "B", "OR", "󰘳", "+", "O"], "action": "Toggle utilities sidebar" },
 +            { "keys": ["󰘳", "+", "K"], "action": "Toggle virtual keyboard" },
-             { "keys": ["Ctrl", "Alt", "+", "Del"], "action": "Power/Session menu" },
-+            { "keys": ["󰘳", "Alt", "+", "Del"], "action": "Open btop" },
++            { "keys": ["Ctrl", "⌥", "+", "Del"], "action": "Power/Session menu" },
++            { "keys": ["󰘳", "⌥", "+", "Del"], "action": "Open btop" },
  
              { "keys": ["Esc"], "action": "Exit a window" },
-+            { "keys": ["󰘳", "Alt", "+", "Q"], "action": "Kill a window" },
++            { "keys": ["󰘳", "⌥", "+", "Q"], "action": "Kill a window" },
              { "keys": ["rightCtrl"], "action": "Dismiss/close sidebar" },
  
 -            { "keys": ["Ctrl", "󰖳", "+", "T"], "action": "Change wallpaper+colorscheme" },
@@ -114,11 +115,11 @@
 +            { "keys": ["󰘳", "Shift", "+", "T"], "action": "Image to text  >>  clipboard" },
 +            { "keys": ["󰘳", "Shift", "+", "C"], "action": "Color picker" },
 +            { "keys": ["󰘳", "Shift", "+", "5"], "action": "Record region with sound" },
-+            { "keys": ["󰘳", "Alt", "+", "5"], "action": "Record region with sound" },
-+            { "keys": ["󰘳", "Shift", "Alt", "+", "5"], "action": "Record screen with sound" },
++            { "keys": ["󰘳", "⌥", "+", "5"], "action": "Record region with sound" },
++            { "keys": ["󰘳", "Shift", "⌥", "+", "5"], "action": "Record screen with sound" },
 +            { "keys": ["󰘳", "Ctrl", "+", "3"], "action": "Calculator" },
 +            { "keys": ["󰘳", "Ctrl", "+", "N"], "action": "Daylight Filter Increase" },
-+            { "keys": ["󰘳", "Ctrl", "Alt", "+", "N"], "action": "Daylight Filter Decrease" },
++            { "keys": ["󰘳", "Ctrl", "⌥", "+", "N"], "action": "Daylight Filter Decrease" },
 +            { "keys": ["󰘳", "Ctrl", "+", "L"], "action": "Lock desktop" },
          ],
          "id": 5
@@ -141,18 +142,23 @@
          ],
          "id": 6
      },
-@@ -99,8 +104,8 @@ export const keybindList = [[
+@@ -99,8 +104,13 @@ export const keybindList = [[
          "icon": "keyboard",
          "name": "Typing",
          "binds": [
 -            { "keys": ["󰖳", "+", "V"], "action": "Clipboard history  >>  clipboard" },
 -            { "keys": ["󰖳", "+", "."], "action": "Emoji picker  >>  clipboard" },
++            { "keys": ["󰘳", "+", "."], "action": "Emoji picker  >>  clipboard" },
 +            { "keys": ["󰘳", "+", "V"], "action": "Clipboard history  >>  clipboard" },
++	    { "keys": ["󰘳", "+", "󰘵", "+", "V"], "action": "Flycut  >> clipboard" },
++	    { "keys": ["Ctrl", "+", "󰍜"], "action": "Snippets Menu" }, 
++	    { "keys": ["󰘵", "+", "󰍜"], "action": "Add to Snippets Menu" }, 
++//	    { "keys": ["Ctrl", "󰘵", "+", "󰍜"], "action": "Delete from Snippets Menu" }, 
 +            { "keys": ["󰘳", "+", "."], "action": "Emoji picker  >>  clipboard" },
          ],
          "id": 7
      },
-@@ -112,10 +117,25 @@ export const keybindList = [[
+@@ -112,10 +122,25 @@ export const keybindList = [[
              { "keys": [">img"], "action": "Select wallpaper and generate colorscheme" },
              { "keys": [">light"], "action": "Switch to light theme" },
              { "keys": [">dark"], "action": "Switch to dark theme" },
