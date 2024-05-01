@@ -6,8 +6,8 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "ced3823270fcee9cf9de7b5b25b25db3f7dc9012";
-      sha256 = "sha256-dGZQpcJ1wrWCYBJJK/szOIW6AsqTZHYVkz3EiCwYyqc=";
+      rev = "5dc88abe769e71e93c11a8213c0e60a439c15698";
+      sha256 = "sha256-uFQoQIGcuS0sGbdH2k+hGHKwQyGOFx0AVpJKh300xRU=";
     };
 
     patches = [
@@ -31,7 +31,7 @@ rec {
       cd .config
       find ags -type f | grep -v "_material.scss" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find anyrun -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
-      find fish -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
+      #find fish -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       #find fontconfig -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find hypr -type f | grep -v "hyprlock.conf\|colors.conf" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find mpv -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash

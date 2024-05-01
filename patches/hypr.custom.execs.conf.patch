@@ -1,6 +1,6 @@
 --- a/.config/hypr/custom/execs.conf
 +++ b/.config/hypr/custom/execs.conf
-@@ -1,2 +1,50 @@
+@@ -1,2 +1,47 @@
 -# You can make apps auto-start here
 -# Relevant Hyprland wiki section: https://wiki.hyprland.org/Configuring/Keywords/#executing
 +# Wallpaper
@@ -39,17 +39,14 @@
 +exec=touchegg
 +
 +# Bluetooth
-+exec-once=blueman-tray
-+#exec-once=antimicrox --tray --hidden
++exec-once=blueman-tray &
++exec-once=antimicrox --tray --hidden &
 +
 +# Allow GPU enabled XWayland applications that MUST run as root
 +exec=xhost +SI:localuser:root
 +
 +# Network Manager
-+exec-once=nm-applet
++exec-once=nm-applet &
 +
-+# Dock
-+exec-once=cairo-dock
-+
-+# Remote VNC
-+exec-once=wayvnc
++# Remote Desktop
++exec-once=~/.local/bin/sunshine &

@@ -21,16 +21,29 @@
     lib = nixpkgs.lib;
     pkgs = import inputs.nixpkgs {
       inherit system;
-      config.allowUnfree = true;
-      config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-        "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run"
-      ];
+      config = {
+        allowUnfree = true;
+        btop = {
+          cudaSupport = true;
+        };
+        onnxruntime = {
+          cudaSupport = true;
+        };
+        sunshine = {
+          cudaSupport = true;
+          cudaCapabilities = [ "12.2" ];
+          cudaEnableForwardCompat = false;
+          allowUnfree = true;
+        };
+        allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+          "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run"
+        ];
+      };
       overlays = [
         nixgl.overlay
         (import ./overlays/gnome-pie.nix)
         (import ./overlays/keyboard-visualizer.nix)
         (import ./overlays/toshy.nix)
-        (import ./overlays/sunshine.nix)
         (import ./overlays/materialyoucolor.nix)
         (import ./overlays/end-4-dots.nix)
         (import ./overlays/wofi-calc.nix)
@@ -47,7 +60,8 @@
 	};
         system.packages = [ anyrun.packages.${system}.anyrun
                             nix-gl-host.defaultPackage.x86_64-linux
-                            nixgl.defaultPackage.x86_64-linux ];
+                            nixgl.defaultPackage.x86_64-linux
+                          ];
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix

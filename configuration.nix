@@ -17,6 +17,25 @@
       ./hardware-configuration.nix
     ];
 
+  environment.localBinInPath = true;
+  fileSystems."/mnt/games" =
+    { device = "/dev/disk/by-uuid/e3e7ef09-ad64-4cc3-ae04-fc20084ff1ec";
+      fsType = "btrfs";
+      options = [
+        "user"
+        "exec"
+        "noatime"
+      ];
+    };
+  fileSystems."/mnt/backups" =
+    { device = "192.168.42.8:/volume2/Backups";
+      fsType = "nfs";
+      options = [
+        "user"
+        "exec"
+        "noatime"
+      ];
+    };  
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -61,7 +80,7 @@
   services.xserver.desktopManager.enlightenment.enable = true;
 
   # Enable OpenRGB.
-  #services.hardware.openrgb.enable = true;
+  services.hardware.openrgb.enable = true;
 
   programs.hyprland = {
     # Install the packages from nixpkgs
@@ -84,6 +103,13 @@
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+  services.printing.drivers = [ pkgs.gutenprint ];
+  hardware.sane.enable = true;
+  services.avahi = {
+    enable = true;
+    nssmdns = true;
+    openFirewall = true;
+  };
 
   # Enable sound with pipewire.
   sound.enable = true;
@@ -186,7 +212,7 @@
   users.users.celes = {
     isNormalUser = true;
     description = "Celes Renata";
-    extraGroups = [ "networkmanager" "wheel" "input" "uinput" "render" "video" "audio" ];
+    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" ];
     packages = with pkgs; [
       firefox
     #  thunderbird
@@ -225,7 +251,8 @@
     mlocate
     barrier
     openssl
-
+    xsane
+    gnome.simple-scan
     # Shells.
     fish
     zsh
@@ -233,7 +260,6 @@
 
     # Development Tools.
     git
-    nodejs_21
     meson
     gcc13
     cmake
@@ -288,7 +314,7 @@
     libva-utils
     wofi
     libqalculate
-    sunshine
+    #(sunshine.override { cudaSupport = true; })
     moonlight-qt
     xfce.thunar
 
@@ -318,8 +344,9 @@
     foot
 
     # Emulation
-    bottles
+    lutris
     wine
+    wine64
     protonup-qt
 
     # Mac Sound.

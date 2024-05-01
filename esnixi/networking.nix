@@ -20,12 +20,20 @@
 
     networking.firewall = {
       enable = true;
-      allowedTCPPorts = [ 8082 24800 47984 47989 47990 48010 ];
+      allowedTCPPorts = [ 3216 3658 3659 8082 24800 47984 47989 47990 48010 ];
+      allowedTCPPortRanges = [
+        { from = 31800; to = 31899; }
+        { from = 27015; to = 27030; }
+        { from = 27036; to = 27037; }
+      ];
+      allowedUDPPorts = [ 3216 27036 ];
       allowedUDPPortRanges = [
         { from = 24800; to = 24810; }
         { from = 47998; to = 48000; }
         { from = 8000; to = 8010; }
         { from = 9942; to = 9944; }
+        { from = 3658; to = 3659; }
+        { from = 27000; to = 27031; }
       ];
     };
   };
