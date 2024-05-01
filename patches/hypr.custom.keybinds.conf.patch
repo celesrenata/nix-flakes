@@ -1,6 +1,6 @@
 --- a/.config/hypr/custom/keybinds.conf
 +++ b/.config/hypr/custom/keybinds.conf
-@@ -1,2 +1,232 @@
+@@ -1,2 +1,233 @@
 -# You can put your preferred keybinds here
 -# https://wiki.hyprland.org/Configuring/Binds/
 \ No newline at end of file
@@ -62,6 +62,7 @@
 +bind = $Primary$Alternate, Insert, exec, foot -F btop
 +
 +# Actions
++bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji
 +bind = $Alternate, F4, killactive,
 +bind = $Secondary$Alternate, Space, togglefloating, 
 +bind = $Secondary$Alternate, Q, exec, hyprctl kill
