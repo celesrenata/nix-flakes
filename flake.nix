@@ -29,19 +29,26 @@
         onnxruntime = {
           cudaSupport = true;
         };
-        sunshine = {
-          cudaSupport = true;
-          cudaCapabilities = [ "12.2" ];
-          cudaEnableForwardCompat = false;
-          allowUnfree = true;
-        };
+        #packageOverrides = pkgs: {
+        #  sunshine = pkgs.sunshine.override {
+        #    cudaSupport = true;
+        #    #cudaCapabilities = [ "12.2" ];
+        #    cudaEnableForwardCompat = false;
+        #    #allowUnfree = true;
+        #  };
+        #};
         allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
           "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run"
+        ];
+        permittedInsecurePackages = [
+          "python-2.7.18.7"
+          "openssl-1.1.1w"
         ];
       };
       overlays = [
         nixgl.overlay
-        (import ./overlays/gnome-pie.nix)
+#        (import ./overlays/kando.nix)
+#        (import ./overlays/cmake-js.nix)
         (import ./overlays/keyboard-visualizer.nix)
         (import ./overlays/toshy.nix)
         (import ./overlays/materialyoucolor.nix)

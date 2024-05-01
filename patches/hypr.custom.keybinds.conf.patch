@@ -1,6 +1,6 @@
 --- a/.config/hypr/custom/keybinds.conf
 +++ b/.config/hypr/custom/keybinds.conf
-@@ -1,2 +1,228 @@
+@@ -1,2 +1,232 @@
 -# You can put your preferred keybinds here
 -# https://wiki.hyprland.org/Configuring/Binds/
 \ No newline at end of file
@@ -39,10 +39,12 @@
 +bind = $Primary$Secondary, J, exec, thunar
 +# firefox
 +bind = $Primary$Secondary, L, exec, firefox
-+bind = $Primary$Secondary$Tertiary, L, exec, /usr/bin/microsoft-edge-beta --enable-features=UseOzonePlatform --ozone-platform=wayland --gtk-version=4
++# chromium
++bind = $Primary$Secondary$Tertiary, L, exec, chromium 
++
 +# notepad
-+bind = $Primary$Secondary, 48, exec, subl
-+bind = $Primary$Secondary, 47, exec, codium
++bind = $Primary$Secondary, X, exec, subl
++bind = $Primary$Secondary, C, exec, code
 +bind = $Primary$Secondary$Tertiary, 47, exec, jetbrains-fleet
 +# office
 +bind = $Secondary$Tertiary, W, exec, wps
@@ -63,6 +65,7 @@
 +bind = $Alternate, F4, killactive,
 +bind = $Secondary$Alternate, Space, togglefloating, 
 +bind = $Secondary$Alternate, Q, exec, hyprctl kill
++bind = $Primary$Alternate, Delete, exec, ~/.local/bin/agsAction.sh session
 +bind = $Primary$Tertiary$Alternate, Delete, exec, pkill wlogout || wlogout -p layer-shell
 +bind = $Primary$Tertiary$Alternate$Secondary, Delete, exec, systemctl poweroff
 +# bind = $Tertiary$Alternate,mouse_up, exec, wtype -M ctrl -k Prior
@@ -112,13 +115,14 @@
 +bind = $Primary$Secondary, T, exec, ~/.config/ags/scripts/color_generation/switchwall.sh
 +bind = $Alternate, Tab, exec, ags -t 'overview'
 +bind = $Secondary, Space, exec, ags -t 'overview'
-+bind = $Secondary$Alternate, Slash, exec, ags -t 'cheatsheet0'
++bind = $Secondary$Alternate, Slash, exec, ~/.local/bin/agsAction.sh cheatsheet
 +bind = $Secondary, B, exec, ags -t 'sideleft'
 +bind = $Secondary, N, exec, ags -t 'sideright'
 +bind = $Secondary, M, exec, ags run-js 'openMusic$Primarys.value = (!Mpris.getPlayer() ? false : !openMusic$Primarys.value);'
 +bind = $Secondary, Comma, exec, ags run-js 'openColorScheme.value = true; Utils.timeout(2000, () => openColorScheme.value = false);'
-+bind = $Secondary, K, exec, ags -t 'osk'
-+bind = $Primary$Alternate, Delete, exec, ags -t 'session'
++bind = $Secondary, K, exec, ~/.local/bin/agsAction osk
++bind = $Primary$Alternate, Delete, exec, ~/.local/bin/agsAction.sh session
++bind = $Secondary$Alternate, Delete, exec, foot -F btop
 +bindr = $Primary, $Primary_R, exec, ags run-js 'indicator.popup(-1);'
 +bindr = $Primary, $Primary_R, exec, ags run-js 'Notifications.notifications.forEach((notif) => notif.dismiss())'
 +bindle = , XF86AudioRaiseVolume, exec, ags run-js 'indicator.popup(1);'

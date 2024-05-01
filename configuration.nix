@@ -7,11 +7,6 @@
   # Licences.
   nixpkgs.config.allowUnfree = true;
 
-  # Inscure packages allowed.
-  nixpkgs.config.permittedInsecurePackages = [
-    "python-2.7.18.7"
-  ];
-
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -72,7 +67,8 @@
 
   # Enable the GDM Display Manager.
   services.xserver.displayManager.gdm.enable = true;
-
+  services.xserver.displayManager.defaultSession = "hyprland";
+  
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
@@ -260,6 +256,7 @@
 
     # Development Tools.
     git
+    nodejs_20
     meson
     gcc13
     cmake
@@ -279,6 +276,7 @@
     nixStatic.dev
     node2nix
     nil
+    sublime4
 
     # Session.
     polkit
@@ -314,9 +312,10 @@
     libva-utils
     wofi
     libqalculate
-    #(sunshine.override { cudaSupport = true; })
+    sunshine 
     moonlight-qt
     xfce.thunar
+    wayland-scanner
 
     # Media
     plex-media-player

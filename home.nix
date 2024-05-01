@@ -3,8 +3,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "8cbecf5026219053d8c0ffccc21b790331c1ae1e";
-    sha256 = "sha256-a5C662fx7wTmP09lEwnbveHwsJXtwCycaJV6NOOmfoo=";
+    rev = "d4905700e0047f700ac5b6d41486f7409ec905ee";
+    sha256 = "sha256-kt3Ot+60wmqbJ3BAyakcgbuxwshVNe7IvoRgLA58pY0=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -58,6 +58,12 @@ let
   home.file.".local/bin/initialSetup.sh" = {
     source = celes-dots + "/.local/bin/initialSetup.sh";
   };
+  home.file.".local/bin/sunshine" = {
+    source = celes-dots + "/.local/bin/sunshineFixed";
+  };
+  home.file.".local/bin/agsAction.sh" = {
+    source = celes-dots + "/.local/bin/agsAction.sh";
+  };
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
@@ -101,7 +107,41 @@ let
     color_theme = "Default";
     theme_background = false;
   };
-  programs.fish.enable = true;
+  programs.fish = {
+    enable = true;
+    shellAliases = {
+      cider = "env -u NIXOS_OZONE_WL cider --use-gl=desktop";
+      sunshine = "~/.local/bin/sunshine";
+    };
+    shellInit = ''
+      function fish_prompt -d "Write out the prompt"
+    # This shows up as USER@HOST /home/user/ >, with the directory colored
+    # $USER and $hostname are set by fish, so you can just use them
+    # instead of using `whoami` and `hostname`
+    fish_add_path -p $HOME/.local/bin
+    printf '%s@%s %s%s%s > ' $USER $hostname \
+        (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
+end
+
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+    set fish_greeting
+
+end
+
+starship init fish | source
+if test -f ~/.cache/ags/user/generated/terminal/sequences.txt
+    cat ~/.cache/ags/user/generated/terminal/sequences.txt
+end
+    '';
+  };
+
+  xdg.desktopEntries.cider = {
+    name = "Cider";
+    genericName = "Music";
+    exec = "env -u NIXOS_OZONE_WL cider --use-gl=desktop %U";
+    icon = "cider";
+  };
 
   # Obs.
   programs.obs-studio = {
@@ -145,6 +185,7 @@ let
     discord
     vesktop
     darktable
+    sunshine
 
     # Extra Launchers.
 
@@ -176,6 +217,7 @@ let
 
     # Gaming.
     antimicrox
+    #inputs.nixpkgs-stable.sunshine
 
     # nix related
     #
@@ -277,7 +319,7 @@ let
     gnome.gnome-control-center
     gnome.gnome-bluetooth
     gnome.gnome-shell
-    gnome-pie
+    nodejs_20
     yaru-theme
     blueberry
     networkmanager
@@ -373,15 +415,13 @@ let
       k = "kubectl";
       urldecode = "python3 -c 'import sys, urllib.parse as ul; print(ul.unquote_plus(sys.stdin.read()))'";
       urlencode = "python3 -c 'import sys, urllib.parse as ul; print(ul.quote_plus(sys.stdin.read()))'";
+      cider = "env -u NIXOS_OZONE_WL cider --use-gl=desktop";
     };
     sessionVariables = {
       EDITOR = "vim";
     };
   };
   
-  home.sessionPath = [
-    ".local/bin"
-  ];
   home.sessionVariables = {
     LD_LIBRARY_PATH = "/run/opengl-driver/lib";
   };

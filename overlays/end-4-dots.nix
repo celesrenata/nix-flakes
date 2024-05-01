@@ -6,8 +6,8 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "5dc88abe769e71e93c11a8213c0e60a439c15698";
-      sha256 = "sha256-uFQoQIGcuS0sGbdH2k+hGHKwQyGOFx0AVpJKh300xRU=";
+      rev = "bf3258d0685fdf935e2a25635d4b9a4da1175b84";
+      sha256 = "sha256-k3cGVABHG5i2WLcWT3mAyEqqpruXoG0FgrjaKcD+W+k=";
     };
 
     patches = [
@@ -23,7 +23,6 @@ rec {
       ../patches/hypr.custom.execs.conf.patch
       ../patches/hypr.custom.keybinds.conf.patch
       ../patches/hypr.custom.general.conf.patch
-      ../patches/hypr.hyprland.general.conf.patch
       ../patches/fish.config.fish.patch
     ];
     
