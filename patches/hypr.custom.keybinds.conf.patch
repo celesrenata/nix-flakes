@@ -84,8 +84,8 @@
 +bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
 +bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
 +bind = $Primary, Menu, exec, tac ~/.local/share/snippets | wofi -Iim --dmenu | sed -z '$ s/\n$//' | wl-copy && wtype -M ctrl v -M ctrl
-+bind = $Alternate, Menu, exec, wtype -M logo c -M logo && wl-paste >> ~/.local/share/snippets && notify-send "Added to snippets!"
-+bind = $Alternate$Tertiary, Menu, exec, tac ~/.local/share/snippets | wofi -Iim --dmenu | xargs -I '%' ~/.local/bin/regexEscape.sh "'%'"| xargs -I '%' sed '/^%$/d' -i ~/.local/share/snippets && notify-send "Deleted from snippets!"
++bind = $Alternate, Menu, exec, wtype -M logo c -M logo && wl-paste >> ~/.local/share/snippets && sed '/^[[:space:]]*$/d' -i ~/.local/share/snippets && notify-send "Added to snippets!"
++bind = $Alternate$Tertiary, Menu, exec, tac ~/.local/share/snippets | wofi -Iim --dmenu | xargs -I '%' ~/.local/bin/regexEscape.sh "'%'"| xargs -I '%' sed '/\(^.*%.*$\)/d' -i ~/.local/share/snippets && notify-send "Deleted from snippets!"
 +
 +# Text-to-image
 +# Normal
