@@ -1,7 +1,8 @@
 # ESXi  for Nvidia passthroughs / Mac T2 / RPI5 Flakes
 * RPI5 flakes please switch to RPI5 branch
 
-## Installation
+## Installation Steps Via Netboot.xyz
+* Follow the guide here if you don't use netboot.xyz (https://nixos.org/manual/nixos/unstable/)
 1. Boot virtual machine to netboot.xyz
 11. Select Linux Network Installs
 11. Select Nixos
@@ -22,6 +23,6 @@
 11. `sudo poweroff`
 1. Map your video cards pci addresses
 1. Boot the virt
-1. Login as your user.
+1. Login from GDM.
 1. System will configure dynamic assets and then reboot for you.
 1. 'Command + Option + /' to open the cheatsheet.
