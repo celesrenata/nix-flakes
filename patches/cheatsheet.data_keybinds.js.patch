@@ -134,8 +134,8 @@
 -            { "keys": ["󰖳", "+", "X"], "action": "Launch editor: GNOME Text Editor" },
 -            { "keys": ["󰖳", "+", "I"], "action": "Launch settings: GNOME Control center" }
 +            { "keys": ["󰘳", "Ctrl", "+", "H"], "action": "Launch terminal: Foot" },
-+            { "keys": ["󰘳", "Ctrl", "+", "L"], "action": "Launch browser: Firefox" },
-+	    { "keys": ["󰘳", "Ctrl", "Shift", "+", "L"], "action": "Launch browser: Chromium" },
++            { "keys": ["󰘳", "Ctrl", "+", "B"], "action": "Launch browser: Firefox" },
++	    { "keys": ["󰘳", "Ctrl", "Shift", "+", "B"], "action": "Launch browser: Chromium" },
 +            { "keys": ["󰘳", "Ctrl", "+", "C"], "action": "Launch editor: vscode" },
 +            { "keys": ["󰘳", "Ctrl", "+", "X"], "action": "Launch editor: Sublime" },
 +            { "keys": ["󰘳", "Ctrl", "+", "I"], "action": "Launch settings: GNOME Control center" }

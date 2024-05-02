@@ -29,7 +29,7 @@
 +# Code
 +bind = $Primary$Secondary, U, exec, code
 +# Discord
-+bind = $Primary$Secondary, I, exec, armcord -enable-features=UseOzonePlatform --ozone-platform=wayland
++bind = $Primary$Secondary, I, exec, vesktop 
 +# Tidal
 +bind = $Primary$Secondary, M, exec, kodi
 +# foot
@@ -37,10 +37,11 @@
 +bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
 +# finders
 +bind = $Primary$Secondary, J, exec, thunar
++bind = $Primary$Secondary$Tertiary, T, exec, nautilus
 +# firefox
-+bind = $Primary$Secondary, L, exec, firefox
++bind = $Primary$Secondary, B, exec, firefox
 +# chromium
-+bind = $Primary$Secondary$Tertiary, L, exec, chromium 
++bind = $Primary$Secondary$Tertiary, B, exec, chromium 
 +
 +# notepad
 +bind = $Primary$Secondary, X, exec, subl
@@ -104,8 +105,7 @@
 +bind = $Secondary$Tertiary, P, exec, playerctl play-pause
 +
 +#Lock screen  |  blur: --effect-blur=20x202
-+bind = $Secondary, L, exec, swaylock
-+bind = $Secondary$Tertiary, L, exec, swaylock
++bind = $Primary$Secondary, L, exec, hyprlock 
 +# bindl = $Secondary$Tertiary, L, exec, sleep 0.1 && systemctl suspend
 +
 +# App launcher
