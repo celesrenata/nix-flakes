@@ -22,6 +22,6 @@
 11. `sudo poweroff`
 1. Map your video cards pci addresses
 1. Boot the virt
-1. Login as your user, don't forget to select hyprland! englightment is a fallback.
+1. Login as your user.
 1. System will configure dynamic assets and then reboot for you.
 1. 'Command + Option + /' to open the cheatsheet.
