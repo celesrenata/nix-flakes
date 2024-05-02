@@ -3,8 +3,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "d4905700e0047f700ac5b6d41486f7409ec905ee";
-    sha256 = "sha256-kt3Ot+60wmqbJ3BAyakcgbuxwshVNe7IvoRgLA58pY0=";
+    rev = "8c96e0dd8de90bb212bb82d15a064865ae2fe76f";
+    sha256 = "sha256-9W2ivdT0u51lAghf+9g/iUqTjpaNUaN6Be/mrrfe2ik=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -63,6 +63,9 @@ let
   };
   home.file.".local/bin/agsAction.sh" = {
     source = celes-dots + "/.local/bin/agsAction.sh";
+  };
+  home.file.".local/bin/regexEscape.sh" = {
+    source = celes-dots + "/.local/bin/regexEscape.sh";
   };
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
@@ -342,6 +345,7 @@ end
     wl-clipboard
     hyprpicker
     gammastep
+    libnotify
 
     # Fonts
     fontconfig
