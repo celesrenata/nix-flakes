@@ -36,7 +36,7 @@
 +# are a good way to crash Hyprland
 +
 +# Gestures
-+exec=touchegg
++exec-once=touchegg
 +
 +# Bluetooth
 +exec=blueman-tray &
