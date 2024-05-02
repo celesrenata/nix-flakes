@@ -67,7 +67,7 @@
 
   # Enable the GDM Display Manager.
   services.xserver.displayManager.gdm.enable = true;
-  services.xserver.displayManager.defaultSession = "hyprland";
+  services.displayManager.defaultSession = "hyprland";
   
   # Enable the X11 windowing system.
   services.xserver.enable = true;
@@ -92,9 +92,9 @@
   services.acpid.enable = true;
 
   # Configure keymap in X11
-  services.xserver = {
+  services.xserver.xkb = {
     layout = "us";
-    xkbVariant = "";
+    variant = "";
   };
 
   # Enable CUPS to print documents.
@@ -103,7 +103,7 @@
   hardware.sane.enable = true;
   services.avahi = {
     enable = true;
-    nssmdns = true;
+    nssmdns4 = true;
     openFirewall = true;
   };
 
@@ -161,7 +161,7 @@
   services.gnome.gnome-keyring.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
+  services.libinput.enable = true;
   services.keyd = {
     enable = true;
     keyboards.mac.settings = {

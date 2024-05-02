@@ -23,20 +23,7 @@
       inherit system;
       config = {
         allowUnfree = true;
-        btop = {
-          cudaSupport = true;
-        };
-        onnxruntime = {
-          cudaSupport = true;
-        };
-        #packageOverrides = pkgs: {
-        #  sunshine = pkgs.sunshine.override {
-        #    cudaSupport = true;
-        #    #cudaCapabilities = [ "12.2" ];
-        #    cudaEnableForwardCompat = false;
-        #    #allowUnfree = true;
-        #  };
-        #};
+
         allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
           "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run"
         ];

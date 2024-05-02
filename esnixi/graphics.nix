@@ -8,14 +8,6 @@
       capabilities = "cap_sys_admin+p";
       source = "${pkgs.sunshine}/bin/sunshine";
     };
-    nixpkgs.config = {
-      btop = {
-        cudaSupport = true;
-      };
-      onnxruntime = {
-        cudaSupport = true;
-      };
-    };
 
     services.avahi.publish.enable = true;
     services.avahi.publish.userServices = true;
@@ -29,7 +21,15 @@
 
     environment.systemPackages = with pkgs; [
       libGL
-      onnxruntimeOverride
+      (onnxruntime.override {
+        cudaSupport = true;
+      })
+      (sunshine.override {
+        cudaSupport = true;
+      })
+      (btop.override {
+        cudaSupport = true;
+      })
       kdenlive
       nvtopPackages.full
       cudaPackages.cudatoolkit

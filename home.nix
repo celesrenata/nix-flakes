@@ -74,16 +74,11 @@ let
     source = celes-dots + "/love-is-love.jpg";
   };
 
-  # encode the file content in nix configuration file directly
-  # home.file.".xxx".text = ''
-  #     xxx
-  # '';
-
   # set cursor size and dpi for 4k monitor
-  #xresources.properties = {
-  #  "Xcursor.size" = 24;
-  #  "Xft.dpi" = 172;
-  #};
+  xresources.properties = {
+    "Xcursor.size" = 24;
+    "Xft.dpi" = 172;
+  };
   home.pointerCursor = {
     gtk.enable = true;
     x11.enable = true;
@@ -185,6 +180,7 @@ end
     chromium
     tidal-hifi
     cider
+    spotify
     discord
     vesktop
     darktable
@@ -322,6 +318,7 @@ end
     gnome.gnome-control-center
     gnome.gnome-bluetooth
     gnome.gnome-shell
+    gnome.nautilus
     nodejs_20
     yaru-theme
     blueberry
@@ -344,8 +341,7 @@ end
     wlogout
     wl-clipboard
     hyprpicker
-    nwg-dock-hyprland
-    nwg-launchers
+    gammastep
 
     # Fonts
     fontconfig
