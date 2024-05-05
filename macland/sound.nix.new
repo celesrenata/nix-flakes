@@ -23,8 +23,8 @@ in
       LADSPA_PATH = lib.mkForce "${pkgs.ladspaPlugins}/lib/ladspa";
     };
   };
-  environment.etc = {
-    "pipewire/pipewire.conf.d/10-t2_101_sink.conf".text = ''
+  services.pipewire.wireplumber.configPackages = [
+	(pkgs.writeTextDir "share/pipewire/pipewire.conf.d/10-t2_161_sink.conf" ''
 		# SPDX-License-Identifier: MIT
 # (C) 2022 The Asahi Linux Contributors
 
@@ -292,6 +292,6 @@ context.modules = [
         }
     }
 ]
-	'';
-  };
+	'')
+  ];
 }

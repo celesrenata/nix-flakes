@@ -87,7 +87,7 @@
       macland = nixpkgs.lib.nixosSystem { 
         specialArgs = {
           inherit pkgs;
-          inherit nixpkgs-unstable;
+          inherit pkgs-unstable;
         };
         
         system.packages = [ anyrun.packages.${system}.anyrun  ];
