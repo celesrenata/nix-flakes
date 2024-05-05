@@ -1,4 +1,4 @@
-{ inputs, pkgs, ... }: 
+{ inputs, pkgs, pkgs-unstable, ... }: 
 let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
@@ -94,6 +94,7 @@ let
   # VSCode
   programs.vscode = {
     enable = true;
+    package = pkgs-unstable.vscode;
     extensions = with pkgs.vscode-extensions; [
       #dracula-theme.theme-dracula
       #vscodevim.vim
@@ -147,7 +148,8 @@ end
   # Obs.
   programs.obs-studio = {
     enable = true;
-    plugins = with pkgs.obs-studio-plugins; [
+    package = pkgs-unstable.obs-studio;
+    plugins = with pkgs-unstable.obs-studio-plugins; [
       wlrobs
       obs-backgroundremoval
       obs-pipewire-audio-capture
@@ -156,7 +158,8 @@ end
   };
 
   # Packages that should be installed to the user profile.
-  home.packages = with pkgs; [
+  home.packages = 
+  (with pkgs; [
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
 
@@ -185,7 +188,6 @@ end
     cider
     spotify
     discord
-    vesktop
     darktable
     sunshine
 
@@ -219,7 +221,6 @@ end
 
     # Gaming.
     antimicrox
-    #inputs.nixpkgs-stable.sunshine
 
     # nix related
     #
@@ -246,7 +247,6 @@ end
     ethtool
     pciutils # lspci
     usbutils # lsusb
-    toshy
     wofi-calc
     openrgb-with-all-plugins
     KeyboardVisualizer
@@ -273,6 +273,9 @@ end
       wheel
       pywayland
       psutil
+      # debugpy.overrideAttrs (final: prev: {
+      #   pytestCheckPhase = ''true'';
+      # })
       pydbus
       dbus-python
       pygobject3
@@ -284,9 +287,6 @@ end
       ordered-set
       six
       hatchling
-      python-xlib
-      python-xwaykeyz
-      python-hyprpy
       pycairo
       xkeysnail
     ]))
@@ -328,6 +328,8 @@ end
     networkmanager
     brightnessctl
     wlsunset
+    gjs
+    gjs.dev
 
     # AGS and Hyprland dependencies.
     coreutils
@@ -336,23 +338,13 @@ end
     fuzzel
     ripgrep
     gojq
-    gjs
     dart-sass
     axel
-    hypridle
-    hyprlock
     wlogout
     wl-clipboard
     hyprpicker
     gammastep
     libnotify
-
-    # Fonts
-    fontconfig
-    lexend
-    nerdfonts
-    material-symbols
-    bibata-cursors
 
     # Shells and Terminals
     starship
@@ -369,7 +361,17 @@ end
     grim
     tesseract
     slurp 
-  ];
+  ])
+
+  ++
+
+  (with pkgs-unstable; [
+    hypridle
+    hyprlock
+    lan-mouse
+    python311Packages.debugpy
+    vesktop
+  ]);
 
   # basic configuration of git, please change to your own
   programs.git = {
@@ -437,7 +439,7 @@ end
   # You can update home Manager without changing this value. See
   # the home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "24.05";
+  home.stateVersion = "23.11";
 
   # Let home Manager install and manage itself.
   programs.home-manager.enable = true;

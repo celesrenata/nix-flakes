@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, pkgs-unstable, ... }:
 {
   config = {
     boot = {
@@ -8,7 +8,7 @@
       };
       supportedFilesystems = [ "ntfs" "nfs" ];
       plymouth.enable = true;
-      kernelPackages = pkgs.linuxPackages_latest;
+      kernelPackages = pkgs-unstable.linuxPackages_latest;
       kernelModules = [ "uinput" "nvidia" ];
       extraModprobeConfig = ''
         options nvidia NVreg_OpenRmEnableUnsupportedGpus=1

@@ -2,35 +2,18 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs, ... }:
+{ pkgs, pkgs-unstable, ... }:
 {
   # Licences.
   nixpkgs.config.allowUnfree = true;
 
   imports =
     [ # Include the results of the hardware scan.
+      #"${pkgs-unstable}/nixos/modules/programs/alvr.nix"
       ./hardware-configuration.nix
     ];
 
   environment.localBinInPath = true;
-#  fileSystems."/mnt/games" =
-#    { device = "/dev/disk/by-uuid/e3e7ef09-ad64-4cc3-ae04-fc20084ff1ec";
-#      fsType = "btrfs";
-#      options = [
-#        "user"
-#        "exec"
-#        "noatime"
-#      ];
-#    };
-#  fileSystems."/mnt/backups" =
-#    { device = "192.168.42.8:/volume2/Backups";
-#      fsType = "nfs";
-#      options = [
-#        "user"
-#        "exec"
-#        "noatime"
-#      ];
-#    };  
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -67,7 +50,7 @@
 
   # Enable the GDM Display Manager.
   services.xserver.displayManager.gdm.enable = true;
-  services.displayManager.defaultSession = "hyprland";
+  services.xserver.displayManager.defaultSession = "hyprland";
   
   # Enable the X11 windowing system.
   services.xserver.enable = true;
@@ -81,6 +64,7 @@
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
+    package = pkgs-unstable.hyprland;
     # Whether to enable Xwayland
     xwayland.enable = true;
   };
@@ -103,7 +87,7 @@
   hardware.sane.enable = true;
   services.avahi = {
     enable = true;
-    nssmdns4 = true;
+    nssmdns = true;
     openFirewall = true;
   };
 
@@ -135,7 +119,7 @@
   };
 
   # Enable Fonts.
-  fonts.packages = with pkgs; [
+  fonts.packages = with pkgs-unstable; [
     noto-fonts
     noto-fonts-cjk
     noto-fonts-emoji
@@ -145,6 +129,11 @@
     mplus-outline-fonts.githubRelease
     dina-font
     proggyfonts
+    fontconfig
+    lexend
+    nerdfonts
+    material-symbols
+    bibata-cursors
   ];
 
   # Extra Groups
@@ -161,7 +150,7 @@
   services.gnome.gnome-keyring.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  services.libinput.enable = true;
+  services.xserver.libinput.enable = true;
   services.keyd = {
     enable = true;
     keyboards.mac.settings = {
@@ -317,7 +306,6 @@
     xfce.thunar
     wayland-scanner
     waypipe
-    lan-mouse
 
     # Media
     plex-media-player

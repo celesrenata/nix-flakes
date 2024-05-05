@@ -1,6 +1,7 @@
-{ config, lib, pkgs, nixpkgs, ... }:
+{ config, lib, pkgs, pkgs-unstable, ... }:
 {
   config = {
+    nixpkgs.config.allowUnfree = true;
     # Remote Desktop
     security.wrappers.sunshine = {
       owner = "root";
@@ -19,7 +20,7 @@
       models = "/opt/ollama/models";
     };
 
-    environment.systemPackages = with pkgs; [
+    environment.systemPackages = with pkgs-unstable; [
       libGL
       (onnxruntime.override {
         cudaSupport = true;

@@ -2,8 +2,9 @@
   description = "NixOS configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager/release-23.11";
     anyrun.url = "github:Kirottu/anyrun";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     #anyrun.inputs.nixpkgs.follows = "nixpkgs";
@@ -15,17 +16,26 @@
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
 
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, nixgl, nix-gl-host, nix-vscode-extensions, nixos-hardware, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-unstable, anyrun, home-manager, dream2nix, nixgl, nix-gl-host, nix-vscode-extensions, nixos-hardware, ... }:
   let
     system = "x86_64-linux";
     lib = nixpkgs.lib;
-    pkgs = import inputs.nixpkgs {
+    pkgs-unstable = import inputs.nixpkgs-unstable {
       inherit system;
       config = {
         allowUnfree = true;
+        allowBroken = true;
+      };
+    };
 
+    pkgs = import inputs.nixpkgs rec {
+      inherit system;
+      inherit pkgs-unstable;
+      config = {
+        allowUnfree = true;
+        allowBroken = true;
         allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-          "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run"
+          "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run" "cuda_cccl"
         ];
         permittedInsecurePackages = [
           "python-2.7.18.7"
@@ -34,10 +44,8 @@
       };
       overlays = [
         nixgl.overlay
-#        (import ./overlays/kando.nix)
-#        (import ./overlays/cmake-js.nix)
         (import ./overlays/keyboard-visualizer.nix)
-        (import ./overlays/toshy.nix)
+        (import ./overlays/debugpy.nix)
         (import ./overlays/materialyoucolor.nix)
         (import ./overlays/end-4-dots.nix)
         (import ./overlays/wofi-calc.nix)
@@ -48,10 +56,10 @@
   in {
     nixosConfigurations = {
       esnixi = nixpkgs.lib.nixosSystem {
-        #inherit system;
-	specialArgs = {
-	  inherit pkgs;
-	};
+        specialArgs = {
+          inherit pkgs;
+          inherit pkgs-unstable;
+        };
         system.packages = [ anyrun.packages.${system}.anyrun
                             nix-gl-host.defaultPackage.x86_64-linux
                             nixgl.defaultPackage.x86_64-linux
@@ -68,7 +76,10 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.extraSpecialArgs = { 
+              inherit inputs;
+              inherit pkgs-unstable;
+            };
             home-manager.users.celes = import ./home.nix;
           }
         ];
@@ -76,6 +87,7 @@
       macland = nixpkgs.lib.nixosSystem { 
         specialArgs = {
           inherit pkgs;
+          inherit nixpkgs-unstable;
         };
         
         system.packages = [ anyrun.packages.${system}.anyrun  ];
@@ -93,7 +105,10 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.extraSpecialArgs = { 
+              inherit inputs;
+              inherit pkgs-unstable;
+            };
             home-manager.users.celes = import ./home.nix;
           }
         ];

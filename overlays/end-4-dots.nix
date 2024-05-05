@@ -6,11 +6,12 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "bf3258d0685fdf935e2a25635d4b9a4da1175b84";
-      sha256 = "sha256-k3cGVABHG5i2WLcWT3mAyEqqpruXoG0FgrjaKcD+W+k=";
+      rev = "f4251b71e3bd3b076271f0e5baad842e68e8247a";
+      sha256 = "sha256-JGcm8gXfZI8TQTFbs5nmDI2wI/Uth6/IQKvMkJARPA4=";
     };
 
     patches = [
+      ../patches/ags.sideright.centermodules.configure.js.patch
       ../patches/applycolor.sh.patch
       ../patches/cheatsheet.data_keybinds.js.patch
       ../patches/cheatsheet.main.js.patch

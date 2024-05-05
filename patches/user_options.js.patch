@@ -1,6 +1,6 @@
 --- a/.config/ags/modules/.configuration/user_options.js
 +++ b/.config/ags/modules/.configuration/user_options.js
-@@ -77,7 +77,7 @@ let configOptions = {
+@@ -87,7 +87,7 @@ let configOptions = {
          'shown': 10,
      },
      'dock': {
@@ -9,10 +9,3 @@
          'hiddenThickness': 5,
          'pinnedApps': ['firefox', 'org.gnome.Nautilus'],
          'layer': 'top',
-@@ -159,4 +159,4 @@ function overrideConfigRecursive(userOverrides, configOptions = {}) {
- overrideConfigRecursive(userOverrides, configOptions);
- 
- globalThis['userOptions'] = configOptions;
--export default configOptions;
-\ No newline at end of file
-+export default configOptions;
