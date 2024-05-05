@@ -26,7 +26,7 @@
         { from = 27015; to = 27030; }
         { from = 27036; to = 27037; }
       ];
-      allowedUDPPorts = [ 3216 27036 ];
+      allowedUDPPorts = [ 3216 27036 48010 ];
       allowedUDPPortRanges = [
         { from = 24800; to = 24810; }
         { from = 47998; to = 48000; }

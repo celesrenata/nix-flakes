@@ -13,24 +13,24 @@
     ];
 
   environment.localBinInPath = true;
-  fileSystems."/mnt/games" =
-    { device = "/dev/disk/by-uuid/e3e7ef09-ad64-4cc3-ae04-fc20084ff1ec";
-      fsType = "btrfs";
-      options = [
-        "user"
-        "exec"
-        "noatime"
-      ];
-    };
-  fileSystems."/mnt/backups" =
-    { device = "192.168.42.8:/volume2/Backups";
-      fsType = "nfs";
-      options = [
-        "user"
-        "exec"
-        "noatime"
-      ];
-    };  
+#  fileSystems."/mnt/games" =
+#    { device = "/dev/disk/by-uuid/e3e7ef09-ad64-4cc3-ae04-fc20084ff1ec";
+#      fsType = "btrfs";
+#      options = [
+#        "user"
+#        "exec"
+#        "noatime"
+#      ];
+#    };
+#  fileSystems."/mnt/backups" =
+#    { device = "192.168.42.8:/volume2/Backups";
+#      fsType = "nfs";
+#      options = [
+#        "user"
+#        "exec"
+#        "noatime"
+#      ];
+#    };  
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -316,6 +316,8 @@
     moonlight-qt
     xfce.thunar
     wayland-scanner
+    waypipe
+    lan-mouse
 
     # Media
     plex-media-player

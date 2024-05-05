@@ -124,7 +124,7 @@
          ],
          "id": 5
      },
-@@ -87,11 +91,12 @@ export const keybindList = [[
+@@ -87,11 +91,15 @@ export const keybindList = [[
          "icon": "apps",
          "name": "Apps",
          "binds": [
@@ -136,13 +136,16 @@
 +            { "keys": ["󰘳", "Ctrl", "+", "H"], "action": "Launch terminal: Foot" },
 +            { "keys": ["󰘳", "Ctrl", "+", "B"], "action": "Launch browser: Firefox" },
 +	    { "keys": ["󰘳", "Ctrl", "Shift", "+", "B"], "action": "Launch browser: Chromium" },
++            { "keys": ["󰘳", "Ctrl", "+", "M"], "action": "Launch music: Tidal" },
++            { "keys": ["󰘳", "Ctrl", "Shift", "+", "M"], "action": "Launch music: Cider" },
++            { "keys": ["󰘳", "Ctrl", "⌥", "+", "M"], "action": "Launch music: Spotify" },
 +            { "keys": ["󰘳", "Ctrl", "+", "C"], "action": "Launch editor: vscode" },
 +            { "keys": ["󰘳", "Ctrl", "+", "X"], "action": "Launch editor: Sublime" },
 +            { "keys": ["󰘳", "Ctrl", "+", "I"], "action": "Launch settings: GNOME Control center" }
          ],
          "id": 6
      },
-@@ -99,8 +104,13 @@ export const keybindList = [[
+@@ -99,8 +107,13 @@ export const keybindList = [[
          "icon": "keyboard",
          "name": "Typing",
          "binds": [
@@ -158,7 +161,7 @@
          ],
          "id": 7
      },
-@@ -112,10 +122,25 @@ export const keybindList = [[
+@@ -112,10 +125,25 @@ export const keybindList = [[
              { "keys": [">img"], "action": "Select wallpaper and generate colorscheme" },
              { "keys": [">light"], "action": "Switch to light theme" },
              { "keys": [">dark"], "action": "Switch to dark theme" },
