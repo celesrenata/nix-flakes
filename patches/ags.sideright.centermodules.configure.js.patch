@@ -1,0 +1,32 @@
+--- a/.config/ags/modules/sideright/centermodules/configure.js
++++ b/.config/ags/modules/sideright/centermodules/configure.js
+@@ -30,6 +30,18 @@ const HyprlandSpinButton = ({ icon, name, desc = null, option, ...rest }) => Con
+     ...rest,
+ });
+ 
++const TransSlider = ({ icon, name, desc = null, option, ...rest }) => ConfigSpinButton({
++    icon: icon,
++    name: name,
++    desc: desc,
++    initValue: Number(exec(['bash', '-c', `cat $HOME/.cache/ags/user/generated/terminal/transparency`])),
++    onChange: (self, newValue) => {
++	execAsync(['bash', '-c', `echo ${newValue} > $HOME/.cache/ags/user/generated/terminal/transparency`])
++	    .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/applycolor.sh term`]))
++            .catch(print);
++    },
++});
++
+ const Subcategory = (children) => Box({
+     className: 'margin-left-20',
+     vertical: true,
+@@ -74,6 +86,10 @@ export default (props) => {
+                                     .catch(print);
+                             },
+                         }),
++			Subcategory([
++                            TransSlider({ icon: 'opacity', name: 'Terminal Opacity', desc: "Changes the opacity of the foot terminal", minValue: 0, maxValue: 100 }),
++                        ]),
++                        ConfigGap({}),
+                         HyprlandToggle({ icon: 'blur_on', name: 'Blur', desc: "Enable blur on transparent elements\nDoesn't affect performance/power consumption unless you have transparent windows.", option: "decoration:blur:enabled" }),
+                         Subcategory([
+                             HyprlandToggle({ icon: 'stack_off', name: 'X-ray', desc: "Make everything behind a window/layer except the wallpaper not rendered on its blurred surface\nRecommended to improve performance (if you don't abuse transparency/blur) ", option: "decoration:blur:xray" }),

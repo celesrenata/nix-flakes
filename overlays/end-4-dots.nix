@@ -6,11 +6,12 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "ced3823270fcee9cf9de7b5b25b25db3f7dc9012";
-      sha256 = "sha256-dGZQpcJ1wrWCYBJJK/szOIW6AsqTZHYVkz3EiCwYyqc=";
+      rev = "f4251b71e3bd3b076271f0e5baad842e68e8247a";
+      sha256 = "sha256-JGcm8gXfZI8TQTFbs5nmDI2wI/Uth6/IQKvMkJARPA4=";
     };
 
     patches = [
+      ../patches/ags.sideright.centermodules.configure.js.patch
       ../patches/applycolor.sh.patch
       ../patches/cheatsheet.data_keybinds.js.patch
       ../patches/cheatsheet.main.js.patch
@@ -23,15 +24,15 @@ rec {
       ../patches/hypr.custom.execs.conf.patch
       ../patches/hypr.custom.keybinds.conf.patch
       ../patches/hypr.custom.general.conf.patch
-      ../patches/hypr.hyprland.general.conf.patch
       ../patches/fish.config.fish.patch
     ];
     
     installPhase = ''
+      install -m755 -D .local/bin/fuzzel-emoji $out/.local/bin/fuzzel-emoji
       cd .config
       find ags -type f | grep -v "_material.scss" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find anyrun -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
-      find fish -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
+      #find fish -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       #find fontconfig -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find hypr -type f | grep -v "hyprlock.conf\|colors.conf" | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find mpv -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash

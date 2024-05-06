@@ -1,6 +1,6 @@
 --- a/.config/hypr/custom/keybinds.conf
 +++ b/.config/hypr/custom/keybinds.conf
-@@ -1,2 +1,228 @@
+@@ -1,2 +1,233 @@
 -# You can put your preferred keybinds here
 -# https://wiki.hyprland.org/Configuring/Binds/
 \ No newline at end of file
@@ -29,20 +29,24 @@
 +# Code
 +bind = $Primary$Secondary, U, exec, code
 +# Discord
-+bind = $Primary$Secondary, I, exec, armcord -enable-features=UseOzonePlatform --ozone-platform=wayland
-+# Tidal
-+bind = $Primary$Secondary, M, exec, kodi
-+# foot
++bind = $Primary$Secondary, I, exec, vesktop 
++# Music
++bind = $Primary$Secondary, M, exec, kodi 
++bind = $Primary$Secondary$Tertiary, M, exec, plexmediaplayer
++bind = $Primary$Secondary$Alternate, M, exec, jellyfinmediaplayer
++# Foot
 +bind = $Primary$Secondary, H, exec, foot
 +bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
-+# finders
++# Finders
 +bind = $Primary$Secondary, J, exec, thunar
-+# firefox
-+bind = $Primary$Secondary, L, exec, firefox
-+bind = $Primary$Secondary$Tertiary, L, exec, /usr/bin/microsoft-edge-beta --enable-features=UseOzonePlatform --ozone-platform=wayland --gtk-version=4
++bind = $Primary$Secondary$Tertiary, T, exec, nautilus
++# Browsers
++bind = $Primary$Secondary, B, exec, firefox
++bind = $Primary$Secondary$Tertiary, B, exec, chromium 
++
 +# notepad
-+bind = $Primary$Secondary, 48, exec, subl
-+bind = $Primary$Secondary, 47, exec, codium
++bind = $Primary$Secondary, X, exec, subl
++bind = $Primary$Secondary, C, exec, code
 +bind = $Primary$Secondary$Tertiary, 47, exec, jetbrains-fleet
 +# office
 +bind = $Secondary$Tertiary, W, exec, wps
@@ -60,6 +64,7 @@
 +bind = $Primary$Alternate, Insert, exec, foot -F btop
 +
 +# Actions
++bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji
 +bind = $Alternate, F4, killactive,
 +bind = $Secondary$Alternate, Space, togglefloating, 
 +bind = $Secondary$Alternate, Q, exec, hyprctl kill
@@ -72,16 +77,16 @@
 +bind = $Secondary$Tertiary, D, exec,~/.local/bin/rubyshot | wl-copy
 +bindl =,Print,exec,grim - | wl-copy
 +bind = $Secondary$Tertiary, 4, exec, grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" - | wl-copy
-+bind = $Secondary$Tertiary, 5, exec, ~/.config/ags/scripts/record-script.sh --sound
++bind = $Secondary$Tertiary, 5, exec, ~/.config/ags/scripts/record-script.sh
++bind = $Secondary$Alternate, 5, exec, ~/.config/ags/scripts/record-script.sh --sound
 +bind = $Secondary$Tertiary$Alternate, 5, exec, ~/.config/ags/scripts/record-script.sh --fullscreen-sound
-+bind = $Primary$Tertiary, C, exec, wtype -M logo c -m logo && wl-paste >> ~/.config/snippets/active && notify-send "Snipped!"
 +
 +bind = $Secondary$Alternate, C, exec, hyprpicker -a
-+#bind = $Secondary, V, exec, wtype -M ctrl v -m ctrl
-+bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -m ctrl
-+bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -m ctrl
-+bind = $Primary, Menu, exec, tac ~/.local/share/snippets | wofi -Iim --dmenu | tr -d '\n' | wl-copy && wtype -M logo v -m logo
-+bind = $Alternate, Menu, exec, wtype -M ctrl c -m ctrl && wl-paste >> ~/.local/share/snippets && notify-send "Added to snippets!"
++bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
++bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
++bind = $Primary, Menu, exec, tac ~/.local/share/snippets | wofi -Iim --dmenu | sed -z '$ s/\n$//' | wl-copy && wtype -M ctrl v -M ctrl
++bind = $Alternate, Menu, exec, wtype -M logo c -M logo && wl-paste >> ~/.local/share/snippets && sed '/^[[:space:]]*$/d' -i ~/.local/share/snippets && notify-send "Added to snippets!"
++bind = $Alternate$Tertiary, Menu, exec, tac ~/.local/share/snippets | wofi -Iim --dmenu | xargs -I '%' ~/.local/bin/regexEscape.sh "'%'"| xargs -I '%' sed '/\(^.*%.*$\)/d' -i ~/.local/share/snippets && notify-send "Deleted from snippets!"
 +
 +# Text-to-image
 +# Normal
@@ -100,8 +105,7 @@
 +bind = $Secondary$Tertiary, P, exec, playerctl play-pause
 +
 +#Lock screen  |  blur: --effect-blur=20x202
-+bind = $Secondary, L, exec, swaylock
-+bind = $Secondary$Tertiary, L, exec, swaylock
++bind = $Primary$Secondary, L, exec, hyprlock 
 +# bindl = $Secondary$Tertiary, L, exec, sleep 0.1 && systemctl suspend
 +
 +# App launcher
@@ -112,13 +116,14 @@
 +bind = $Primary$Secondary, T, exec, ~/.config/ags/scripts/color_generation/switchwall.sh
 +bind = $Alternate, Tab, exec, ags -t 'overview'
 +bind = $Secondary, Space, exec, ags -t 'overview'
-+bind = $Secondary$Alternate, Slash, exec, ags -t 'cheatsheet0'
++bind = $Secondary$Alternate, Slash, exec, ~/.local/bin/agsAction.sh cheatsheet
 +bind = $Secondary, B, exec, ags -t 'sideleft'
 +bind = $Secondary, N, exec, ags -t 'sideright'
 +bind = $Secondary, M, exec, ags run-js 'openMusic$Primarys.value = (!Mpris.getPlayer() ? false : !openMusic$Primarys.value);'
 +bind = $Secondary, Comma, exec, ags run-js 'openColorScheme.value = true; Utils.timeout(2000, () => openColorScheme.value = false);'
-+bind = $Secondary, K, exec, ags -t 'osk'
-+bind = $Primary$Alternate, Delete, exec, ags -t 'session'
++bind = $Secondary, K, exec, ~/.local/bin/agsAction osk
++bind = $Primary$Alternate, Delete, exec, ~/.local/bin/agsAction.sh session
++bind = $Secondary$Alternate, Delete, exec, foot -F btop
 +bindr = $Primary, $Primary_R, exec, ags run-js 'indicator.popup(-1);'
 +bindr = $Primary, $Primary_R, exec, ags run-js 'Notifications.notifications.forEach((notif) => notif.dismiss())'
 +bindle = , XF86AudioRaiseVolume, exec, ags run-js 'indicator.popup(1);'

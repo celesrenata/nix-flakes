@@ -1,4 +1,4 @@
-{ config, lib, pkgs, nixpkgs,  ... }:
+{ config, lib, pkgs, pkgs-unstable, nixpkgs,  ... }:
 {
   config = {
     # Remote Desktop
@@ -17,22 +17,22 @@
       models = "/opt/ollama/models";
     };
 
-    environment.systemPackages = with pkgs; [
+    environment.systemPackages = with pkgs-unstable; [
       libGL
       kdenlive
     ];
     hardware.opengl =
     let
       fn = oa: {
-        nativeBuildInputs = oa.nativeBuildInputs ++ [ pkgs.glslang ];
+        nativeBuildInputs = oa.nativeBuildInputs ++ [ pkgs-unstable.glslang ];
         mesonFlags = oa.mesonFlags ++ [ "-Dvulkan-layers=device-select,overlay" ];
       };
     in
-    with pkgs; {
+    with pkgs-unstable; {
       enable = true;
       driSupport = true;
-      package = (mesa.overrideAttrs fn).drivers;
-      extraPackages = with pkgs; [
+      package = (pkgs-unstable.mesa.overrideAttrs fn).drivers;
+      extraPackages = with pkgs-unstable; [
         vaapiVdpau
         libvdpau-va-gl
         libGL

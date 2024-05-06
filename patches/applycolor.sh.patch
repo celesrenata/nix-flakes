@@ -1,14 +1,23 @@
 --- a/.config/ags/scripts/color_generation/applycolor.sh
 +++ b/.config/ags/scripts/color_generation/applycolor.sh
-@@ -1,6 +1,6 @@
+@@ -1,10 +1,15 @@
  #!/usr/bin/env bash
  
 -term_alpha=100 #Set this to < 100 make all your terminals transparent
-+term_alpha=70 #Set this to < 100 make all your terminals transparent
  # sleep 0 # idk i wanted some delay or colors dont get applied properly
  if [ ! -d "$HOME"/.cache/ags/user/generated ]; then
      mkdir -p "$HOME"/.cache/ags/user/generated
-@@ -22,7 +22,7 @@ transparentize() {
+ fi
++if [ ! -f "$HOME"/.cache/ags/user/generated/terminal/transparency ]; then
++    term_alpha=100 #Set this to < 100 make all your terminals transparent
++    echo "$term_alpha" > "$HOME"/.cache/ags/user/generated/terminal/transparency
++else
++    term_alpha=$(cat "$HOME"/.cache/ags/user/generated/terminal/transparency)
++fi
+ cd "$HOME/.config/ags" || exit
+ 
+ colornames=''
+@@ -22,7 +27,7 @@ transparentize() {
    local hex="$1"
    local alpha="$2"
    local red green blue
@@ -17,7 +26,7 @@
    red=$((16#${hex:1:2}))
    green=$((16#${hex:3:2}))
    blue=$((16#${hex:5:2}))
-@@ -30,6 +30,17 @@ transparentize() {
+@@ -30,6 +35,17 @@ transparentize() {
    printf 'rgba(%d, %d, %d, %.2f)\n' "$red" "$green" "$blue" "$alpha"
  }
  
@@ -35,7 +44,27 @@
  get_light_dark() {
      lightdark=""
      if [ ! -f "$HOME"/.cache/ags/user/colormode.txt ]; then
-@@ -49,6 +60,7 @@ apply_fuzzel() {
+@@ -40,6 +56,19 @@ get_light_dark() {
+     echo "$lightdark"
+ }
+ 
++get_transparency() {
++    transparency=""
++    if [ ! -f "$HOME"/.cache/ags/user/colormode.txt ]; then
++        echo "" > "$HOME"/.cache/ags/user/colormode.txt
++    else
++        transparency=$(sed -n '2p' "$HOME/.cache/ags/user/colormode.txt")
++    fi  
++    if [ "${transparency}" == "opaque" ]; then
++	term_alpha=100
++    fi
++    echo "$term_alpha"
++}
++
+ apply_fuzzel() {
+     # Check if scripts/templates/fuzzel/fuzzel.ini exists
+     if [ ! -f "scripts/templates/fuzzel/fuzzel.ini" ]; then
+@@ -49,6 +78,7 @@ apply_fuzzel() {
      # Copy template
      mkdir -p "$HOME"/.cache/ags/user/generated/fuzzel
      cp "scripts/templates/fuzzel/fuzzel.ini" "$HOME"/.cache/ags/user/generated/fuzzel/fuzzel.ini
@@ -43,7 +72,7 @@
      # Apply colors
      for i in "${!colorlist[@]}"; do
          sed -i "s/{{ ${colorlist[$i]} }}/${colorvalues[$i]#\#}/g" "$HOME"/.cache/ags/user/generated/fuzzel/fuzzel.ini
-@@ -57,6 +69,24 @@ apply_fuzzel() {
+@@ -57,7 +87,26 @@ apply_fuzzel() {
      cp  "$HOME"/.cache/ags/user/generated/fuzzel/fuzzel.ini "$HOME"/.config/fuzzel/fuzzel.ini
  }
  
@@ -66,9 +95,11 @@
 +}
 +
  apply_term() {
++    term_alpha=$(get_transparency)
      # Check if terminal escape sequence template exists
      if [ ! -f "scripts/templates/terminal/sequences.txt" ]; then
-@@ -66,6 +96,7 @@ apply_term() {
+         echo "Template file not found for Terminal. Skipping that."
+@@ -66,11 +115,12 @@ apply_term() {
      # Copy template
      mkdir -p "$HOME"/.cache/ags/user/generated/terminal
      cp "scripts/templates/terminal/sequences.txt" "$HOME"/.cache/ags/user/generated/terminal/sequences.txt
@@ -76,7 +107,13 @@
      # Apply colors
      for i in "${!colorlist[@]}"; do
          sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$HOME"/.cache/ags/user/generated/terminal/sequences.txt
-@@ -89,6 +120,7 @@ apply_hyprland() {
+     done
+-
++    
+     sed -i "s/\$alpha/$term_alpha/g" "$HOME/.cache/ags/user/generated/terminal/sequences.txt"
+ 
+     for file in /dev/pts/*; do
+@@ -89,6 +139,7 @@ apply_hyprland() {
      # Copy template
      mkdir -p "$HOME"/.cache/ags/user/generated/hypr/hyprland
      cp "scripts/templates/hypr/hyprland/colors.conf" "$HOME"/.cache/ags/user/generated/hypr/hyprland/colors.conf
@@ -84,7 +121,7 @@
      # Apply colors
      for i in "${!colorlist[@]}"; do
          sed -i "s/{{ ${colorlist[$i]} }}/${colorvalues[$i]#\#}/g" "$HOME"/.cache/ags/user/generated/hypr/hyprland/colors.conf
-@@ -106,6 +138,7 @@ apply_hyprlock() {
+@@ -106,6 +157,7 @@ apply_hyprlock() {
      # Copy template
      mkdir -p "$HOME"/.cache/ags/user/generated/hypr/
      cp "scripts/templates/hypr/hyprlock.conf" "$HOME"/.cache/ags/user/generated/hypr/hyprlock.conf
@@ -92,7 +129,7 @@
      # Apply colors
      # sed -i "s/{{ SWWW_WALL }}/${wallpath_png}/g" "$HOME"/.cache/ags/user/generated/hypr/hyprlock.conf
      for i in "${!colorlist[@]}"; do
-@@ -121,6 +154,7 @@ apply_gtk() { # Using gradience-cli
+@@ -121,6 +173,7 @@ apply_gtk() { # Using gradience-cli
      # Copy template
      mkdir -p "$HOME"/.cache/ags/user/generated/gradience
      cp "scripts/templates/gradience/preset.json" "$HOME"/.cache/ags/user/generated/gradience/preset.json
@@ -100,7 +137,7 @@
  
      # Apply colors
      for i in "${!colorlist[@]}"; do
-@@ -148,6 +182,28 @@ apply_ags() {
+@@ -148,6 +201,28 @@ apply_ags() {
      ags run-js "App.resetCss(); App.applyCss('${HOME}/.cache/ags/user/generated/style.css');"
  }
  
@@ -129,7 +166,17 @@
  if [[ "$1" = "--bad-apple" ]]; then
      lightdark=$(get_light_dark)
      cp scripts/color_generation/specials/_material_badapple"${lightdark}".scss scss/_material.scss
-@@ -170,3 +226,5 @@ apply_hyprlock &
+@@ -164,9 +239,15 @@ else
+     colorvalues=( $colorstrings ) # Array of color values
+ fi
+ 
++if [ "$1" = "term" ]; then
++    apply_term &
++    exit 0
++fi
+ apply_ags &
+ apply_hyprland &
+ apply_hyprlock &
  apply_gtk &
  apply_fuzzel &
  apply_term &

@@ -1,12 +1,13 @@
 --- a/.config/hypr/custom/execs.conf
 +++ b/.config/hypr/custom/execs.conf
-@@ -1,2 +1,50 @@
+@@ -1,2 +1,48 @@
 -# You can make apps auto-start here
 -# Relevant Hyprland wiki section: https://wiki.hyprland.org/Configuring/Keywords/#executing
 +# Wallpaper
 +#exec-once = swaybg -i ~/.config/eww/images/wallpaper/wallpaper
 +#exec-once = swww init; swww kill; swww init # idk why tbh
 +exec-once = swww-daemon --format xrgb
++exec-once = sleep 1 && pkill swww && swww init
 + 
 +# Status bar
 +#exec-once = eww daemon && eww open bar && eww open bgdecor
@@ -36,20 +37,17 @@
 +# are a good way to crash Hyprland
 +
 +# Gestures
-+exec=touchegg
++exec-once=touchegg
 +
 +# Bluetooth
-+exec-once=blueman-tray
-+#exec-once=antimicrox --tray --hidden
++exec=blueman-tray &
++exec-once=sleep 4 && antimicrox --tray --hidden &
 +
 +# Allow GPU enabled XWayland applications that MUST run as root
 +exec=xhost +SI:localuser:root
 +
 +# Network Manager
-+exec-once=nm-applet
++exec-once=nm-applet &
 +
-+# Dock
-+exec-once=cairo-dock
-+
-+# Remote VNC
-+exec-once=wayvnc
++# Remote Desktop
++exec-once=~/.local/bin/sunshine &

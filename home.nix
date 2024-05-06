@@ -1,10 +1,10 @@
-{ inputs, pkgs, ... }: 
+{ inputs, pkgs, pkgs-stable, ... }: 
 let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "7fe84dc6c54cb10e57f697b3dcbdd76619cb6e73";
-    sha256 = "sha256-LoRHQWsxXo6fsmS4rVyZ4dhT3eHk40c3OvxrVXmhfGo=";
+    rev = "a374624ffb2bb40b3942c1c451ad46fefff33d46";
+    sha256 = "sha256-qxaaaagB1OFmKrgYqTdOXzpNMTTvMLEiP0lMDDvCMa8=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -19,7 +19,7 @@ let
   programs.ags = {
     enable = true;
     configDir = null;
-    extraPackages = with pkgs; [
+    extraPackages = with pkgs-stable; [
       gtksourceview
       webkitgtk
       accountsservice
@@ -40,7 +40,7 @@ let
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
-  home.file.".config/touchegg/touchegg.conf" = {
+home.file.".config/touchegg/touchegg.conf" = {
     source = celes-dots + "/.config/touchegg/touchegg.conf";
   };
   home.file.".config/ags/scripts/windowstate/state.sh" = {
@@ -56,15 +56,26 @@ let
     source = celes-dots + "/.config/wofi/config";
   };
   home.file.".local/bin/initialSetup.sh" = {
-    source = celes-dots + "/.local/bin/initialSetupRPI5.sh";
+    source = celes-dots + "/.local/bin/initialSetup.sh";
+  };
+  home.file.".local/bin/sunshine" = {
+    source = celes-dots + "/.local/bin/sunshineFixed";
+  };
+  home.file.".local/bin/agsAction.sh" = {
+    source = celes-dots + "/.local/bin/agsAction.sh";
+  };
+  home.file.".local/bin/regexEscape.sh" = {
+    source = celes-dots + "/.local/bin/regexEscape.sh";
   };
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
+  home.file.".local/bin/fuzzel-emoji" = {
+    source = pkgs.end-4-dots + "/.local/bin/fuzzel-emoji";
+  };
   home.file."Backgrounds/love-is-love.jpg" = {
     source = celes-dots + "/love-is-love.jpg";
   };
-
   # encode the file content in nix configuration file directly
   # home.file.".xxx".text = ''
   #     xxx
@@ -87,6 +98,7 @@ let
   # VSCode
   programs.vscode = {
     enable = true;
+    package = pkgs.vscode;
     extensions = with pkgs.vscode-extensions; [
       dracula-theme.theme-dracula
       #vscodevim.vim
@@ -98,30 +110,47 @@ let
     ];
   };
   programs.btop.settings = {
+    package = pkgs.btop;
     color_theme = "Default";
     theme_background = false;
   };
-  programs.fish.enable = true;
+  programs.fish = {
+    enable = true;
+    shellAliases = {
+      cider = "env -u NIXOS_OZONE_WL cider --use-gl=desktop";
+      sunshine = "~/.local/bin/sunshine";
+    };
+    shellInit = ''
+      function fish_prompt -d "Write out the prompt"
+    # This shows up as USER@HOST /home/user/ >, with the directory colored
+    # $USER and $hostname are set by fish, so you can just use them
+    # instead of using `whoami` and `hostname`
+    fish_add_path -p $HOME/.local/bin
+    printf '%s@%s %s%s%s > ' $USER $hostname \
+        (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
+end
 
-  # Obs.
-  #programs.obs-studio = {
-  #  enable = true;
-  #  plugins = with pkgs.obs-studio-plugins; [
-  #    #wlrobs
-  #    obs-backgroundremoval
-  #    obs-pipewire-audio-capture
-  #    obs-vaapi
-  #  ];
-  #};
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+    set fish_greeting
+
+end
+
+starship init fish | source
+if test -f ~/.cache/ags/user/generated/terminal/sequences.txt
+    cat ~/.cache/ags/user/generated/terminal/sequences.txt
+end
+    '';
+  };
 
   # Packages that should be installed to the user profile.
-  home.packages = with pkgs; [
+  home.packages = 
+  (with pkgs-stable; [
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
 
     neofetch
     macchina
-    btop
     nnn # terminal file manager
 
     # archives
@@ -134,14 +163,11 @@ let
     ripgrep # recursively searches directories for a regex pattern
     jq # A lightweight and flexible command-line JSON processor
     yq-go # yaml processer https://github.com/mikefarah/yq
-    eza # A modern replacement for ‘ls’
     fzf # A command-line fuzzy finder
 
     # programs
     firefox
     chromium
-    armcord
-    darktable
 
     # Extra Launchers.
 
@@ -184,13 +210,11 @@ let
     hugo # static site generator
     glow # markdown previewer in terminal
 
-    btop  # replacement of htop/nmon
     iotop # io monitoring
     iftop # network monitoring
 
     # system call monitoring
     strace # system call monitoring
-    ltrace # library call monitoring
     lsof # list open files
 
     # system tools
@@ -199,10 +223,7 @@ let
     ethtool
     pciutils # lspci
     usbutils # lsusb
-    toshy
     wofi-calc
-    openrgb-with-all-plugins
-    KeyboardVisualizer
 
     # Development
     # MicroTex Deps
@@ -214,6 +235,76 @@ let
     # Other
     graphviz
 
+    # Player and Audio
+    pavucontrol
+    libdbusmenu-gtk3
+    plasma-browser-integration
+    playerctl
+    mpv
+    vlc
+
+    # GTK
+    gtk-layer-shell
+    gtk3
+    gtksourceview3
+    upower
+    yad
+    ydotool
+    gobject-introspection
+    wrapGAppsHook
+
+    # QT
+    libsForQt5.qwt
+
+    # Gnome Stuff
+    polkit_gnome
+    gnome.gnome-keyring
+    gnome.gnome-control-center
+    gnome.gnome-bluetooth
+    gnome.gnome-shell
+    yaru-theme
+    blueberry
+    networkmanager
+    brightnessctl
+    wlsunset
+
+    # AGS and Hyprland dependencies.
+    coreutils
+    cliphist
+    curl
+    fuzzel
+    ripgrep
+    gjs
+    axel
+    wlogout
+    wl-clipboard
+    gammastep
+    libnotify
+
+    # Themes
+    qt5ct
+
+    # Screenshot and Recorder
+    swappy
+    wf-recorder
+    grim
+    tesseract
+    slurp 
+  ])
+
+  ++
+
+    (with pkgs; [
+    adw-gtk3
+    armcord
+    dart-sass
+    eza
+    gojq
+    gradience
+    hypridle
+    hyprlock
+    hyprpicker
+    lan-mouse
     # Python
     pyenv.out
     (python311.withPackages(ps: with ps; [
@@ -237,91 +328,14 @@ let
       ordered-set
       six
       hatchling
-      python-xlib
-      python-xwaykeyz
-      python-hyprpy
       pycairo
       xkeysnail
     ]))
-
-    # Player and Audio
-    pavucontrol
-    wireplumber
-    libdbusmenu-gtk3
-    plasma-browser-integration
-    playerctl
+    python311Packages.debugpy
     swww
-    mpv
-    vlc
-
-    # GTK
     webp-pixbuf-loader
-    gtk-layer-shell
-    gtk3
-    gtksourceview3
-    upower
-    yad
-    ydotool
-    gobject-introspection
-    wrapGAppsHook
-
-    # QT
-    libsForQt5.qwt
-
-    # Gnome Stuff
-    polkit_gnome
-    gnome.gnome-keyring
-    gnome.gnome-control-center
-    gnome.gnome-bluetooth
-    gnome.gnome-shell
-    gnome-pie
-    yaru-theme
-    blueberry
-    networkmanager
-    brightnessctl
-    wlsunset
-
-    # AGS and Hyprland dependencies.
-    coreutils
-    cliphist
-    curl
-    fuzzel
-    ripgrep
-    gojq
-    gjs
-    dart-sass
-    axel
-    hypridle
-    hyprlock
-    wlogout
-    wl-clipboard
-    hyprpicker
-    nwg-dock-hyprland
-    nwg-launchers
-
-    # Fonts
-    fontconfig
-    lexend
-    nerdfonts
-    material-symbols
-    bibata-cursors
-
-    # Shells and Terminals
-    starship
-    foot
-
-    # Themes
-    adw-gtk3
-    qt5ct
-    gradience
-
-    # Screenshot and Recorder
-    swappy
-    wf-recorder
-    grim
-    tesseract
-    slurp 
-  ];
+    wireplumber
+  ]);
 
   # basic configuration of git, please change to your own
   programs.git = {

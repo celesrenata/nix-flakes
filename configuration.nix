@@ -2,10 +2,15 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs, ... }:
+{ pkgs, pkgs-unstable, ... }:
 {
   # Licences.
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config = {
+    allowUnfree = true;
+    packageOverrides = pkgs: {
+      unstable = pkgs-unstable;
+    };
+  };  
 
   # Inscure packages allowed.
   nixpkgs.config.permittedInsecurePackages = [
@@ -19,8 +24,6 @@
 
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
-  boot.plymouth.enable = true;
 
   # Udev rules.
   hardware.uinput.enable = true;
@@ -47,7 +50,13 @@
   };
 
   # Enable the GDM Display Manager.
-  services.xserver.displayManager.gdm.enable = true;
+  services.displayManager = {
+    defaultSession = "hyprland";
+  };
+  services.xserver.displayManager.gdm = {
+      enable = true;
+      wayland = true;
+  };
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
@@ -58,6 +67,7 @@
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
+    package = pkgs-unstable.hyprland;
     # Whether to enable Xwayland
     xwayland.enable = true;
   };
@@ -73,8 +83,8 @@
 
   # Configure keymap in X11
   services.xserver = {
-    layout = "us";
-    xkbVariant = "";
+    xkb.layout = "us";
+    xkb.variant = "";
   };
 
   # Enable CUPS to print documents.
@@ -108,7 +118,7 @@
   };
 
   # Enable Fonts.
-  fonts.packages = with pkgs; [
+  fonts.packages = with pkgs-unstable; [
     noto-fonts
     noto-fonts-cjk
     noto-fonts-emoji
@@ -118,6 +128,11 @@
     mplus-outline-fonts.githubRelease
     dina-font
     proggyfonts
+    fontconfig
+    lexend
+    nerdfonts
+    material-symbols
+    bibata-cursors
   ];
 
   # Extra Groups
@@ -177,7 +192,8 @@
   environment.sessionVariables.MOZ_ENABLE_WAYLAND = "1";
 
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = 
+  (with pkgs; [
     # Editors.
     vim
     
@@ -203,6 +219,8 @@
     mlocate
     barrier
     openssl
+    gnome.simple-scan
+    
 
     # Shells.
     fish
@@ -211,26 +229,8 @@
 
     # Development Tools.
     git
-#    nodejs_21
-#    meson
-#    gcc13
-#    cmake
-#    pkg-config
-#    glib.dev
-#    glib
-#    glibc.dev
-#    gobject-introspection.dev
-#    pango.dev
-#    harfbuzz.dev
-#    cairo.dev
-#    gdk-pixbuf.dev
-#    atk.dev
-#    libpulseaudio.dev
-#    typescript
-#    ninja
-#    nixStatic.dev
-#    node2nix
     nil
+    sublime4
 
     # Session.
     polkit
@@ -269,15 +269,12 @@
     sunshine
     moonlight-qt
     xfce.thunar
+    wayland-scanner
 
     # Media
     plex-media-player
     jellyfin-media-player
     kdenlive
-    (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
-      inputstream-adaptive
-      inputstream-ffmpegdirect
-    ]))
     
     # GTK
     gtk3
@@ -308,7 +305,17 @@
 
     # Mac Camera.
     libcamera
-  ];
+  ])
+
+  ++
+
+  (with pkgs-unstable; [
+    gnome.gdm
+    (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
+      inputstream-adaptive
+      inputstream-ffmpegdirect
+    ]))
+  ]);
 
   # List services that you want to enable:
 
