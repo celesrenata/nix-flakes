@@ -106,6 +106,7 @@ let
     ];
   };
   programs.btop.settings = {
+    package = pkgs-unstable.btop;
     color_theme = "Default";
     theme_background = false;
   };
@@ -165,7 +166,6 @@ end
 
     neofetch
     macchina
-    btop
     nnn # terminal file manager
 
     # archives
@@ -232,7 +232,6 @@ end
     hugo # static site generator
     glow # markdown previewer in terminal
 
-    btop  # replacement of htop/nmon
     iotop # io monitoring
     iftop # network monitoring
 
