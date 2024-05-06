@@ -29,7 +29,7 @@
 +# Code
 +bind = $Primary$Secondary, U, exec, code
 +# Discord
-+bind = $Primary$Secondary, I, exec, vesktop 
++bind = $Primary$Secondary, I, exec, armcord 
 +# Music
 +bind = $Primary$Secondary, M, exec, kodi 
 +bind = $Primary$Secondary$Tertiary, M, exec, plexmediaplayer

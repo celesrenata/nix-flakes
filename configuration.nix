@@ -2,14 +2,11 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs, pkgs-unstable, ... }:
+{ pkgs, pkgs-stable, ... }:
 {
   # Licences.
   nixpkgs.config = {
     allowUnfree = true;
-    packageOverrides = pkgs: {
-      unstable = pkgs-unstable;
-    };
   };  
 
   # Inscure packages allowed.
@@ -67,7 +64,7 @@
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
-    package = pkgs-unstable.hyprland;
+    package = pkgs.hyprland;
     # Whether to enable Xwayland
     xwayland.enable = true;
   };
@@ -118,7 +115,7 @@
   };
 
   # Enable Fonts.
-  fonts.packages = with pkgs-unstable; [
+  fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-cjk
     noto-fonts-emoji
@@ -149,7 +146,7 @@
   services.gnome.gnome-keyring.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
+  services.libinput.enable = true;
   services.keyd = {
     enable = true;
     keyboards.mac.settings = {
@@ -193,7 +190,7 @@
 
   # $ nix search wget
   environment.systemPackages = 
-  (with pkgs; [
+  (with pkgs-stable; [
     # Editors.
     vim
     
@@ -208,7 +205,6 @@
     ladspaPlugins
     calf
     lsp-plugins
-    easyeffects
     alsa-utils
 
     # System Tools.
@@ -229,7 +225,6 @@
 
     # Development Tools.
     git
-    nil
     sublime4
 
     # Session.
@@ -244,15 +239,11 @@
     linux-pam
     cliphist
     sudo
-    xwaylandvideobridge
 
     # Wayland.
-    xdg-desktop-portal-hyprland
     xwayland
     brightnessctl
     ydotool
-    swww
-    hyprpaper
     fcitx5
     wlsunset
     wtype
@@ -260,21 +251,14 @@
     xorg.xhost
     wev
     wf-recorder
-    ffmpeg_5-full
     mkvtoolnix-cli
     vulkan-tools
     libva-utils
     wofi
     libqalculate
-    sunshine
     moonlight-qt
     xfce.thunar
     wayland-scanner
-
-    # Media
-    plex-media-player
-    jellyfin-media-player
-    kdenlive
     
     # GTK
     gtk3
@@ -292,24 +276,24 @@
     # Not GTK.
     tk
 
-    # Terminals.
-    kitty
-    foot
-
-    # Emulation
-
-    # Mac Sound.
-    libspatialaudio
-    pulseaudio
-    #t2AppleAudioDSP
-
     # Mac Camera.
     libcamera
   ])
 
   ++
 
-  (with pkgs-unstable; [
+  (with pkgs; [
+    nil
+    foot
+    ffmpeg_5-full
+    libspatialaudio
+    pulseaudio
+    plex-media-player
+    jellyfin-media-player
+    kdenlive
+    xwaylandvideobridge
+    xdg-desktop-portal-hyprland
+    hyprpaper
     gnome.gdm
     (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
       inputstream-adaptive
