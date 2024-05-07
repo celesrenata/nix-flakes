@@ -14,6 +14,7 @@ rec {
       ../patches/ags.sideright.centermodules.configure.js.patch
       ../patches/applycolor.sh.patch
       ../patches/cheatsheet.data_keybinds.js.patch
+      ../patches/cheatsheet.keybinds.js.patch
       ../patches/cheatsheet.main.js.patch
       ../patches/data_keyboardlayouts.js.patch
       ../patches/user_options.js.patch
