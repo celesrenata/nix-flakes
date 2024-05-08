@@ -16,12 +16,13 @@
 11. `cd /mnt/sources`
 11. `git clone https://github.com/celesrenata/nix-flakes`
 11. `cp -r nix-flakes/* /mnt/etc/nixos/`
-11. Consider creating your own brance to track changes from my base code for things like, your username
+11. Consider creating your own branch to track changes from my base code for things like, your username
 11. `sudo nixos-install --root /mnt --flake /mnt/etc/nixos#esnixi`
 11. `sudo nixos-enter`
 11. `sudo passwd celes`
 11. `sudo poweroff`
 1. Map your video cards pci addresses
+1. disable svga head from virtual machine (mostly to not confuse the OS)
 1. Boot the virt
 1. Login from GDM.
 1. System will configure dynamic assets and then reboot for you.
