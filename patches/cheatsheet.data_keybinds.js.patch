@@ -36,7 +36,7 @@
          ],
          "id": 2
      },
-@@ -28,14 +28,14 @@ export const keybindList = [[
+@@ -28,15 +28,15 @@ export const keybindList = [[
          "icon": "move_group",
          "name": "Windows",
          "binds": [
@@ -46,6 +46,7 @@
 -            { "keys": ["󰖳", "+", "'"], "action": "Split ratio +" },
 -            { "keys": ["󰖳", "+", "Lmb"], "action": "Move window" },
 -            { "keys": ["󰖳", "+", "Rmb"], "action": "Resize window" },
+-            { "keys": ["󰖳", "Alt", "+", "Space"], "action": "Float window" },
 -            { "keys": ["󰖳", "+", "F"], "action": "Fullscreen" },
 -            { "keys": ["󰖳", "Alt", "+", "F"], "action": "Fake fullscreen" }
 +            { "keys": ["󰘳", "+", "←↑→↓"], "action": "Focus window in direction" },
@@ -54,12 +55,13 @@
 +            { "keys": ["󰘳", "+", "'"], "action": "Split ratio +" },
 +            { "keys": ["󰘳", "+", "Lmb"], "action": "Move window" },
 +            { "keys": ["󰘳", "+", "Rmb"], "action": "Resize window" },
++            { "keys": ["󰘳", "Alt", "+", "Space"], "action": "Float window" },
 +            { "keys": ["󰘳", "+", "F"], "action": "Fullscreen" },
-+            { "keys": ["󰘳", "⌥", "+", "F"], "action": "Fake fullscreen" }
++            { "keys": ["󰘳", "Alt", "+", "F"], "action": "Fake fullscreen" }
          ],
          "id": 3
      }
-@@ -45,23 +45,25 @@ export const keybindList = [[
+@@ -46,23 +46,25 @@ export const keybindList = [[
          "icon": "widgets",
          "name": "Widgets (AGS)",
          "binds": [
@@ -97,7 +99,7 @@
              // { "keys": ["(right)Ctrl"], "action": "Dismiss notification & close menus" }
          ],
          "id": 4
-@@ -69,15 +71,17 @@ export const keybindList = [[
+@@ -70,15 +72,17 @@ export const keybindList = [[
      {
          "icon": "construction",
          "name": "Utilities",
@@ -124,7 +126,7 @@
          ],
          "id": 5
      },
-@@ -87,11 +91,15 @@ export const keybindList = [[
+@@ -88,11 +92,15 @@ export const keybindList = [[
          "icon": "apps",
          "name": "Apps",
          "binds": [
@@ -145,7 +147,7 @@
          ],
          "id": 6
      },
-@@ -99,8 +107,13 @@ export const keybindList = [[
+@@ -100,8 +108,13 @@ export const keybindList = [[
          "icon": "keyboard",
          "name": "Typing",
          "binds": [
@@ -161,7 +163,7 @@
          ],
          "id": 7
      },
-@@ -112,10 +125,25 @@ export const keybindList = [[
+@@ -113,10 +126,25 @@ export const keybindList = [[
              { "keys": [">img"], "action": "Select wallpaper and generate colorscheme" },
              { "keys": [">light"], "action": "Switch to light theme" },
              { "keys": [">dark"], "action": "Switch to dark theme" },

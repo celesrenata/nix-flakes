@@ -1,4 +1,4 @@
-{ inputs, pkgs, pkgs-unstable, ... }: 
+{ inputs, pkgs, pkgs-old, pkgs-unstable, ... }: 
 let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
@@ -20,7 +20,7 @@ let
     enable = true;
     configDir = null;
     extraPackages = with pkgs; [
-      gtksourceview
+      pkgs-old.gtksourceview
       webkitgtk
       accountsservice
     ];
@@ -152,6 +152,7 @@ end
     package = pkgs-unstable.obs-studio;
     plugins = with pkgs-unstable.obs-studio-plugins; [
       wlrobs
+      #pkgs.obs-backgroundremovalOverride
       obs-backgroundremoval
       obs-pipewire-audio-capture
       obs-vaapi
@@ -334,6 +335,7 @@ end
     coreutils
     cliphist
     curl
+    ddcutil
     fuzzel
     ripgrep
     gojq
@@ -438,7 +440,7 @@ end
   # You can update home Manager without changing this value. See
   # the home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "23.11";
+  home.stateVersion = "24.05";
 
   # Let home Manager install and manage itself.
   programs.home-manager.enable = true;

@@ -50,7 +50,7 @@
 
   # Enable the GDM Display Manager.
   services.xserver.displayManager.gdm.enable = true;
-  services.xserver.displayManager.defaultSession = "hyprland";
+  services.displayManager.defaultSession = "hyprland";
   
   # Enable the X11 windowing system.
   services.xserver.enable = true;
@@ -87,7 +87,7 @@
   hardware.sane.enable = true;
   services.avahi = {
     enable = true;
-    nssmdns = true;
+    nssmdns4 = true;
     openFirewall = true;
   };
 
@@ -150,7 +150,7 @@
   services.gnome.gnome-keyring.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
+  services.libinput.enable = true;
   services.keyd = {
     enable = true;
     keyboards.mac.settings = {
@@ -197,7 +197,7 @@
   users.users.celes = {
     isNormalUser = true;
     description = "Celes Renata";
-    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" ];
+    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" ];
     packages = with pkgs; [
       firefox
     #  thunderbird
@@ -234,16 +234,34 @@
     networkmanagerapplet
     nix-index
     mlocate
-    barrier
+    util-linux
     openssl
     xsane
     gnome.simple-scan
+    btop
+
     # Shells.
     fish
     zsh
     bash
 
+    # Kubernetes Tools
+    k3s
+    (wrapHelm pkgs-unstable.kubernetes-helm {
+      plugins = with pkgs-unstable.kubernetes-helmPlugins; [
+        helm-secrets
+        helm-diff
+        helm-s3
+        helm-git
+      ];
+    }) 
+    pkgs-unstable.kubernetes-helm
+    pkgs-unstable.helmfile
+    kustomize
+    kompose
+
     # Development Tools.
+    jetbrains-toolbox
     git
     nodejs_20
     meson
@@ -328,6 +346,11 @@
     # Not GTK.
     tk
 
+    # Latex
+    texliveFull
+    texlive.combined.scheme-full
+    latexRes-package
+
     # Terminals.
     kitty
     foot
@@ -336,6 +359,7 @@
     lutris
     wine
     wine64
+    qemu
     protonup-qt
 
     # Mac Sound.
