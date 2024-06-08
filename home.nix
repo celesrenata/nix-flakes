@@ -3,8 +3,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "8c96e0dd8de90bb212bb82d15a064865ae2fe76f";
-    sha256 = "sha256-9W2ivdT0u51lAghf+9g/iUqTjpaNUaN6Be/mrrfe2ik=";
+    rev = "cf435920e9d85d3f2bad768dd6ad12ef22a1ac2c";
+    sha256 = "sha256-UgG4xSyJLo+z6SVskIR1op/5nN9h7bClGFblqToNzII=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -21,6 +21,7 @@ let
     configDir = null;
     extraPackages = with pkgs; [
       pkgs-old.gtksourceview
+      pkgs-old.gnome.gvfs
       webkitgtk
       accountsservice
     ];
@@ -35,24 +36,24 @@ let
 
   # link all files in `./scripts` to `~/.config/i3/scripts`
 
-  home.file.".config" = {
+  home.file.".configstaging" = {
     source = pkgs.end-4-dots;
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
-  home.file.".config/touchegg/touchegg.conf" = {
+  home.file.".configstaging/touchegg/touchegg.conf" = {
     source = celes-dots + "/.config/touchegg/touchegg.conf";
   };
-  home.file.".config/ags/scripts/windowstate/state.sh" = {
+  home.file.".configstaging/ags/scripts/windowstate/state.sh" = {
     source = celes-dots + "/.config/ags/scripts/windowstate/state.sh";
   };
-  home.file.".config/ags/scripts/templates/foot/foot.ini" = {
+  home.file.".configstaging/ags/scripts/templates/foot/foot.ini" = {
     source = celes-dots + "/.config/ags/scripts/templates/foot/foot.ini";
   };
-  home.file.".config/ags/scripts/templates/wofi/style.css" = {
+  home.file.".configstaging/ags/scripts/templates/wofi/style.css" = {
     source = celes-dots + "/.config/ags/scripts/templates/wofi/style.css";
   };
-  home.file.".config/wofi/config" = {
+  home.file.".configstaging/wofi/config" = {
     source = celes-dots + "/.config/wofi/config";
   };
   home.file.".local/bin/initialSetup.sh" = {
@@ -161,6 +162,12 @@ end
 
   # Packages that should be installed to the user profile.
   home.packages = 
+  (with pkgs-old; [
+    gnome.gvfs 
+  ])
+
+  ++
+
   (with pkgs; [
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them

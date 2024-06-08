@@ -6,8 +6,8 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "dots-hyprland";
-      rev = "9eaf71566639cace3207b5ba6376a6cde919052c";
-      sha256 = "sha256-1lN/uEXRmudCD4d/14ssOOw3FwAWCqlOH7LbgYa95DE=";
+      rev = "f4251b71e3bd3b076271f0e5baad842e68e8247a";
+      sha256 = "sha256-1lN/ueXRmudCD4d/14ssOOw3FwAWCqlOH7LbgYa95DE=";
     };
 
     patches = [

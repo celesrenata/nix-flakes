@@ -1,5 +1,12 @@
 --- a/.config/ags/scripts/color_generation/applycolor.sh
 +++ b/.config/ags/scripts/color_generation/applycolor.sh
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env bash
+-
++set -x
+ XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+ XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+ XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 @@ -7,11 +7,16 @@ CONFIG_DIR="$XDG_CONFIG_HOME/ags"
  CACHE_DIR="$XDG_CACHE_HOME/ags"
  STATE_DIR="$XDG_STATE_HOME/ags"
@@ -27,14 +34,13 @@
    red=$((16#${hex:1:2}))
    green=$((16#${hex:3:2}))
    blue=$((16#${hex:5:2}))
-@@ -37,6 +42,17 @@ transparentize() {
+@@ -37,6 +42,16 @@ transparentize() {
    printf 'rgba(%d, %d, %d, %.2f)\n' "$red" "$green" "$blue" "$alpha"
  }
  
 +dehex() {
 +  local hex="$1"
 +  local red green blue
-+
 +  red=$((16#${hex:1:2}))
 +  green=$((16#${hex:3:2}))
 +  blue=$((16#${hex:5:2}))
@@ -45,7 +51,7 @@
  get_light_dark() {
      lightdark=""
      if [ ! -f "$STATE_DIR/user/colormode.txt" ]; then
-@@ -47,6 +63,19 @@ get_light_dark() {
+@@ -47,6 +62,19 @@ get_light_dark() {
      echo "$lightdark"
  }
  
@@ -65,10 +71,13 @@
  apply_fuzzel() {
      # Check if scripts/templates/fuzzel/fuzzel.ini exists
      if [ ! -f "scripts/templates/fuzzel/fuzzel.ini" ]; then
-@@ -64,7 +93,27 @@ apply_fuzzel() {
-     cp  "$CACHE_DIR"/user/generated/fuzzel/fuzzel.ini "$XDG_CONFIG_HOME"/fuzzel/fuzzel.ini
- }
+@@ -62,9 +90,30 @@ apply_fuzzel() {
+     done
  
+     cp  "$CACHE_DIR"/user/generated/fuzzel/fuzzel.ini "$XDG_CONFIG_HOME"/fuzzel/fuzzel.ini
++    chmod +w "$XDG_CONFIG_HOME"/fuzzel/fuzzel.ini
++}
++
 +apply_foot() {
 +    if [ ! -f "scripts/templates/foot/foot.ini" ]; then
 +        echo "Template file not found for Foot. Skipping that."
@@ -86,8 +95,8 @@
 +    done
 +
 +    cp "$HOME"/.cache/ags/user/generated/foot/foot.ini "$HOME/.config/foot/foot.ini"
-+}
-+
+ }
+ 
  apply_term() {
 +    term_alpha=$(get_transparency)
      # Check if terminal escape sequence template exists
@@ -135,7 +144,7 @@
  
      # Apply colors
      for i in "${!colorlist[@]}"; do
-@@ -154,6 +210,28 @@ apply_ags() {
+@@ -154,6 +210,37 @@ apply_ags() {
      ags run-js 'openColorScheme.value = true; Utils.timeout(2000, () => openColorScheme.value = false);'
  }
  
@@ -154,7 +163,16 @@
 +    done
 +
 +    for i in "${!colorlist[@]}"; do
-+        dehexed=$(dehex ${colorvalues[$i]})
++        case ${colorvalues[$i]} in
++            True|False|true|false)
++                dehexed=${colorvalues[$i]}
++		#TODO: Do I need these?
++		continue
++	        ;;
++            *)
++                dehexed=$(dehex ${colorvalues[$i]})
++		;;
++        esac
 +        sed -i "s/{{ ${colorlist[$i]}-rgb }}/${dehexed}/g" "$HOME/.config/wofi/style_new.css"
 +    done
 +
@@ -164,7 +182,7 @@
  if [[ "$1" = "--bad-apple" ]]; then
      lightdark=$(get_light_dark)
      cp scripts/color_generation/specials/_material_badapple"${lightdark}".scss $STATE_DIR/scss/_material.scss
-@@ -170,9 +248,15 @@ else
+@@ -170,9 +257,15 @@ else
      colorvalues=( $colorstrings ) # Array of color values
  fi
  
