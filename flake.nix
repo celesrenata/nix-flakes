@@ -101,6 +101,7 @@
             home-manager.extraSpecialArgs = { 
               inherit inputs;
               inherit pkgs-unstable;
+              inherit pkgs-old;
             };
             home-manager.users.celes = import ./home.nix;
           }

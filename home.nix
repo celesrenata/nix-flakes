@@ -346,6 +346,8 @@ end
     hyprpicker
     gammastep
     libnotify
+    bc
+    xdg-user-dirs
 
     # Shells and Terminals
     starship
