@@ -5,11 +5,11 @@
     services.auto-cpufreq.enable = true;
     services.auto-cpufreq.settings = {
       battery = {
-        governor = "balanced";
+        governor = "onDemand";
         turbo = "auto";
       };
       charger = {
-        governor = "balanced";
+        governor = "onDemand";
         turbo = "auto";
       };
     };

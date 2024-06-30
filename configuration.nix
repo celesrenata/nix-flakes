@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs, pkgs-stable, ... }:
+{ pkgs, pkgs-old, pkgs-unstable, ... }:
 {
   # Licences.
   nixpkgs.config = {
@@ -24,6 +24,10 @@
 
   # Udev rules.
   hardware.uinput.enable = true;
+
+  # Logitech.
+  hardware.logitech.wireless.enable = true;
+  hardware.logitech.wireless.enableGraphical = true;
 
   # Set your time zone.
 
@@ -76,7 +80,10 @@
   services.acpid.enable = true;
 
   # Argonone.
-  services.hardware.argonone.enable = true;
+  services.hardware.argonone = {
+    enable = true;
+    package = pkgs.argononedOverride;
+  };
 
   # Configure keymap in X11
   services.xserver = {
@@ -144,6 +151,22 @@
 
   # Gnome Keyring
   services.gnome.gnome-keyring.enable = true;
+  # Polkit
+  systemd = {
+    user.services.polkit-gnome-authentication-agent-1 = {
+      description = "polkit-gnome-authentication-agent-1";
+      wantedBy = [ "graphical-session.target" ];
+      wants = [ "graphical-session.target" ];
+      after = [ "graphical-session.target" ];
+      serviceConfig = {
+          Type = "simple";
+          ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+          Restart = "on-failure";
+          RestartSec = 1;
+          TimeoutStopSec = 10;
+        };
+    };
+  };
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
@@ -190,7 +213,13 @@
 
   # $ nix search wget
   environment.systemPackages = 
-  (with pkgs-stable; [
+  (with pkgs-old; [
+    gtksourceview
+  ])
+
+  ++
+
+  (with pkgs; [
     # Editors.
     vim
     
@@ -216,7 +245,9 @@
     barrier
     openssl
     gnome.simple-scan
-    
+    nixos-generators
+    screen 
+    btop
 
     # Shells.
     fish
@@ -226,6 +257,10 @@
     # Development Tools.
     git
     sublime4
+
+    # Kubernetes.
+    helm
+    k3s
 
     # Session.
     polkit
@@ -259,6 +294,7 @@
     moonlight-qt
     xfce.thunar
     wayland-scanner
+    waypipe
     
     # GTK
     gtk3
@@ -284,6 +320,7 @@
 
   (with pkgs; [
     nil
+    kubevirt
     foot
     ffmpeg_5-full
     libspatialaudio
@@ -294,11 +331,24 @@
     xwaylandvideobridge
     xdg-desktop-portal-hyprland
     hyprpaper
-    gnome.gdm
+    box64
     (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
       inputstream-adaptive
       inputstream-ffmpegdirect
     ]))
+        # Kubernetes Tools
+    k3s
+    (wrapHelm kubernetes-helm {
+      plugins = with kubernetes-helmPlugins; [
+        helm-secrets
+        helm-diff
+        helm-s3
+        helm-git
+      ];
+    })
+    kubernetes-helm
+    helmfile
+    kustomize
   ]);
 
   # List services that you want to enable:

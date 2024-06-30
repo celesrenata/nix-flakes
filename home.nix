@@ -1,10 +1,10 @@
-{ inputs, pkgs, pkgs-stable, ... }: 
+{ inputs, pkgs, pkgs-old, ... }:
 let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "a374624ffb2bb40b3942c1c451ad46fefff33d46";
-    sha256 = "sha256-qxaaaagB1OFmKrgYqTdOXzpNMTTvMLEiP0lMDDvCMa8=";
+    rev = "a24961dd618ca10cfa50851aedff2a7e1affdeb0";
+    sha256 = "sha256-QQVeINXRjRmU9eOX1OUTzHu0amz4ZFCJK8n8jYo+YPM=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -19,7 +19,7 @@ let
   programs.ags = {
     enable = true;
     configDir = null;
-    extraPackages = with pkgs-stable; [
+    extraPackages = with pkgs-old; [
       gtksourceview
       webkitgtk
       accountsservice
@@ -35,31 +35,17 @@ let
 
   # link all files in `./scripts` to `~/.config/i3/scripts`
 
-  home.file.".config" = {
+  home.file.".configstaging" = {
     source = pkgs.end-4-dots;
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
-home.file.".config/touchegg/touchegg.conf" = {
-    source = celes-dots + "/.config/touchegg/touchegg.conf";
-  };
-  home.file.".config/ags/scripts/windowstate/state.sh" = {
-    source = celes-dots + "/.config/ags/scripts/windowstate/state.sh";
-  };
-  home.file.".config/ags/scripts/templates/foot/foot.ini" = {
-    source = celes-dots + "/.config/ags/scripts/templates/foot/foot.ini";
-  };
-  home.file.".config/ags/scripts/templates/wofi/style.css" = {
-    source = celes-dots + "/.config/ags/scripts/templates/wofi/style.css";
-  };
-  home.file.".config/wofi/config" = {
-    source = celes-dots + "/.config/wofi/config";
+  home.file."Backgrounds" = {
+    source = celes-dots + "/Backgrounds";
+    recursive = true;
   };
   home.file.".local/bin/initialSetup.sh" = {
-    source = celes-dots + "/.local/bin/initialSetup.sh";
-  };
-  home.file.".local/bin/sunshine" = {
-    source = celes-dots + "/.local/bin/sunshineFixed";
+    source = pkgs.end-4-dots + "/.local/bin/initialSetup.sh";
   };
   home.file.".local/bin/agsAction.sh" = {
     source = celes-dots + "/.local/bin/agsAction.sh";
@@ -70,12 +56,10 @@ home.file.".config/touchegg/touchegg.conf" = {
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
-  home.file.".local/bin/fuzzel-emoji" = {
-    source = pkgs.end-4-dots + "/.local/bin/fuzzel-emoji";
+  home.file.".config/hypr/hyprland.conf" = {
+    source = pkgs.end-4-dots + "/hypr/hyprland.conf";
   };
-  home.file."Backgrounds/love-is-love.jpg" = {
-    source = celes-dots + "/love-is-love.jpg";
-  };
+
   # encode the file content in nix configuration file directly
   # home.file.".xxx".text = ''
   #     xxx
@@ -102,17 +86,12 @@ home.file.".config/touchegg/touchegg.conf" = {
     extensions = with pkgs.vscode-extensions; [
       dracula-theme.theme-dracula
       #vscodevim.vim
-      yzhang.markdown-all-in-one
+      #yzhang.markdown-all-in-one
       #ms-python.python
       oderwat.indent-rainbow
-      eamodio.gitlens
+      #eamodio.gitlens
       jnoortheen.nix-ide
     ];
-  };
-  programs.btop.settings = {
-    package = pkgs.btop;
-    color_theme = "Default";
-    theme_background = false;
   };
   programs.fish = {
     enable = true;
@@ -145,10 +124,9 @@ end
 
   # Packages that should be installed to the user profile.
   home.packages = 
-  (with pkgs-stable; [
+  (with pkgs; [
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
-
     neofetch
     macchina
     nnn # terminal file manager
@@ -290,11 +268,11 @@ end
     grim
     tesseract
     slurp 
-  ])
-
-  ++
-
-    (with pkgs; [
+#  ])
+#
+#  ++
+#
+#    (with pkgs-unstable; [
     adw-gtk3
     armcord
     dart-sass
@@ -307,7 +285,7 @@ end
     lan-mouse
     # Python
     pyenv.out
-    (python311.withPackages(ps: with ps; [
+    (python312.withPackages(ps: with ps; [
       materialyoucolor
       material-color-utilities
       pillow
@@ -331,7 +309,7 @@ end
       pycairo
       xkeysnail
     ]))
-    python311Packages.debugpy
+    python312Packages.debugpy
     swww
     webp-pixbuf-loader
     wireplumber

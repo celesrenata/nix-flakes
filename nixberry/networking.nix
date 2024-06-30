@@ -4,11 +4,12 @@
     # Networking.
     networking.hostName = "nixberry"; # Define your hostname.
     networking.networkmanager.enable = true;
-    networking.networkmanager.wifi.backend = "iwd";
-    networking.wireless.iwd = {
-      enable = true;
-      settings.General.EnableNetworkConfiguration = true;
-    };
+    #networking.networkmanager.wifi.backend = "iwd";
+    #networking.wireless = {
+    #networking.wireless.iwd = {
+      #enable = true;
+      #settings.General.EnableNetworkConfiguration = true;
+    #};
 
     # Configure network proxy if necessary
     # networking.proxy.default = "http://user:password@proxy:port/";
