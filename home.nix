@@ -3,8 +3,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "cf435920e9d85d3f2bad768dd6ad12ef22a1ac2c";
-    sha256 = "sha256-UgG4xSyJLo+z6SVskIR1op/5nN9h7bClGFblqToNzII=";
+    rev = "a24961dd618ca10cfa50851aedff2a7e1affdeb0";
+    sha256 = "sha256-QQVeINXRjRmU9eOX1OUTzHu0amz4ZFCJK8n8jYo+YPM=";
   };
   wofi-calc = pkgs.fetchFromGitHub {
     owner = "Zeioth";
@@ -12,6 +12,11 @@ let
     rev = "edd316f3f40a6fcb2afadf5b6d9b14cc75a901e0";
     sha256 = "sha256-y8GoTHm0zPkeXhYS/enNAIrU+RhrUMnQ41MdHWWTPas=";
   };
+  torchvision-hipblas = pkgs.buildEnv.system {
+    envName = "torchvision-hipblas";
+    packages = [pkgs.rocmPackages.torchvision] ++ [pkgs.rocmPackages.hipblas];
+  };
+
   in
   {
   imports = [ inputs.ags.homeManagerModules.default ];
@@ -41,26 +46,12 @@ let
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
-  home.file.".configstaging/touchegg/touchegg.conf" = {
-    source = celes-dots + "/.config/touchegg/touchegg.conf";
-  };
-  home.file.".configstaging/ags/scripts/windowstate/state.sh" = {
-    source = celes-dots + "/.config/ags/scripts/windowstate/state.sh";
-  };
-  home.file.".configstaging/ags/scripts/templates/foot/foot.ini" = {
-    source = celes-dots + "/.config/ags/scripts/templates/foot/foot.ini";
-  };
-  home.file.".configstaging/ags/scripts/templates/wofi/style.css" = {
-    source = celes-dots + "/.config/ags/scripts/templates/wofi/style.css";
-  };
-  home.file.".configstaging/wofi/config" = {
-    source = celes-dots + "/.config/wofi/config";
+  home.file."Backgrounds" = {
+    source = celes-dots + "/Backgrounds";
+    recursive = true;
   };
   home.file.".local/bin/initialSetup.sh" = {
-    source = celes-dots + "/.local/bin/initialSetup.sh";
-  };
-  home.file.".local/bin/sunshine" = {
-    source = celes-dots + "/.local/bin/sunshineFixed";
+    source = pkgs.end-4-dots + "/.local/bin/initialSetup.sh";
   };
   home.file.".local/bin/agsAction.sh" = {
     source = celes-dots + "/.local/bin/agsAction.sh";
@@ -71,11 +62,8 @@ let
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
-  home.file.".local/bin/fuzzel-emoji" = {
-    source = pkgs.end-4-dots + "/.local/bin/fuzzel-emoji";
-  };
-  home.file."Backgrounds/love-is-love.jpg" = {
-    source = celes-dots + "/love-is-love.jpg";
+  home.file.".config/hypr/hyprland.conf" = {
+    source = pkgs.end-4-dots + "/hypr/hyprland.conf";
   };
 
   # set cursor size and dpi for 4k monitor
@@ -111,34 +99,6 @@ let
     color_theme = "Default";
     theme_background = false;
   };
-  programs.fish = {
-    enable = true;
-    shellAliases = {
-      cider = "env -u NIXOS_OZONE_WL cider --use-gl=desktop";
-      sunshine = "~/.local/bin/sunshine";
-    };
-    shellInit = ''
-      function fish_prompt -d "Write out the prompt"
-    # This shows up as USER@HOST /home/user/ >, with the directory colored
-    # $USER and $hostname are set by fish, so you can just use them
-    # instead of using `whoami` and `hostname`
-    fish_add_path -p $HOME/.local/bin
-    printf '%s@%s %s%s%s > ' $USER $hostname \
-        (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
-end
-
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-    set fish_greeting
-
-end
-
-starship init fish | source
-if test -f ~/.cache/ags/user/generated/terminal/sequences.txt
-    cat ~/.cache/ags/user/generated/terminal/sequences.txt
-end
-    '';
-  };
 
   xdg.desktopEntries.cider = {
     name = "Cider";
@@ -172,8 +132,7 @@ end
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
 
-    neofetch
-    macchina
+    fastfetch
     nnn # terminal file manager
 
     # archives
@@ -270,7 +229,7 @@ end
 
     # Python
     pyenv.out
-    (python311.withPackages(ps: with ps; [
+    (python312.withPackages(ps: with ps; [
       materialyoucolor
       material-color-utilities
       pillow
@@ -296,6 +255,15 @@ end
       hatchling
       pycairo
       xkeysnail
+
+      # Ollama.
+      #pkgs-unstable.python312Packages.torchaudio
+      #torchvision.overrideAttrs (final: prev {
+      #  buildInputs = oldAttrs.buildInputs ++ [ rocmPackages.hipblas ];
+      #})
+      #diffusers
+      #transformers
+      #accelerate
     ]))
 
     # Player and Audio
@@ -379,7 +347,7 @@ end
     hypridle
     hyprlock
     lan-mouse
-    python311Packages.debugpy
+    python312Packages.debugpy
     vesktop
   ]);
 

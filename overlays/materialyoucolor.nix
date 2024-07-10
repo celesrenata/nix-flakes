@@ -1,13 +1,13 @@
 final: prev:
 rec {
-  python-materialyoucolor-init = prev.python311.override {
+  python-materialyoucolor-init = prev.python312.override {
     packageOverrides = final: prev: {
       python-xlib = prev.buildPythonPackage rec {
         pname = "materialyoucolor";
         version = "2.0.9";
         format = "pyproject";
         doCheck = false;
-        BuildInputs = with prev.pkgs.python311Packages; [
+        BuildInputs = with prev.pkgs.python312Packages; [
           six
         ];
         src = prev.fetchPypi {

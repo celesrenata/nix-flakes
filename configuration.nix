@@ -68,7 +68,10 @@
     # Whether to enable Xwayland
     xwayland.enable = true;
   };
-
+ 
+  programs.fish = {
+    enable = true;
+  };
   # Enable Location.
   services.geoclue2.enable = true;
 
@@ -93,7 +96,7 @@
 
   # Enable sound with pipewire.
   sound.enable = true;
-  hardware.pulseaudio.enable = false;
+  #hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   
   services.pipewire = {
@@ -105,9 +108,9 @@
   };
 
   services.jack = {
-    #jackd.enable = true;
+    jackd.enable = true;
     # support ALSA only programs via ALSA JACK PCM plugin
-    alsa.enable = true;
+    alsa.enable = false;
     # support ALSA only programs via loopback device (supports programs like Steam)
     loopback = {
       enable = true;
@@ -139,6 +142,8 @@
   # Extra Groups
   users.groups.mlocate = {};
   users.groups.plocate = {};
+  users.groups.libvirt = {};
+  users.groups.kvm = {};
 
   security.sudo.configFile = ''
     root   ALL=(ALL:ALL) SETENV: ALL
@@ -155,6 +160,7 @@
     enable = true;
     keyboards.mac.settings = {
       main = {
+        fn = "overload(464)";
         control = "layer(meta)";
         meta = "layer(control)";
         rightcontrol = "layer(meta)";
@@ -177,7 +183,6 @@
   nix.optimise.automatic = true;
  
   # Steam.
-  
   programs.steam.package = pkgs.steam.override {
     extraPkgs = pkgs: [
       pkgs.steamcmd
@@ -192,12 +197,16 @@
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
   };
+  systemd.user.services.monado.environment = {
+    STEAMVR_LH_ENABLE = "1";
+    XRT_COMPOSITOR_COMPUTE = "1";
+  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
     isNormalUser = true;
     description = "Celes Renata";
-    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" ];
+    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" "libvirt" "kvm" ];
     packages = with pkgs; [
       firefox
     #  thunderbird
@@ -219,6 +228,7 @@
     curl
     rsync
     nmap
+    pssh
     tmate
 
     # Audio.
@@ -239,13 +249,23 @@
     xsane
     gnome.simple-scan
     btop
+    usbutils
+    pciutils
+    thefuck
+    tldr
+    bc
+    freerdp3Override
+    aws-workspaces
+    tiny-dfr
+    kbd
+    imagemagick
 
     # Shells.
     fish
     zsh
     bash
 
-    # Kubernetes Tools
+    # Kubernetes Tools.
     k3s
     (wrapHelm pkgs-unstable.kubernetes-helm {
       plugins = with pkgs-unstable.kubernetes-helmPlugins; [
@@ -259,6 +279,8 @@
     pkgs-unstable.helmfile
     kustomize
     kompose
+
+    # Ollama Tools.
 
     # Development Tools.
     jetbrains-toolbox
