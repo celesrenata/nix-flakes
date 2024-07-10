@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs, pkgs-old, pkgs-unstable, ... }:
+{ chaotic, pkgs, pkgs-stable, pkgs-unstable, ... }:
 {
   # Licences.
   nixpkgs.config = {
@@ -24,6 +24,23 @@
 
   # Udev rules.
   hardware.uinput.enable = true;
+  services.udev.extraRules = ''
+    # HDMI-CEC
+    SUBSYSTEM=="vchiq", GROUP="video", MODE="0660", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/vchiq"
+    # permissions from https://github.com/graysky2/kodi-standalone-service/blob/master/arm/udev/99-kodi.rules
+    #    SUBSYSTEM=="vc-sm",GROUP="video",MODE="0660"
+    #    SUBSYSTEM=="tty",KERNEL=="tty[0-9]*",GROUP="tty",MODE="0660"
+
+    # https://github.com/RPi-Distro/raspberrypi-sys-mods/blob/master/etc.armhf/udev/rules.d/99-com.rules#L7
+    SUBSYSTEM=="input", GROUP="input", MODE="0660"
+    SUBSYSTEM=="i2c-dev", GROUP="i2c", MODE="0660"
+    SUBSYSTEM=="spidev", GROUP="spi", MODE="0660"
+    SUBSYSTEM=="bcm2835-gpiomem", GROUP="gpio", MODE="0660"
+    SUBSYSTEM=="rpivid-*", GROUP="video", MODE="0660"
+    KERNEL=="vcsm-cma", GROUP="video", MODE="0660"
+    SUBSYSTEM=="dma_heap", GROUP="video", MODE="0660"
+    SUBSYSTEM=="gpio", GROUP="gpio", MODE="0660"
+  '';
 
   # Logitech.
   hardware.logitech.wireless.enable = true;
@@ -68,11 +85,13 @@
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
-    package = pkgs.hyprland;
+    package = pkgs-stable.hyprland;
     # Whether to enable Xwayland
     xwayland.enable = true;
   };
-
+  programs.fish.enable = true;
+  programs.light.enable = true;
+  services.avahi.enable = true;
   # Enable Location.
   services.geoclue2.enable = true;
 
@@ -142,6 +161,8 @@
   # Extra Groups
   users.groups.mlocate = {};
   users.groups.plocate = {};
+  users.groups.libvirt = {};
+  users.groups.kvm = {};
 
   security.sudo.configFile = ''
     root   ALL=(ALL:ALL) SETENV: ALL
@@ -160,7 +181,7 @@
       after = [ "graphical-session.target" ];
       serviceConfig = {
           Type = "simple";
-          ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+          ExecStart = "${pkgs-stable.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
           Restart = "on-failure";
           RestartSec = 1;
           TimeoutStopSec = 10;
@@ -199,11 +220,7 @@
   users.users.celes = {
     isNormalUser = true;
     description = "Celes Renata";
-    extraGroups = [ "networkmanager" "wheel" "input" "uinput" "render" "video" "audio" ];
-    packages = with pkgs; [
-      firefox
-    #  thunderbird
-    ];
+    extraGroups = [ "networkmanager" "wheel" "input" "uinput" "render" "video" "audio" "libvirt" "docker" "kvm" ];
   };
 
   # List packages installed in system profile. To search, run:
@@ -213,13 +230,13 @@
 
   # $ nix search wget
   environment.systemPackages = 
-  (with pkgs-old; [
+  (with pkgs-stable; [
     gtksourceview
   ])
 
   ++
 
-  (with pkgs; [
+  (with pkgs-stable; [
     # Editors.
     vim
     
@@ -244,10 +261,17 @@
     mlocate
     barrier
     openssl
-    gnome.simple-scan
+    simple-scan
     nixos-generators
     screen 
     btop
+    usbutils
+    pciutils
+    thefuck
+    tldr
+    bc
+    kbd
+    imagemagick
 
     # Shells.
     fish
@@ -314,29 +338,27 @@
 
     # Mac Camera.
     libcamera
-  ])
 
-  ++
-
-  (with pkgs; [
     nil
     kubevirt
     foot
-    ffmpeg_5-full
+    ffmpeg-full
     libspatialaudio
     pulseaudio
-    plex-media-player
-    jellyfin-media-player
     kdenlive
     xwaylandvideobridge
-    xdg-desktop-portal-hyprland
     hyprpaper
     box64
+    
+    # Media
+    jellyfin-media-player
+    plex-media-player
     (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
       inputstream-adaptive
       inputstream-ffmpegdirect
     ]))
-        # Kubernetes Tools
+
+    # Kubernetes Tools
     k3s
     (wrapHelm kubernetes-helm {
       plugins = with kubernetes-helmPlugins; [
@@ -349,7 +371,56 @@
     kubernetes-helm
     helmfile
     kustomize
-  ]);
+  ])
+
+  ++
+
+  (with pkgs-unstable; [ 
+    # Development Tools
+    jetbrains-toolbox-aarch64
+    (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
+      inputstream-adaptive
+      inputstream-ffmpegdirect
+    ]))
+   ]);
+
+
+xdg.portal = {
+    enable = true;
+    wlr = {
+      enable = true;
+      settings.screencast = {
+        output_name = "HDMI-A-1";
+        max_fps = 30;
+        chooser_type = "simple";
+        chooser_cmd = "${pkgs-stable.slurp}/bin/slurp -f %o -or";
+      };
+    };
+    config = {
+      common = {
+        Hyprland = [
+          "gtk"
+          "hyprland"
+          "wlr"
+        ];
+        #"org.freedesktop.impl.portal.AppChooser"=["kde"];
+        # this doesn't work
+        #"org.freedesktop.impl.portal.FileChooser"=["kde"];
+        #"org.freedesktop.impl.portal.ScreenCast"=["wlr"];
+        #"org.freedesktop.impl.portal.Screenshot"=["wlr"];
+
+        "org.freedesktop.impl.portal.ScreenCast"=["hyprland"];
+        "org.freedesktop.impl.portal.Screenshot"=["hyprland"];
+      };
+    };
+    extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+      pkgs.xdg-desktop-portal-kde
+      pkgs.xdg-desktop-portal-wlr
+      #inputs.xdg-desktop-portal-hyprland
+    ];
+  };
+
 
   # List services that you want to enable:
 

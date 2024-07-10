@@ -6,10 +6,10 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dots-hyprland";
-      rev = "ef11a331a67a9cf5abe7edbae1ab1ea37c5d4d1b";
-      sha256 = "sha256-jktqJizBtwjtX5ScKVAWMMhV/kCejjOAbZ3Q9bEIQS8=";
+      rev = "fe11be377dcbdeda45a183c1d033939e530ad6e0";
+      sha256 = "sha256-T16na4M8VkyeUS4tE6rL9H1n4tDhjMK/xQOSQCGlkdo=";
     };
-    
+
     installPhase = ''
       install -m755 -D .local/bin/fuzzel-emoji $out/.local/bin/fuzzel-emoji
       install -m755 -D .local/bin/initialSetup.sh $out/.local/bin/initialSetup.sh

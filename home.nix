@@ -1,4 +1,4 @@
-{ inputs, pkgs, pkgs-old, ... }:
+{ inputs, pkgs, ... }:
 let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
@@ -19,7 +19,7 @@ let
   programs.ags = {
     enable = true;
     configDir = null;
-    extraPackages = with pkgs-old; [
+    extraPackages = with pkgs; [
       gtksourceview
       webkitgtk
       accountsservice
@@ -93,41 +93,13 @@ let
       jnoortheen.nix-ide
     ];
   };
-  programs.fish = {
-    enable = true;
-    shellAliases = {
-      cider = "env -u NIXOS_OZONE_WL cider --use-gl=desktop";
-      sunshine = "~/.local/bin/sunshine";
-    };
-    shellInit = ''
-      function fish_prompt -d "Write out the prompt"
-    # This shows up as USER@HOST /home/user/ >, with the directory colored
-    # $USER and $hostname are set by fish, so you can just use them
-    # instead of using `whoami` and `hostname`
-    fish_add_path -p $HOME/.local/bin
-    printf '%s@%s %s%s%s > ' $USER $hostname \
-        (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
-end
-
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-    set fish_greeting
-
-end
-
-starship init fish | source
-if test -f ~/.cache/ags/user/generated/terminal/sequences.txt
-    cat ~/.cache/ags/user/generated/terminal/sequences.txt
-end
-    '';
-  };
 
   # Packages that should be installed to the user profile.
   home.packages = 
   (with pkgs; [
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
-    neofetch
+    fastfetch
     macchina
     nnn # terminal file manager
 
@@ -202,6 +174,9 @@ end
     pciutils # lspci
     usbutils # lsusb
     wofi-calc
+    remmina
+    rdesktop
+    freerdp
 
     # Development
     # MicroTex Deps
@@ -240,6 +215,7 @@ end
     gnome.gnome-control-center
     gnome.gnome-bluetooth
     gnome.gnome-shell
+    gnome-network-displaysOverride
     yaru-theme
     blueberry
     networkmanager

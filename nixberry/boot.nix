@@ -103,12 +103,10 @@
       };
     in
       pkgs.recurseIntoAttrs (pkgs.linuxPackagesFor linux_rpi5);
-      blacklistedKernelModules = [ "rtw86_8821cu" ];
-      initrd.kernelModules = [ "8821cu" ];
-      extraModulePackages = with config.boot.kernelPackages; [ rtl8821cu ];
-      kernelParams = [ "8250.nr_uarts=11" "console=ttyAMA10,9660" "console=tty0" ];
-      kernelModules = [ "uinput" "rtl8821cu" ];
+      initrd.kernelModules = [ "8821au" ];
+      extraModulePackages = with config.boot.kernelPackages; [ rtl8821au ];
+      kernelParams = [ "8250.nr_uarts=11" "console=ttyAMA10,9660" "console=tty0" "usbhid.mousepoll=0" ];
+      kernelModules = [ "uinput" ];
     };
-    hardware.opengl.enable = true;
   };
 }

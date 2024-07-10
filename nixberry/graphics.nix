@@ -1,4 +1,4 @@
-{ config, lib, pkgs, pkgs-unstable, nixpkgs,  ... }:
+{ config, lib, pkgs, nixpkgs,  ... }:
 {
   config = {
     environment.systemPackages = with pkgs; [
@@ -15,6 +15,7 @@
         libGL
       ];
     };
+    #chaotic.mesa-git.enable = true;
     # Load nvidia driver for Xorg and Wayland
     services.xserver.videoDrivers = [ "v3d" ];
   };
