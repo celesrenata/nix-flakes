@@ -1,6 +1,16 @@
 # ESXi  for Nvidia passthroughs / Mac T2 / RPI5 Flakes
 * RPI5 flakes please switch to RPI5 branch
 
+# X86_64 Branch Features
+* Hyprland (Wayland)
+* Customized version of End-4's Dots for Hyprland
+* Mac Keybindings
+* Steam
+* ALVR
+* Customized Winapps with M365 (**Bring your own Licenses!**)
+* Jetbrains-Toolbox (for Wayland)
+* VSCode with Nix backend
+* 
 # ESXI VM installation guide.
 ## Installation Steps Via Netboot.xyz
 * Follow the guide here if you don't use netboot.xyz (https://nixos.org/manual/nixos/unstable/)
@@ -58,3 +68,4 @@
   
 # Limitations
 * Tiny-DFR is looking for keycode 464, howevery keyd resets the keycode to 254, so it doesn't currently work outside of f-keys
+* Jetbrains currently requires a shim that can be activated by restarting AGS or logging out ('command' + 'control' + 'R') and only supports 2024.2 onwards!
