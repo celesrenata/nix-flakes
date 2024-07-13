@@ -12,9 +12,11 @@ let
     rev = "edd316f3f40a6fcb2afadf5b6d9b14cc75a901e0";
     sha256 = "sha256-y8GoTHm0zPkeXhYS/enNAIrU+RhrUMnQ41MdHWWTPas=";
   };
-  torchvision-hipblas = pkgs.buildEnv.system {
-    envName = "torchvision-hipblas";
-    packages = [pkgs.rocmPackages.torchvision] ++ [pkgs.rocmPackages.hipblas];
+  winapps = pkgs.fetchFromGitHub {
+    owner = "celesrenata";
+    repo = "winapps";
+    rev = "d71e0d92cc2b4e097d86e59e196bbb4df4d2125c";
+    sha256 = "sha256-rkk/xwpaGx4wWQWtBdPZUkP8hMFO6O/v6DJz4aa8gh0=";
   };
 
   in
@@ -50,6 +52,14 @@ let
     source = celes-dots + "/Backgrounds";
     recursive = true;
   };
+  home.file."winapps/pkg" = {
+    source = winapps;
+    recursive = true;
+    executable = true;
+  };
+  home.file."winapps/runmefirst.sh" = {
+    source = winapps + "/runmefirst.sh";
+  };
   home.file.".local/bin/initialSetup.sh" = {
     source = pkgs.end-4-dots + "/.local/bin/initialSetup.sh";
   };
@@ -63,8 +73,11 @@ let
     source = wofi-calc + "/wofi-calc.sh";
   };
   home.file.".config/hypr/hyprland.conf" = {
-    source = pkgs.end-4-dots + "/hypr/hyprland.conf";
+    source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
   };
+#  home.file.".local/bin/sunshine" = {
+#    source = celes-dots + "/.local/bin/sunshineFixed";
+#  };
 
   # set cursor size and dpi for 4k monitor
   xresources.properties = {
@@ -156,7 +169,6 @@ let
     spotify
     discord
     darktable
-    sunshine
 
     # Extra Launchers.
 
@@ -255,15 +267,6 @@ let
       hatchling
       pycairo
       xkeysnail
-
-      # Ollama.
-      #pkgs-unstable.python312Packages.torchaudio
-      #torchvision.overrideAttrs (final: prev {
-      #  buildInputs = oldAttrs.buildInputs ++ [ rocmPackages.hipblas ];
-      #})
-      #diffusers
-      #transformers
-      #accelerate
     ]))
 
     # Player and Audio

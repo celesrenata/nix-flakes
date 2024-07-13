@@ -10,10 +10,11 @@
       extraPackages32 = with pkgs; [ driversi686Linux.amdvlk ];
     };
 
-    # Load AMD driver for Xorg and Wayland
+    # Load AMD driver for Xorg and Waylandard
     environment.variables.LIBVA_DRIVER_NAME = "amdgpu";
     environment.variables.VDPAU_DRIVER = "amdgpu";
     services.xserver.videoDrivers = ["amdgpu"];
+    hardware.amdgpu.opencl.enable = true;
     hardware.nvidia.prime = { 
       sync.enable = true; 
     

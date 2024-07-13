@@ -56,7 +56,7 @@
   services.xserver.enable = true;
 
   # Enable the Enlightenment Desktop Environment.
-  services.xserver.desktopManager.enlightenment.enable = true;
+  services.xserver.desktopManager.mate.enable = true;
 
   # Enable OpenRGB.
   services.hardware.openrgb.enable = true;
@@ -259,6 +259,7 @@
     tiny-dfr
     kbd
     imagemagick
+    sunshine
 
     # Shells.
     fish
