@@ -6,8 +6,8 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dots-hyprland";
-      rev = "f2e0d797e65656044b0b804541d1cd14eadc37e4";
-      sha256 = "sha256-xD5mVe4+hwwmuaMKVRfeo9J+alS3W+PE/l1p90F1K3I=";
+      rev = "c5a77d30afed4f21d83c53e590e0c878c7f11100";
+      sha256 = "sha256-FL5MrY4pflSrFpd+NScY9MAniRm63wxlfNWNhuwkyo4=";
     };
 
     installPhase = ''
@@ -22,6 +22,7 @@ rec {
       find hypr -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find mpv -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find qt5ct -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
+      find winapps -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find wlogout -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find zshrc.d -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       install -m755 -D starship.toml $out/.config/starship.toml
