@@ -10,7 +10,9 @@
 * Customized Winapps with M365 (**Bring your own Licenses!**)
 * Jetbrains-Toolbox (for Wayland)
 * VSCode with Nix backend
-* 
+* Ollama built in! (T2 not currently supported due to RCOM drivers still being written)
+* Suspend and Resume for T2 works!
+
 # ESXI VM installation guide.
 ## Installation Steps Via Netboot.xyz
 * Follow the guide here if you don't use netboot.xyz (https://nixos.org/manual/nixos/unstable/)
@@ -69,3 +71,4 @@
 # Limitations
 * Tiny-DFR is looking for keycode 464, howevery keyd resets the keycode to 254, so it doesn't currently work outside of f-keys
 * Jetbrains currently requires a shim that can be activated by restarting AGS or logging out ('command' + 'control' + 'R') and only supports 2024.2 onwards!
+* Sadly no RCOM support for ollama on T2 mac yet, ollama is currently ommitted from the T2 build, but you can copy it from the Esnixi comfig
