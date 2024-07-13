@@ -12,6 +12,15 @@
 * VSCode with Nix backend
 * Ollama built in! (T2 not currently supported due to RCOM drivers still being written)
 * Suspend and Resume for T2 works!
+## Theming
+* ![img](http://www.celestium.life/wp-content/uploads/2024/06/image.png)
+* ![img](http://www.celestium.life/wp-content/uploads/2024/06/theme2.png)
+
+## Developing
+* ![img](http://www.celestium.life/wp-content/uploads/2024/07/productivity.png)
+
+## Gaming
+* ![img](http://www.celestium.life/wp-content/uploads/2024/07/gaming.png)
 
 # ESXI VM installation guide.
 ## Installation Steps Via Netboot.xyz
