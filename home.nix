@@ -238,10 +238,14 @@ let
 
     # Other
     graphviz
+    cvs
+    mercurial
+    p4
+    subversion
 
     # Python
     pyenv.out
-    (python312.withPackages(ps: with ps; [
+    (python311.withPackages(ps: with ps; [
       materialyoucolor
       material-color-utilities
       pillow
@@ -251,6 +255,14 @@ let
       wheel
       pywayland
       psutil
+      rbtoolsOverride
+      importlib-metadata
+      python-housekeeping
+      #rbtools
+      certifi
+      colorama
+      python-pydiffx
+      breezy
       # debugpy.overrideAttrs (final: prev: {
       #   pytestCheckPhase = ''true'';
       # })
@@ -350,7 +362,7 @@ let
     hypridle
     hyprlock
     lan-mouse
-    python312Packages.debugpy
+    python311Packages.debugpy
     vesktop
   ]);
 

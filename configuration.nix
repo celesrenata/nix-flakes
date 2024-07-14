@@ -17,6 +17,10 @@
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  security.pki.certificateFiles = [
+    ./home.crt
+  ];
+
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;
   # boot.loader.efi.canTouchEfiVariables = true;
