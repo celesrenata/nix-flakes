@@ -10,7 +10,7 @@
 * Customized Winapps with M365 (**Bring your own Licenses!**)
 * Jetbrains-Toolbox (for Wayland)
 * VSCode with Nix backend
-* Ollama built in! (T2 not currently supported due to RCOM drivers still being written)
+* Ollama built in! (T2 nnow supported!!!)
 * Suspend and Resume for T2 works!
 ## Theming
 * ![img](http://www.celestium.life/wp-content/uploads/2024/06/image.png)
@@ -80,7 +80,6 @@
 # Limitations
 * Tiny-DFR is looking for keycode 464, howevery keyd resets the keycode to 254, so it doesn't currently work outside of f-keys
 * Jetbrains currently requires a shim that can be activated by restarting AGS or logging out ('command' + 'control' + 'R') and only supports 2024.2 onwards!
-* Sadly no RCOM support for ollama on T2 mac yet, ollama is currently included with the expected paramaters to work once ollama includes newer RCOM.
 * Winapps not immediately available for ESXI or RPI5
    * ESXI does not allow passing of virtualization with an active PCI passthrough, you will need to stand up a new VM on your own and adapt `.config/winapps/winapps.conf`
    * RPi5 is not fast enough to reliably cut a slice out of, I did try, and yes if you use 'dockur/windows-arm' you indeed can do everything on the RPi5 (or a better aarch64 platform).
