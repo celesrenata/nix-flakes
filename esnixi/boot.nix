@@ -8,7 +8,7 @@
       };
       supportedFilesystems = [ "ntfs" "nfs" ];
       plymouth.enable = true;
-      kernelPackages = pkgs-unstable.linuxPackages_latest;
+      kernelPackages = pkgs.linuxPackages_6_6;
       kernelModules = [ "uinput" "nvidia" ];
       extraModprobeConfig = ''
         options nvidia NVreg_OpenRmEnableUnsupportedGpus=1
