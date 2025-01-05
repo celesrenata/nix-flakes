@@ -25,7 +25,7 @@
             "3389:3389"
           ];
           environment = {
-            VERSION = "win11e";
+            VERSION = "win11p";
             USERNAME = "celes";
             PASSWORD = "renata";
             DISK_SIZE = "128G";

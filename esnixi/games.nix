@@ -1,16 +1,13 @@
 { pkgs, pkgs-unstable, ... }:
 {
-  imports =
-  [
-    "${pkgs-unstable.path}/nixos/modules/programs/alvr.nix"
-  ];
   config = {
+    hardware.xpadneo.enable = true;
     programs.alvr = {
       enable = true;
       package = pkgs-unstable.alvr;
     };
     environment.systemPackages = [
-      pkgs.xivlauncher
+#      pkgs.xivlauncher
     ];
   };
 }

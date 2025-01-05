@@ -18,9 +18,15 @@
     services.blueman.enable = true;
     hardware.enableAllFirmware = true;
 
+    #networking.bridges = {
+    #  "br0" = {
+    #    interfaces = [ "enp5s0f1" ];
+    #  };
+    #};
+
     networking.firewall = {
-      enable = true;
-      allowedTCPPorts = [ 3216 3658 3659 8082 24800 47984 47989 47990 48010 ];
+      enable = false;
+      allowedTCPPorts = [ 3216 3658 3659 8080 8082 11434 24800 47984 47989 47990 48010 ];
       allowedTCPPortRanges = [
         { from = 31800; to = 31899; }
         { from = 27015; to = 27030; }
@@ -33,7 +39,7 @@
         { from = 8000; to = 8010; }
         { from = 9942; to = 9944; }
         { from = 3658; to = 3659; }
-        { from = 27000; to = 27031; }
+        { from = 27000; to = 27036; }
       ];
     };
   };

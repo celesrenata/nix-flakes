@@ -3,18 +3,6 @@
   config = {
     # Power and Thermal.
     services.thermald.enable = true;
-    #services.tlp.enable = true;
-    services.auto-cpufreq.enable = true;
-    services.auto-cpufreq.settings = {
-      battery = {
-        governor = "onDemand";
-        turbo = "auto";
-      };
-      charger = {
-        governor = "onDemand";
-        turbo = "auto";
-      };
-    };
     systemd.services.t2fanrd = {
       enable = true;
       description = "T2 Mac Fan Controller";

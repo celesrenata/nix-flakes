@@ -1,0 +1,19 @@
+--- a/src/keys.h
++++ b/src/keys.h
+@@ -284,7 +284,7 @@ struct modifier {
+ #define  KEYD_RIGHT_MOUSE		251
+ #define  KEYD_MOUSE_1          		252
+ #define  KEYD_MOUSE_2          		253
+-#define  KEYD_FN               		254
++#define  KEYD_FN               		464
+ 
+ #define KEY_NAME(code) (keycode_table[code].name ? keycode_table[code].name : "UNKNOWN")
+ 
+@@ -292,6 +292,6 @@ int parse_modset(const char *s, uint8_t *mods);
+ int parse_key_sequence(const char *s, uint8_t *code, uint8_t *mods);
+ 
+ extern const struct modifier modifiers[MAX_MOD];
+-extern const struct keycode_table_ent keycode_table[256];
++extern const struct keycode_table_ent keycode_table[465];
+ 
+ #endif

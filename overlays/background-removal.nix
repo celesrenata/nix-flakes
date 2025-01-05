@@ -12,7 +12,7 @@ rec {
     };
 
     nativeBuildInputs = with prev.pkgs; [ cmake ninja ];
-    buildInputs = with prev.pkgs; [ obs-studio onnxruntime opencv qt6.qtbase curl cudaPackages.tensorrt ];
+    buildInputs = with prev.pkgs; [ obs-studio onnxruntime opencv qt6.qtbase curl cudaPackages.tensorrt cudaPackages.cudatoolkit cudaPackages.nccl];
 
     dontWrapQtApps = true;
 
@@ -21,13 +21,19 @@ rec {
       "-DCMAKE_MODULE_PATH:PATH=${src}/cmake"
       "-DUSE_SYSTEM_ONNXRUNTIME=ON"
       "-DUSE_SYSTEM_OPENCV=ON"
+      "-DDISABLE_ONNXRUNTIME_GPU=ON"
     ];
+
+#    buildPhase = ''
+#      cd ..
+#      cmake --build build_x86_64 --parallel
+#    '';
 
     buildPhase = ''
       cd ..
-      cmake --build build_x86_64 --parallel
+      cmake --build build_x86_64
     '';
-
+    
     installPhase = ''
       cmake --install build_x86_64 --prefix "$out"
     '';

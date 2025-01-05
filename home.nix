@@ -15,8 +15,8 @@ let
   winapps = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "winapps";
-    rev = "d71e0d92cc2b4e097d86e59e196bbb4df4d2125c";
-    sha256 = "sha256-rkk/xwpaGx4wWQWtBdPZUkP8hMFO6O/v6DJz4aa8gh0=";
+    rev = "0319c70fa0dec2da241e9a4b4e35a164f99d6307";
+    sha256 = "sha256-+ZAtEDrHuLJBzF+R6guD7jYltoQcs88qEMvvpjiAXqI=";
   };
 
   in
@@ -27,8 +27,8 @@ let
     enable = true;
     configDir = null;
     extraPackages = with pkgs; [
-      pkgs-old.gtksourceview
-      pkgs-old.gnome.gvfs
+      gtksourceview
+      gnome.gvfs
       webkitgtk
       accountsservice
     ];
@@ -51,7 +51,7 @@ let
   home.file."Backgrounds" = {
     source = celes-dots + "/Backgrounds";
     recursive = true;
-  };
+  }; 
   home.file."winapps/pkg" = {
     source = winapps;
     recursive = true;
@@ -61,7 +61,10 @@ let
     source = winapps + "/runmefirst.sh";
   };
   home.file.".local/bin/initialSetup.sh" = {
-    source = pkgs.end-4-dots + "/.local/bin/initialSetup.sh";
+    source = celes-dots + "/.local/bin/initialSetup.sh";
+  };
+  home.file.".local/bin/sunshine" = {
+    source = celes-dots + "/.local/bin/sunshineFixed";
   };
   home.file.".local/bin/agsAction.sh" = {
     source = celes-dots + "/.local/bin/agsAction.sh";
@@ -75,10 +78,7 @@ let
   home.file.".config/hypr/hyprland.conf" = {
     source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
   };
-#  home.file.".local/bin/sunshine" = {
-#    source = celes-dots + "/.local/bin/sunshineFixed";
-#  };
-
+  
   # set cursor size and dpi for 4k monitor
   xresources.properties = {
     "Xcursor.size" = 24;
@@ -123,13 +123,14 @@ let
   # Obs.
   programs.obs-studio = {
     enable = true;
-    package = pkgs-unstable.obs-studio;
-    plugins = with pkgs-unstable.obs-studio-plugins; [
+    package = pkgs.obs-studio;
+    plugins = with pkgs.obs-studio-plugins; [
       wlrobs
-      #pkgs.obs-backgroundremovalOverride
-      obs-backgroundremoval
+      #obs-backgroundremoval
       obs-pipewire-audio-capture
       obs-vaapi
+      wlrobs
+      obs-vintage-filter
     ];
   };
 
@@ -145,7 +146,6 @@ let
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
 
-    fastfetch
     nnn # terminal file manager
 
     # archives
@@ -164,11 +164,13 @@ let
     # programs
     firefox
     chromium
-    tidal-hifi
-    cider
+    #cider
+    ##cider-2
     spotify
     discord
     darktable
+    sunshine
+    signal-desktop
 
     # Extra Launchers.
 
@@ -186,6 +188,7 @@ let
     # Graphical Editing.
     gimp
     darktable
+    blender
 
     # misc
     cowsay
@@ -226,8 +229,11 @@ let
     pciutils # lspci
     usbutils # lsusb
     wofi-calc
+    imagemagick
     openrgb-with-all-plugins
     KeyboardVisualizer
+    wlvncc
+    tigervnc
 
     # Development
     # MicroTex Deps
@@ -235,34 +241,24 @@ let
     gtkmm3
     gtksourceviewmm
     cairomm
+    gnumake
 
     # Other
     graphviz
-    cvs
-    mercurial
-    p4
-    subversion
 
     # Python
     pyenv.out
-    (python311.withPackages(ps: with ps; [
+    (python312.withPackages(ps: with ps; [
       materialyoucolor
       material-color-utilities
       pillow
       poetry-core
       pywal
+      matplotlib
       setuptools-scm
       wheel
       pywayland
       psutil
-      rbtoolsOverride
-      importlib-metadata
-      python-housekeeping
-      #rbtools
-      certifi
-      colorama
-      python-pydiffx
-      breezy
       # debugpy.overrideAttrs (final: prev: {
       #   pytestCheckPhase = ''true'';
       # })
@@ -270,6 +266,7 @@ let
       dbus-python
       pygobject3
       watchdog
+      pandas
       pip
       evdev
       appdirs
@@ -307,11 +304,11 @@ let
 
     # Gnome Stuff
     polkit_gnome
-    gnome.gnome-keyring
-    gnome.gnome-control-center
-    gnome.gnome-bluetooth
-    gnome.gnome-shell
-    gnome.nautilus
+    gnome-keyring
+    gnome-control-center
+    gnome-bluetooth
+    gnome-shell
+    nautilus
     nodejs_20
     yaru-theme
     blueberry
@@ -345,7 +342,7 @@ let
 
     # Themes
     adw-gtk3
-    qt5ct
+    libsForQt5.qt5ct
     gradience
 
     # Screenshot and Recorder
@@ -359,16 +356,28 @@ let
   ++
 
   (with pkgs-unstable; [
+    fastfetch
+    tidal-hifi
     hypridle
     hyprlock
     lan-mouse
-    python311Packages.debugpy
+    #python311Packages.debugpy
     vesktop
+    #(python311.withPackages(ps: with ps; [
+      # Ollama.
+      #torchvision
+      #torchaudio
+      #torch
+      #diffusers
+      #transformers
+      #accelerate
+     #]))
   ]);
 
   # basic configuration of git, please change to your own
   programs.git = {
     enable = true;
+    lfs.enable = true;
     userName = "Celes Renata";
     userEmail = "celes@celestium.life";
   };
@@ -432,7 +441,7 @@ let
   # You can update home Manager without changing this value. See
   # the home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "24.05";
+  home.stateVersion = "24.11";
 
   # Let home Manager install and manage itself.
   programs.home-manager.enable = true;

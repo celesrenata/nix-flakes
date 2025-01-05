@@ -3,7 +3,7 @@ final: prev:
 rec {
   jetbrains-toolbox = prev.stdenv.mkDerivation rec {
     pname = "jetbrains-toolbox";
-    version = "2.4.2.32922";
+    version = "2.5.2.35332";
     appimageContents = prev.runCommand "${pname}-extracted" {
       nativeBuildInputs = [prev.appimageTools.appimage-exec];
     } ''
@@ -15,7 +15,7 @@ rec {
 
     src = prev.fetchzip {
       url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}.tar.gz";
-      sha256 = "sha256-SkcgAOfSakMwvJEINU3XwHUaCF2ldFJn1jYkScAqG7A=";
+      sha256 = "sha256-uuDUKm+120kOYoRIXIPXam6tQd2aglaN/xDE2Yl4ZhU=";
       stripRoot = false;
     };
     toolboxIcon = prev.fetchurl {

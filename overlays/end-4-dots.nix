@@ -6,8 +6,8 @@ rec {
     src = prev.fetchFromGitHub {
       owner = "celesrenata";
       repo = "dots-hyprland";
-      rev = "c5a77d30afed4f21d83c53e590e0c878c7f11100";
-      sha256 = "sha256-FL5MrY4pflSrFpd+NScY9MAniRm63wxlfNWNhuwkyo4=";
+      rev = "f25908a3ed6455c686f3c4c30afb2e8108998c7c";
+      sha256 = "sha256-bcwgjTTbZtsypXlaFBZNx9xFioowQWt3nXzx6bSf9HA=";
     };
 
     installPhase = ''
@@ -22,6 +22,7 @@ rec {
       find hypr -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find mpv -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find qt5ct -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
+      find touchegg -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find winapps -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find wlogout -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find zshrc.d -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
