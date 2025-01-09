@@ -3,21 +3,21 @@
 
   inputs = {
     nyx.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-24.05";
+    home-manager.url = "github:nix-community/home-manager/release-24.11";
     nur.url = "github:nix-community/NUR";
     anyrun.url = "github:Kirottu/anyrun";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    ags.url = "github:Aylur/ags";
+    ags.url = "github:gorsbart/ags";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     dream2nix.url = "github:nix-community/dream2nix";
     linux_rpi5.url = "gitlab:vriska/nix-rpi5";
     fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*.tar.gz";
   };
 
-  outputs = inputs@{ linux_rpi5, nixpkgs, nixpkgs-stable, nixpkgs-unstable, nur, anyrun, home-manager, dream2nix, nixos-hardware,fh, nyx, ... }:
+  outputs = inputs@{ linux_rpi5, nixpkgs, nixpkgs-stable, nixpkgs-unstable, nur, anyrun, home-manager, dream2nix, nixos-hardware, fh, nyx, ... }:
   let
     system = "aarch64-linux";
     lib = nixpkgs.lib;
@@ -60,6 +60,7 @@
         (import ./overlays/box64.nix)
         (import ./overlays/argononed.nix)
         (import ./overlays/helmfile.nix)
+        (import ./overlays/toshy.nix)
         (import ./overlays/gnome-network-displays.nix)
         nyx.overlays.default
       ];
@@ -70,7 +71,7 @@
         specialArgs = {
           inherit fh;
           inherit linux_rpi5;
-	        inherit pkgs;
+	  inherit pkgs;
           inherit pkgs-stable;
           inherit pkgs-unstable;
         };
@@ -80,6 +81,7 @@
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix
+          nixos-hardware.nixosModules.raspberry-pi-5
           #./remote-build.nix
           ./nixberry/boot.nix
           ./nixberry/cpu.nix
@@ -87,8 +89,8 @@
             environment.systemPackages = [ fh.packages.aarch64-linux.default ];
           }
           ./nixberry/graphics.nix
-          #./nixberry/kernel.nix
           ./nixberry/networking.nix
+          ./toshy.nix
           ./nixberry/virtualisation.nix
           #./nixberry/wireless.nix
           home-manager.nixosModules.home-manager

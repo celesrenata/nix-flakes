@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ chaotic, pkgs, pkgs-stable, pkgs-unstable, ... }:
+{ chaotic, config, lib, nixos-hardware, pkgs, pkgs-stable, pkgs-unstable, ... }:
 {
   # Licences.
   nixpkgs.config = {
@@ -21,9 +21,34 @@
 
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  # Hardware Settings.
+  hardware = {
+    deviceTree = {
+      enable = true;
+      filter = "*rpi-5-*.dtb";
+    };
+  };
 
   # Udev rules.
   hardware.uinput.enable = true;
+  services.keyd = {
+    enable = true;
+    keyboards.mac.settings = {
+      main = {
+        control = "layer(meta)";
+        meta = "layer(control)";
+        rightcontrol = "layer(meta)";
+      };
+      meta = {
+        left =  "control-left";
+        right = "control-right";
+        space = "control-space";
+      };
+    };
+    keyboards.mac.ids = [
+      "*"
+    ];
+  };
   services.udev.extraRules = ''
     # HDMI-CEC
     SUBSYSTEM=="vchiq", GROUP="video", MODE="0660", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/vchiq"
@@ -114,7 +139,6 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  sound.enable = true;
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   
@@ -143,7 +167,7 @@
   # Enable Fonts.
   fonts.packages = with pkgs; [
     noto-fonts
-    noto-fonts-cjk
+    noto-fonts-cjk-sans
     noto-fonts-emoji
     liberation_ttf
     fira-code
@@ -191,24 +215,6 @@
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
-  services.keyd = {
-    enable = true;
-    keyboards.mac.settings = {
-      main = {
-        control = "layer(meta)";
-        meta = "layer(control)";
-        rightcontrol = "layer(meta)";
-      };
-      meta = {
-        left =  "control-left";
-        right = "control-right";
-        space = "control-space";
-      };
-    };
-    keyboards.mac.ids = [
-      "*"
-    ];
-  };
 
   # Gestures.
   services.touchegg.enable = true;
@@ -223,6 +229,12 @@
     extraGroups = [ "networkmanager" "wheel" "input" "uinput" "render" "video" "audio" "libvirt" "docker" "kvm" ];
   };
 
+  users.users.demo = {
+    isNormalUser = true;
+    initialPassword = "demo";
+    description = "Demo User";
+    extraGroups = [ "networkmanager" "input" "uinput" "render" "video" "audio" "libvirt" "docker" "kvm" ];
+  };
   # List packages installed in system profile. To search, run:
   # Enable Wayland for Electron.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
@@ -272,6 +284,8 @@
     bc
     kbd
     imagemagick
+    pssh
+    ssh-tools
 
     # Shells.
     fish
@@ -291,10 +305,10 @@
     polkit_gnome
     dconf
     killall
-    gnome.gnome-keyring
+    gnome-keyring
     wayvnc
     evtest
-    gnome.zenity
+    zenity
     linux-pam
     cliphist
     sudo
@@ -368,9 +382,12 @@
         helm-git
       ];
     })
-    kubernetes-helm
-    helmfile
-    kustomize
+    pkgs-unstable.kubernetes-helm
+    pkgs-unstable.helmfile
+    pkgs-unstable.kustomize
+    pkgs-unstable.kompose
+    pkgs.kubevirt
+    pkgs-unstable.krew
   ])
 
   ++
@@ -385,7 +402,7 @@
    ]);
 
 
-xdg.portal = {
+  xdg.portal = {
     enable = true;
     wlr = {
       enable = true;
@@ -434,5 +451,5 @@ xdg.portal = {
   # networking.firewall.enable = false;
 
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "24.11"; # Did you read the comment?
 }

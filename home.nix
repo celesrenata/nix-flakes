@@ -40,6 +40,12 @@ let
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
+  home.file.".configstaging/toshy/toshy_config.py" = {
+    source = "${pkgs.toshy}/toshy_config.py";
+  };
+  home.file.".configstaging/toshy/toshy_user_preferences.sqlite" = {
+   source = "${pkgs.toshy}/toshy_user_preferences.sqlite";
+  };
   home.file."Backgrounds" = {
     source = celes-dots + "/Backgrounds";
     recursive = true;
@@ -53,13 +59,102 @@ let
   home.file.".local/bin/regexEscape.sh" = {
     source = celes-dots + "/.local/bin/regexEscape.sh";
   };
+  home.file.".local/bin/toshy-services-disable" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-disable.sh";
+  };
+  home.file.".local/bin/toshy-services-enable" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-enable.sh";
+  };
+  home.file.".local/bin/toshy-services-restart" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-restart.sh";
+  };
+  home.file.".local/bin/toshy-services-stop" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-stop.sh";
+  };
+  home.file.".local/bin/toshy-services-log" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-log.sh";
+  };
+  home.file.".local/bin/toshy-services-status" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-status.sh";
+  };
+  home.file.".local/bin/toshy-config-start" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-start.sh";
+  };
+  home.file.".local/bin/toshy-config-start-verbose" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-start-verbose.sh";
+  };
+  home.file.".local/bin/toshy-config-stop" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-stop.sh";
+  };
+  home.file.".local/bin/toshy-config-restart" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-restart.sh";
+  };
+  home.file.".local/bin/toshy-cosmic-dbus-service" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-cosmic-dbus-service.sh";
+  };
+  home.file.".local/bin/toshy-devices" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-devices.sh";
+  };
+  home.file.".local/bin/toshy-env" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-env.sh";
+  };
+  home.file.".local/bin/toshy-fnmode" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-fnmode.sh";
+  };
+  home.file.".local/bin/toshy-gui" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-gui.sh";
+  };
+  home.file.".local/bin/toshy-machine-id" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-machine-id.sh";
+  };
+  home.file.".local/bin/toshy-kde-dbus-service" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-kde-dbus-service.sh";
+  };
+  home.file.".local/bin/toshy-systemd-remove" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-remove.sh";
+  };
+  home.file.".local/bin/toshy-systemd-setup" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-setup.sh";
+  };
+  home.file.".local/bin/toshy-tray" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-tray.sh";
+  };
+  home.file.".local/bin/toshy-versions" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-versions.sh";
+  };
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
   home.file.".config/hypr/hyprland.conf" = {
-    source = pkgs.end-4-dots + "/hypr/hyprland.conf";
+    source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
   };
-
+  home.file.".config/toshy/toshy_gui.py" = {
+    source = "${pkgs.toshy}/toshy_gui.py";
+  };
+  home.file.".config/toshy/toshy_tray.py" = {
+    source = "${pkgs.toshy}/toshy_tray.py";
+  };
+  home.file.".local/share/icons/toshy_app_icon_rainbow.svg" = {
+    source = "${pkgs.toshy}/assets/toshy_app_icon_rainbow.svg";
+  };
+  home.file.".local/share/icons/toshy_app_icon_inverse.svg" = {
+    source = "${pkgs.toshy}/assets/toshy_app_icon_inverse.svg";
+  };
+  home.file.".local/share/icons/toshy_app_icon_grayscale.svg" = {
+    source = "${pkgs.toshy}/assets/toshy_app_icon_grayscale.svg";
+  };
+  home.file.".config/toshy/assets" = {
+    source = "${pkgs.toshy}/assets";
+    recursive = true;
+  };
+  home.file.".config/toshy/lib" = {
+    source = "${pkgs.toshy}/lib";
+    recursive = true;
+  };
+  home.file.".config/toshy/kde-kwin-dbus-service" = {
+    source = "${pkgs.toshy}/kde-kwin-dbus-service";
+    recursive = true;
+  };
   # encode the file content in nix configuration file directly
   # home.file.".xxx".text = ''
   #     xxx
@@ -131,6 +226,7 @@ let
     nmap # A utility for network discovery and security auditing
     ipcalc  # it is a calculator for the IPv4/v6 addresses
     nmap
+    tigervnc
 
     # Graphical Editing.
     gimp
@@ -211,10 +307,10 @@ let
 
     # Gnome Stuff
     polkit_gnome
-    gnome.gnome-keyring
-    gnome.gnome-control-center
-    gnome.gnome-bluetooth
-    gnome.gnome-shell
+    gnome-keyring
+    gnome-control-center
+    gnome-bluetooth
+    gnome-shell
     gnome-network-displaysOverride
     yaru-theme
     blueberry
@@ -236,7 +332,7 @@ let
     libnotify
 
     # Themes
-    qt5ct
+    libsForQt5.qt5ct
 
     # Screenshot and Recorder
     swappy
@@ -250,7 +346,7 @@ let
 #
 #    (with pkgs-unstable; [
     adw-gtk3
-    armcord
+    legcord
     dart-sass
     eza
     gojq
@@ -273,6 +369,7 @@ let
       psutil
       pydbus
       dbus-python
+      python-xwaykeyz
       pygobject3
       watchdog
       pip
@@ -359,7 +456,7 @@ let
   # You can update home Manager without changing this value. See
   # the home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "24.05";
+  home.stateVersion = "24.11";
 
   # Let home Manager install and manage itself.
   programs.home-manager.enable = true;

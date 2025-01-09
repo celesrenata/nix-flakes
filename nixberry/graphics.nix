@@ -1,15 +1,15 @@
-{ config, lib, pkgs, nixpkgs,  ... }:
+{ config, lib, pkgs, pkgs-unstable, nixpkgs,  ... }:
 {
   config = {
     environment.systemPackages = with pkgs; [
       libGL
       kdenlive
     ];
-    hardware.opengl =
+    hardware.graphics =
     with pkgs; {
       enable = true;
-      driSupport = true;
       extraPackages = with pkgs; [
+        #pkgs-unstable.displaylink
         vaapiVdpau
         libvdpau-va-gl
         libGL

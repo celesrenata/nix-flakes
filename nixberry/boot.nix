@@ -14,18 +14,23 @@
 
         let
           # NOTE: raspberrypifw & raspberryPiWirelessFirmware should be updated with this
-          modDirVersion = "6.6.35";
+          modDirVersion = "6.6.67";
           tag = "rpi-6.6.y";
         in
         lib.overrideDerivation (buildLinux (args // {
           version = "${modDirVersion}-${tag}";
           inherit modDirVersion;
-        
+#          src = fetchFromGitHub {
+#            owner = "raspberrypi";
+#            repo = "linux";
+#            rev = "faa16be160ece6fd0a6be712690936553b565bc0";
+#            hash = "sha256-VEWPYsD5chLTszRFwqQQl3n14FJeeAqAFzrWcw/drV4=";
+#          };        
           src = fetchFromGitHub {
             owner = "raspberrypi";
             repo = "linux";
-            rev = "c1432b4bae5b6582f4d32ba381459f33c34d1424";
-            hash = "sha256-pzjgCWG9FhMU3LCZnvz5N4jYfaaJQDT6Pv5lD/3zsm4=";
+            rev = "811ff707533bcd67cdcd368bbd46223082009b12";
+            hash = "sha256-q9swM2TmmuzbUuQnbLZk5PseKWD7/SNPwtth6bpGIqE=";
           };
           defconfig = {
             "1" = "bcmrpi_defconfig";
@@ -39,18 +44,6 @@
             efiBootStub = false;
           } // (args.features or {});
        
-          makeFlags = [
-            "CONFIG_CEPH_LIB=n"
-            "CONFIG_CEPH_FS=n"
-            "CONFIG_CEPH_FSCACHE=n"
-            "CONFIG_CEPH_FS_POSIX_ACL=n"
-            "CONFIG_EROFS_FS_XATTR=n"
-            "CONFIG_EROFS_FS_POSIX_ACL=n"
-            "CONFIG_EROFS_FS_SECURITY=n"
-            "CONFIG_EROFS_FS_ZIP=n"
-            "CONFIG_SND_SOC_SIMPLE_MUX=n"
-          ];
- 
           extraMeta = if (rpiVersion < 3) then {
             platforms = with lib.platforms; arm;
             hydraPlatforms = [];
@@ -108,5 +101,6 @@
       kernelParams = [ "8250.nr_uarts=11" "console=ttyAMA10,9660" "console=tty0" "usbhid.mousepoll=0" ];
       kernelModules = [ "uinput" ];
     };
+    zramSwap.enable = true;
   };
 }
