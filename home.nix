@@ -48,6 +48,12 @@ let
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
+  home.file.".configstaging/toshy/toshy_config.py" = {
+    source = "${pkgs.toshy}/toshy_config.py";
+  };
+  home.file.".configstaging/toshy/toshy_user_preferences.sqlite" = {
+   source = "${pkgs.toshy}/toshy_user_preferences.sqlite";
+  };
   home.file."Backgrounds" = {
     source = celes-dots + "/Backgrounds";
     recursive = true;
@@ -72,13 +78,102 @@ let
   home.file.".local/bin/regexEscape.sh" = {
     source = celes-dots + "/.local/bin/regexEscape.sh";
   };
+  home.file.".local/bin/toshy-services-disable" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-disable.sh";
+  };
+  home.file.".local/bin/toshy-services-enable" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-enable.sh";
+  };
+  home.file.".local/bin/toshy-services-restart" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-restart.sh";
+  };
+  home.file.".local/bin/toshy-services-stop" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-stop.sh";
+  };
+  home.file.".local/bin/toshy-services-log" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-log.sh";
+  };
+  home.file.".local/bin/toshy-services-status" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-services-status.sh";
+  };
+  home.file.".local/bin/toshy-config-start" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-start.sh";
+  };
+  home.file.".local/bin/toshy-config-start-verbose" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-start-verbose.sh";
+  };
+  home.file.".local/bin/toshy-config-stop" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-stop.sh";
+  };
+  home.file.".local/bin/toshy-config-restart" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-config-restart.sh";
+  };
+  home.file.".local/bin/toshy-cosmic-dbus-service" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-cosmic-dbus-service.sh";
+  };
+  home.file.".local/bin/toshy-devices" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-devices.sh";
+  };
+  home.file.".local/bin/toshy-env" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-env.sh";
+  };
+  home.file.".local/bin/toshy-fnmode" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-fnmode.sh";
+  };
+  home.file.".local/bin/toshy-gui" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-gui.sh";
+  };
+  home.file.".local/bin/toshy-machine-id" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-machine-id.sh";
+  };
+  home.file.".local/bin/toshy-kde-dbus-service" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-kde-dbus-service.sh";
+  };
+  home.file.".local/bin/toshy-systemd-remove" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-remove.sh";
+  };
+  home.file.".local/bin/toshy-systemd-setup" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-setup.sh";
+  };
+  home.file.".local/bin/toshy-tray" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-tray.sh";
+  };
+  home.file.".local/bin/toshy-versions" = {
+    source = "${pkgs.toshy}/scripts/bin/toshy-versions.sh";
+  };
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
   home.file.".config/hypr/hyprland.conf" = {
     source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
   };
-  
+  home.file.".config/toshy/toshy_gui.py" = {
+    source = "${pkgs.toshy}/toshy_gui.py";
+  };
+  home.file.".config/toshy/toshy_tray.py" = {
+    source = "${pkgs.toshy}/toshy_tray.py";
+  };
+  home.file.".local/share/icons/toshy_app_icon_rainbow.svg" = {
+    source = "${pkgs.toshy}/assets/toshy_app_icon_rainbow.svg";
+  };
+  home.file.".local/share/icons/toshy_app_icon_inverse.svg" = {
+    source = "${pkgs.toshy}/assets/toshy_app_icon_inverse.svg";
+  };
+  home.file.".local/share/icons/toshy_app_icon_grayscale.svg" = {
+    source = "${pkgs.toshy}/assets/toshy_app_icon_grayscale.svg";
+  };
+  home.file.".config/toshy/assets" = {
+    source = "${pkgs.toshy}/assets";
+    recursive = true;
+  };
+  home.file.".config/toshy/lib" = {
+    source = "${pkgs.toshy}/lib";
+    recursive = true;
+  };
+  home.file.".config/toshy/kde-kwin-dbus-service" = {
+    source = "${pkgs.toshy}/kde-kwin-dbus-service";
+    recursive = true;
+  };
   # set cursor size and dpi for 4k monitor
   xresources.properties = {
     "Xcursor.size" = 24;
@@ -97,11 +192,11 @@ let
   programs.vscode = {
     enable = true;
     package = pkgs-unstable.vscode;
-    extensions = with pkgs.vscode-extensions; [
+    profiles.default.extensions = with pkgs.vscode-extensions; [
       #dracula-theme.theme-dracula
       #vscodevim.vim
       #yzhang.markdown-all-in-one
-      ms-python.python
+      #ms-python.python
       oderwat.indent-rainbow
       eamodio.gitlens
       jnoortheen.nix-ide
@@ -113,19 +208,13 @@ let
     theme_background = false;
   };
 
-  xdg.desktopEntries.cider = {
-    name = "Cider";
-    genericName = "Music";
-    exec = "env -u NIXOS_OZONE_WL cider --use-gl=desktop %U";
-    icon = "cider";
-  };
-
   # Obs.
   programs.obs-studio = {
     enable = true;
     package = pkgs.obs-studio;
     plugins = with pkgs.obs-studio-plugins; [
       wlrobs
+      #pkgs.obs-backgroundremovalOverride
       #obs-backgroundremoval
       obs-pipewire-audio-capture
       obs-vaapi
@@ -164,12 +253,9 @@ let
     # programs
     firefox
     chromium
-    #cider
-    ##cider-2
     spotify
     discord
     darktable
-    sunshine
     signal-desktop
 
     # Extra Launchers.
@@ -236,6 +322,8 @@ let
     tigervnc
 
     # Development
+    nodePackages.aws-cdk
+    awscli2
     # MicroTex Deps
     tinyxml-2
     gtkmm3
@@ -249,11 +337,13 @@ let
     # Python
     pyenv.out
     (python312.withPackages(ps: with ps; [
+      gtk3
       materialyoucolor
       material-color-utilities
       pillow
       poetry-core
       pywal
+      pygobject3
       matplotlib
       setuptools-scm
       wheel
@@ -276,13 +366,14 @@ let
       hatchling
       pycairo
       xkeysnail
+      python-xwaykeyz
     ]))
 
     # Player and Audio
     pavucontrol
     wireplumber
     libdbusmenu-gtk3
-    plasma-browser-integration
+    #plasma-browser-integration
     playerctl
     swww
     mpv
@@ -357,6 +448,7 @@ let
 
   (with pkgs-unstable; [
     fastfetch
+    #sunshine
     tidal-hifi
     hypridle
     hyprlock
@@ -378,8 +470,6 @@ let
   programs.git = {
     enable = true;
     lfs.enable = true;
-    userName = "Celes Renata";
-    userEmail = "celes@celestium.life";
   };
 
   # starship - an customizable prompt for any shell
@@ -422,7 +512,6 @@ let
       k = "kubectl";
       urldecode = "python3 -c 'import sys, urllib.parse as ul; print(ul.unquote_plus(sys.stdin.read()))'";
       urlencode = "python3 -c 'import sys, urllib.parse as ul; print(ul.quote_plus(sys.stdin.read()))'";
-      cider = "env -u NIXOS_OZONE_WL cider --use-gl=desktop";
     };
     sessionVariables = {
       EDITOR = "vim";

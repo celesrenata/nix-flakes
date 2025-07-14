@@ -1,16 +1,29 @@
 { config, lib, pkgs, pkgs-unstable, ... }:
+let
+  myKernelPackages = let
+    base = pkgs.linuxPackages_6_15;
+  in base // {
+    nvidia-open = base.nvidia-open.overrideAttrs (old: {
+      nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.pkg-config ];
+      buildInputs = (old.buildInputs or []) ++ [ pkgs.gtk3 pkgs.gtk2 ];
+    });
+  };
+in
 {
   config = {
     nixpkgs.config.allowUnsupportedSystem = true;
     boot = {
-      #binfmt.emulatedSystems = [ "aarch64-linux" ];
+      binfmt.emulatedSystems = [ "aarch64-linux" ];
       loader = {
         systemd-boot.enable = true;
         efi.canTouchEfiVariables = true;
       };
       supportedFilesystems = [ "ntfs" "nfs" ];
       plymouth.enable = true;
-      kernelPackages = pkgs.linuxPackages_latest;
+
+      # Use patched kernelPackages set
+      kernelPackages = myKernelPackages;
+
       kernelPatches = [
         {
           name = "amdgpu-ignore-ctx-privileges";
@@ -22,14 +35,16 @@
         }
       ];
       kernelModules = [ "uinput" "nvidia" "v4l2loopback" ];
-      extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
+
+      # Use whatever v4l2loopback package you want, or comment if handled via kernelPackages
+      # extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
+      extraModulePackages = with pkgs; [ v4l2loopback-0150 ];
+
       extraModprobeConfig = ''
-         options nvidia_drm modeset=1 fbdev=1
+        options nvidia_drm modeset=1 fbdev=1
       '';
-       # options nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"
-       # options nvidia NVreg_OpenRmEnableUnsupportedGpus=1
-       # options nvidia NVreg_EnablePCIeGen3=1
-       # options nvidia NVreg_EnableGpuFirmware=0
+
+      # initrd kernel modules
       initrd.kernelModules = [
         "nvidia"
         "nvidia_modeset"
@@ -38,6 +53,8 @@
       ];
     };
     hardware.graphics.enable = true;
-#    virtualisation.spiceUSBRedirection.enable = true;
+    services.thermald.enable = true;
+    # virtualisation.spiceUSBRedirection.enable = true;
   };
 }
+

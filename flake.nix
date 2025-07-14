@@ -2,10 +2,10 @@
   description = "NixOS configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    nixpkgs-old.url = "github:nixos/nixpkgs/nixos-24.05";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-24.11";
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs-old.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager/release-25.05";
     anyrun.url = "github:Kirottu/anyrun";
     nix-comfyui.url = "github:haras-unicorn/nix-comfyui";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -14,6 +14,7 @@
     nix-gl-host.url = "github:numtide/nix-gl-host";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";    
     nixgl.url = "github:nix-community/nixGL";
+    protontweaks.url = "github:rain-cafe/protontweaks/main";
     #ags.url = "github:Aylur/ags/main";
     ags.url = "github:gorsbart/ags";
     tiny-dfr.url = "github:sharpenedblade/tiny-dfr";
@@ -21,7 +22,7 @@
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
 
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, nix-comfyui, home-manager, dream2nix, niri, nixgl, nix-gl-host, nix-vscode-extensions, nixos-hardware, tiny-dfr, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, nix-comfyui, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, ... }:
   let
     system = "x86_64-linux";
     lib = nixpkgs.lib;
@@ -52,6 +53,19 @@
         helmfile-wrapped
       ];
     };
+    devShells.x86_64 = pkgs-devshell.mkShell {
+      name = "toshy devShell";
+      nativeBuildInputs = with pkgs-devshell; [
+        gobject-intorspection
+        wrapGAppsHook
+      ];
+      buildInputs = with pkgs-devshell; [
+        gtk3
+        (python3.withPackages (p: with p; [
+          pygobject3
+        ]))
+      ];
+    };
     nixosConfigurations = {
       esnixi =
       let
@@ -60,6 +74,7 @@
         config = {
           cudaSupport = true;
           allowUnfree = true;
+          android_sdk.accept_license = true;
           allowBroken = true;
           allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
             "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" "steam-original" "steam-run" "cuda_cccl"
@@ -74,6 +89,7 @@
           #inputs.niri.overlays.niri
           inputs.nix-comfyui.overlays.default
           #(import ./overlays/cider.nix)
+          (import ./overlays/tensorrt.nix)
           (import ./overlays/keyboard-visualizer.nix)
           (import ./overlays/debugpy.nix)
           (import ./overlays/freerdp.nix)
@@ -87,9 +103,13 @@
           #(import ./overlays/nmap.nix)
           (import ./overlays/wofi-calc.nix)
           #(import ./overlays/xivlauncher.nix)
-          #(import ./overlays/onnxruntime.nix)
+          (import ./overlays/toshy.nix)
           (import ./overlays/helmfile.nix)
-          (import ./overlays/background-removal.nix)
+          (import ./overlays/v4l2loopback.nix)
+          (import ./overlays/nvidia-open-full.nix)
+          #(import ./overlays/nvidia-open-debug.nix)
+          #(import ./overlays/background-removal.nix)
+          protontweaks.overlay
         ];
       };
       pkgs-unstable = import inputs.nixpkgs-unstable {
@@ -113,14 +133,17 @@
                         ];
       modules = [
         ./configuration.nix
-        ./hardware-configuration.nix
+        ./remote-build.nix
+        ./toshy.nix
         ./esnixi/boot.nix
         ./esnixi/games.nix
         ./esnixi/graphics.nix
         ./esnixi/monitoring.nix
         ./esnixi/networking.nix
+        ./esnixi/thunderbolt.nix
         ./esnixi/virtualisation.nix
         #niri.nixosModules.niri
+        protontweaks.nixosModules.protontweaks
         home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
@@ -153,10 +176,9 @@
           };
           overlays = [
             nixgl.overlay
-            inputs.nix-comfyui.overlays.default
             (import ./overlays/keyboard-visualizer.nix)
             (import ./overlays/debugpy.nix)
-            (import ./overlays/freerdp.nix)
+            #(import ./overlays/freerdp.nix)
             (import ./overlays/keyd.nix)
             (import ./overlays/kubevirt.nix)
             (import ./overlays/materialyoucolor.nix)

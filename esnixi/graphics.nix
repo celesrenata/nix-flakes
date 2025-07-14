@@ -5,17 +5,32 @@ let
     url = "https://patch-diff.githubusercontent.com/raw/NVIDIA/open-gpu-kernel-modules/pull/692.patch";
     hash = "sha256-OYw8TsHDpBE5DBzdZCBT45+AiznzO9SfECz5/uXN5Uc=";
   };
+  gpl_symbols_linux_615_patch = pkgs.fetchpatch {
+    url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
+    hash = "sha256-YOTAvONchPPSVDP9eJ9236pAPtxYK5nAePNtm2dlvb4=";
+    stripLen = 1;
+    extraPrefix = "kernel/";
+  };
+  nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
+    version = "570.153.02";
+    sha256_64bit = "sha256-FIiG5PaVdvqPpnFA5uXdblH5Cy7HSmXxp6czTfpd4bY=";
+    sha256_aarch64 = "sha256-FKhtEVChfw/1sV5FlFVmia/kE1HbahDJaxTlpNETlrA=";
+    openSha256 = "sha256-2DpY3rgQjYFuPfTY4U/5TcrvNqsWWnsOSX0f2TfVgTs=";
+    settingsSha256 = "sha256-5m6caud68Owy4WNqxlIQPXgEmbTe4kZV2vZyTWHWe+M=";
+    persistencedSha256 = "sha256-OSo4Od7NmezRdGm7BLLzYseWABwNGdsomBCkOsNvOxA=";
+    patches = [ gpl_symbols_linux_615_patch ];
+  });
 in
 rec {
   nixpkgs.config.allowUnfree = true;
   # Remote Desktop
   
-  security.wrappers.sunshine = {
-    owner = "root";
-    group = "root";
-    capabilities = "cap_sys_admin+p";
-    source = "${pkgs.sunshine}/bin/sunshine";
-  };
+#  security.wrappers.sunshine = {
+#    owner = "root";
+#    group = "root";
+#    capabilities = "cap_sys_admin+p";
+#    source = "${pkgs-unstable.sunshine}/bin/sunshine";
+#  };
   services.avahi.publish.enable = true;
   services.avahi.publish.userServices = true;
   systemd.services.home-assistant.serviceConfig.DeviceAllow = ["/dev/dri/card0" "/dev/dri/card1"];
@@ -30,18 +45,18 @@ rec {
     models = "/opt/ollama/models";
   };
 
-  services.open-webui = {
-    enable = true;
-    host = "0.0.0.0";
-    port = 8776;
-    openFirewall = true;
-  };
+  #services.open-webui = {
+  #  enable = true;
+  #  host = "0.0.0.0";
+  #  port = 8776;
+  #  openFirewall = true;
+  #};
 
   environment.systemPackages = with pkgs; [
     libGL
     nvtopPackages.full
-    kdenlive
-    immersed
+    kdePackages.kdenlive
+    #immersed
     cudaPackages.cudatoolkit
 
     # Ollama. 
@@ -71,27 +86,14 @@ rec {
   # Load nvidia driver for Xorg and Wayland
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
-    #package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
-    #  version = "555.52.04";
-    #  sha256_64bit = "sha256-nVOubb7zKulXhux9AruUTVBQwccFFuYGWrU1ZiakRAI=";
-    #  sha256_aarch64 = "sha256-Kt60kTTO3mli66De2d1CAoE3wr0yUbBe7eqCIrYHcWk=";
-    #  openSha256 = "sha256-wDimW8/rJlmwr1zQz8+b1uvxxxbOf3Bpk060lfLKuy0=";
-    #  settingsSha256 = "sha256-PMh5efbSEq7iqEMBr2+VGQYkBG73TGUh6FuDHZhmwHk=";
-    #  persistencedSha256 = "sha256-KAYIvPjUVilQQcD04h163MHmKcQrn2a8oaXujL2Bxro=";
-    #};
-    #package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
-    #  version = "560.35.03";
-    #  sha256_64bit = "sha256-8pMskvrdQ8WyNBvkU/xPc/CtcYXCa7ekP73oGuKfH+M=";
-    #  sha256_aarch64 = "sha256-s8ZAVKvRNXpjxRYqM3E5oss5FdqW+tv1qQC2pDjfG+s=";
-    #  openSha256 = "sha256-/32Zf0dKrofTmPZ3Ratw4vDM7B+OgpC4p7s+RHUjCrg=";
-    #  settingsSha256 = "sha256-kQsvDgnxis9ANFmwIwB7HX5MkIAcpEEAHc8IBOLdXvk=";
-    #  persistencedSha256 = "sha256-E2J2wYYyRu7Kc3MMZz/8ZIemcZg68rkzvqEwFAL3fFs=";
-    #};
-    package = config.boot.kernelPackages.nvidiaPackages.latest;
+    package = nvidia-package;
+    #package = pkgs-unstable.linuxPackages_6_15.nvidiaPackages;
+    #package = pkgs-unstable.linuxPackages_6_15.nvidiaPackages.latest;
+    #package = config.boot.kernelPackages.nvidiaPackages.latest;
     modesetting.enable = true;
     powerManagement.enable = true;
     forceFullCompositionPipeline = true;
-    open = false;
+    open = true;
     nvidiaSettings = true;
   };
 }

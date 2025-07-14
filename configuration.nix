@@ -59,7 +59,8 @@
   # Enable the GDM Display Manager.
   services.xserver.displayManager = {
     gdm.enable = true;
-    #setupCommands = "export WLR_BACKENDS=headless"plas;
+    gdm.autoSuspend = false;
+    #setupCommands = "export WLR_BACKENDS=headless";
     #autoLogin.enable = true;
     #autoLogin.user = "celes";
   };
@@ -70,7 +71,7 @@
   services.xserver.enable = true;
 
   # Enable the Enlightenment Desktop Environment.
-  services.desktopManager.plasma6.enable = true;
+  services.xserver.desktopManager.enlightenment.enable = true;
 
   # Enable OpenRGB.
   services.hardware.openrgb.enable = true;
@@ -114,16 +115,11 @@
     openFirewall = true;
   };
 
-  services.prometheus.exporters.node = {
-    enable = true;
-    port = 9100;
-    enabledCollectors = [ "systemd" ];
-    extraFlags = [ "--collector.ethtool" "--collector.softirqs" "--collector.tcpstat" ];
-  };
+  services.fwupd.enable = true;
 
   # Enable sound with pipewire.
   #sound.enable = true;
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   
   services.pipewire = {
@@ -149,10 +145,12 @@
   };
 
   # Enable Fonts.
-  fonts.packages = with pkgs-unstable; [
+  fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-cjk-sans
     noto-fonts-emoji
+    dejavu_fonts
+    _0xproto
     liberation_ttf
     fira-code
     fira-code-symbols
@@ -161,7 +159,8 @@
     proggyfonts
     fontconfig
     lexend
-    nerdfonts
+    nerd-fonts.dejavu-sans-mono
+    nerd-fonts.space-mono
     material-symbols
     bibata-cursors
   ];
@@ -208,12 +207,28 @@
 
   # Garbage Collection.
   nix.optimise.automatic = true;
-
+ 
+  # Steam.
+  #programs.steam.package = pkgs.steam.override {
+  #  extraPkgs = pkgs: [
+  #    pkgs.steamcmd
+  #    pkgs.glxinfo
+  #    pkgs.steam-tui
+  #  ];
+  #};
+  programs.ccache.enable = true;
+  programs.nh.enable = true;
+  programs.java.enable = true;
+  programs.adb.enable = true;
   programs.steam = {
     enable = true;
     extraPackages = with pkgs; [
       glxinfo
       qt6.qtwayland
+      nss
+      xorg.libxkbfile
+      kdePackages.qtwayland
+      libsForQt5.qt5.qtwayland
     ];
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
@@ -224,7 +239,7 @@
   users.users.celes = {
     isNormalUser = true;
     description = "Celes Renata";
-    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" "libvirt" "kvm" "vboxusers" ];
+    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" "libvirt" "kvm" "vboxusers" "adbusers" ];
     packages = with pkgs; [
       firefox
     #  thunderbird
@@ -268,9 +283,11 @@
     simple-scan
     btop
     screen
+    #pkgs-unstable.freerdp3
     freerdp3Override
     mako
     keymapp
+    android-tools
 
     # Shells.
     fish
@@ -299,6 +316,7 @@
     steamcmd
 
     # Development Tools.
+    #android-studio-full
     jetbrains-toolbox
     git
     git-lfs
@@ -311,6 +329,7 @@
     glib
     glibc.dev
     gobject-introspection.dev
+    openjdk
     pango.dev
     harfbuzz.dev
     cairo.dev
@@ -323,20 +342,18 @@
     node2nix
     nil
     sublime4
-
-    # AI Tools.
-    (pkgs.comfyuiPackages.comfyui.override {
-      extensions = [
-        pkgs.comfyuiPackages.extensions.acly-inpaint
-        pkgs.comfyuiPackages.extensions.acly-tooling
-        pkgs.comfyuiPackages.extensions.cubiq-ipadapter-plus
-        pkgs.comfyuiPackages.extensions.fannovel16-controlnet-aux
-      ];
-      commandLineArgs = [
-        "--preview-method"
-        "auto"
-      ];
-    })
+    #(pkgs.comfyuiPackages.comfyui.override {
+    #  extensions = [
+    #    pkgs.comfyuiPackages.extensions.acly-inpaint
+    #    pkgs.comfyuiPackages.extensions.acly-tooling
+    #    pkgs.comfyuiPackages.extensions.cubiq-ipadapter-plus
+    #    pkgs.comfyuiPackages.extensions.fannovel16-controlnet-aux
+    #  ];
+    #  commandLineArgs = [
+    #    "--preview-method"
+    #    "auto"
+    #  ];
+    #})
 
     # Session.
     polkit
@@ -350,7 +367,7 @@
     linux-pam
     cliphist
     sudo
-    xwaylandvideobridge
+    #xwaylandvideobridge
     ssh-tools
 
     # Wayland.
@@ -373,7 +390,7 @@
     libva-utils
     wofi
     libqalculate
-    sunshine 
+    #sunshine 
     moonlight-qt
     xfce.thunar
     wayland-scanner
@@ -436,5 +453,5 @@
   # networking.firewall.enable = false;
 
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = "25.05"; # Did you read the comment?
 }

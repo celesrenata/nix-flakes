@@ -5,9 +5,21 @@
         (import ./overlays/toshy.nix)
       ];
     }
-  }: 
+  }:
+ 
 (pkgs.buildFHSUserEnv {
-  name = "pipzone";
+  name = "toshy";
+  nativeBuildInputs = with pkgs; [
+    gobject-introspection
+    wrapGAppsHook
+  ];
+  buildInputs = with pkgs; [
+    gtk3
+    (python3.withPackages (p: with p; [
+      pygobjects3
+      psutil
+    ]))
+  ];
   targetPkgs = pkgs: (with pkgs; [
     pkg-config
     cairo.dev
@@ -35,7 +47,6 @@
     python311Packages.tkinter
     python311Packages.sv-ttk
     python311Packages.watchdog
-    python311Packages.psutil
     python311Packages.i3ipc
     python311Packages.pywayland
     python311Packages.pywlroots
