@@ -255,7 +255,7 @@ let
       bind = $Primary+Shift+Alt, S, exec, grim -g "$(slurp)" - | swappy -f - # Screen snip to editor
       bind = $Primary+Shift, C, exec, hyprpicker -a # Color picker
       bind = $Primary, V, exec, pkill fuzzel || cliphist list | fuzzel --no-fuzzy --dmenu | cliphist decode | wl-copy # Clipboard history
-      bind = $Primary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji # Emoji picker
+      bind = $Primary, Period, exec, pkill fuzzel || fuzzel-emoji # Emoji picker
       
       # Cheatsheet and help
       bind = $Primary, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle # Show cheatsheet
@@ -873,6 +873,7 @@ let
     curl
     ddcutil
     fuzzel
+    fuzzel-emoji
     ripgrep
     gojq
     dart-sass

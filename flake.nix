@@ -104,6 +104,7 @@ description = "NixOS configuration";
           (import ./overlays/freerdp.nix)
           (import ./overlays/materialyoucolor.nix)
           (import ./overlays/end-4-dots.nix)
+          (import ./overlays/fuzzel-emoji.nix)  # Add fuzzel-emoji overlay
           (import ./overlays/nix-static.nix)
           (import ./overlays/freerdp.nix)
           (import ./overlays/kubevirt.nix)
