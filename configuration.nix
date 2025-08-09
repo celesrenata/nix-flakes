@@ -33,7 +33,7 @@
     {domain = "*"; item = "stack"; type = "-"; value = "unlimited";}
   ];
   # Udev rules.
-  hardware.uinput.enable = true;
+  # hardware.uinput.enable = true;
 
   # Set your time zone.
 
@@ -317,6 +317,7 @@
 
     # Development Tools.
     #android-studio-full
+    amazon-q-cli
     jetbrains-toolbox
     git
     git-lfs

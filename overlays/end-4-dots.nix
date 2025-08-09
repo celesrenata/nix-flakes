@@ -12,7 +12,6 @@ rec {
 
     installPhase = ''
       install -m755 -D .local/bin/fuzzel-emoji $out/.local/bin/fuzzel-emoji
-      install -m755 -D .local/bin/initialSetup.sh $out/.local/bin/initialSetup.sh
       cd .config
       find ags -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find anyrun -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
@@ -22,8 +21,6 @@ rec {
       find hypr -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find mpv -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find qt5ct -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
-      find touchegg -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
-      find winapps -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find wlogout -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find zshrc.d -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       install -m755 -D starship.toml $out/.config/starship.toml

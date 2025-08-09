@@ -220,7 +220,7 @@ rec {
   python-toshy-init = prev.python312.override {
     packageOverrides = final: prev: {
       xwaykeyz = with prev.pkgs.python3Packages; toPythonApplication final.python-xwaykeyz;
-      toshy = prev.buidPythonPackages {
+      toshy = prev.buildPythonPackages {
         preBuild = ''
 cat > setup.py << EOF
 from setuptools import setup
@@ -389,10 +389,10 @@ EOF
       install -m755 -D toshy_tray.py $out/toshy_tray.py
     '';
     src = prev.pkgs.fetchFromGitHub {
-      owner = "RedBearAK";
+      owner = "celesrenata";
       repo = "toshy";
-      rev = "374fd12c5fbc8099d5452915dc0e5466a0cfce48";
-      sha256 = "sha256-BBDNRq4aZ0VKUu6cueyKfxQChCWpoEmKsqxWcbSnZIc=";
+      rev = "0c04034cdb00a3a258317b1c8326df5f00b4653b";
+      sha256 = "0fbi5xyav1zp24qdmc5b1n2n53y8chgcqg3v0rzlb2dp96lj5li1";
     }; 
   };
 }

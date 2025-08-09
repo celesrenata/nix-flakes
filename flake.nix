@@ -1,5 +1,5 @@
 {
-  description = "NixOS configuration";
+description = "NixOS configuration";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
@@ -20,9 +20,13 @@
     tiny-dfr.url = "github:sharpenedblade/tiny-dfr";
     dream2nix.url = "github:nix-community/dream2nix";
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
+    # toshy.url = "github:celesrenata/toshy/cline";
+    # toshy.inputs.nixpkgs.follows = "nixpkgs";
+    dots-hyprland.url = "github:celesrenata/end-4-flakes";
+    dots-hyprland.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, nix-comfyui, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, nix-comfyui, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, ... }:
   let
     system = "x86_64-linux";
     lib = nixpkgs.lib;
@@ -43,7 +47,7 @@
     };
 
   in {
-    devShells.x86_64-linux = pkgs-devshell.mkShell {
+    devShells.x86_64-linux.default = pkgs-devshell.mkShell {
       name = "helmfile devShell";
       nativeBuildInputs = with pkgs-devshell; [
         bashInteractive
@@ -53,19 +57,19 @@
         helmfile-wrapped
       ];
     };
-    devShells.x86_64 = pkgs-devshell.mkShell {
-      name = "toshy devShell";
-      nativeBuildInputs = with pkgs-devshell; [
-        gobject-intorspection
-        wrapGAppsHook
-      ];
-      buildInputs = with pkgs-devshell; [
-        gtk3
-        (python3.withPackages (p: with p; [
-          pygobject3
-        ]))
-      ];
-    };
+   # devShells.x86_64 = pkgs-devshell.mkShell {
+   #   name = "toshy devShell";
+   #   nativeBuildInputs = with pkgs-devshell; [
+   #     gobject-intorspection
+   #     wrapGAppsHook
+   #   ];
+   #   buildInputs = with pkgs-devshell; [
+   #     gtk3
+   #     (python3.withPackages (p: with p; [
+   #       pygobject3
+   #     ]))
+   #   ];
+   # };
     nixosConfigurations = {
       esnixi =
       let
@@ -88,6 +92,8 @@
           nixgl.overlay
           #inputs.niri.overlays.niri
           inputs.nix-comfyui.overlays.default
+          # toshy.overlays.default  # Add Toshy overlay - commented out
+          dots-hyprland.overlays.default  # Add dots-hyprland overlay for quickshell
           #(import ./overlays/cider.nix)
           (import ./overlays/tensorrt.nix)
           (import ./overlays/keyboard-visualizer.nix)
@@ -103,7 +109,7 @@
           #(import ./overlays/nmap.nix)
           (import ./overlays/wofi-calc.nix)
           #(import ./overlays/xivlauncher.nix)
-          (import ./overlays/toshy.nix)
+          #(import ./overlays/toshy.nix)
           (import ./overlays/helmfile.nix)
           (import ./overlays/v4l2loopback.nix)
           (import ./overlays/nvidia-open-full.nix)
@@ -134,7 +140,8 @@
       modules = [
         ./configuration.nix
         ./remote-build.nix
-        ./toshy.nix
+        # Remove the local toshy.nix module
+        # ./toshy.nix
         ./esnixi/boot.nix
         ./esnixi/games.nix
         ./esnixi/graphics.nix
@@ -144,10 +151,12 @@
         ./esnixi/virtualisation.nix
         #niri.nixosModules.niri
         protontweaks.nixosModules.protontweaks
+        # toshy.nixosModules.toshy  # Commented out in favor of keyd
         home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";  # Handle file conflicts
           home-manager.extraSpecialArgs = { 
             inherit inputs;
             inherit pkgs-unstable;

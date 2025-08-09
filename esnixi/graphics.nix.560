@@ -1,0 +1,65 @@
+{ config, lib, pkgs, pkgs-unstable, ... }:
+{
+  config = {
+    nixpkgs.config.allowUnfree = true;
+    # Remote Desktop
+    
+    security.wrappers.sunshine = {
+      owner = "root";
+      group = "root";
+      capabilities = "cap_sys_admin+p";
+      source = "${pkgs.sunshine}/bin/sunshine";
+    };
+
+    services.avahi.publish.enable = true;
+    services.avahi.publish.userServices = true;
+    systemd.services.home-assistant.serviceConfig.DeviceAllow = ["/dev/dri/card0"];
+    systemd.services.ollama.serviceConfig.DynamicUser = lib.mkForce false;
+    services.ollama = {
+      enable = true;
+      listenAddress = "0.0.0.0:11434";
+      acceleration = "cuda";
+      models = "/opt/ollama/models";
+    };
+
+    environment.systemPackages = with pkgs-unstable; [
+      libGL
+      kdenlive
+      nvtopPackages.full
+      cudaPackages.cudatoolkit
+    ];
+    hardware.opengl = {
+      enable = true;
+      driSupport = true;
+      driSupport32Bit = true;
+      package = config.boot.kernelPackages.nvidiaPackages.beta;
+      extraPackages = with pkgs; [
+        vaapiVdpau
+        libvdpau-va-gl
+        libGL
+        vulkan-headers
+      ];
+      extraPackages32 = with pkgs.pkgsi686Linux; [ libva ];
+      setLdLibraryPath = true;
+    };
+
+    # Load nvidia driver for Xorg and Wayland
+    services.xserver.videoDrivers = [ "nvidia" ];
+    hardware.nvidia = {
+      # package = config.boot.kernelPackages.nvidiaPackages.stable;
+      package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
+        version = "560.28.03";
+        sha256_64bit = "sha256-martv18vngYBJw1IFUCAaYr+uc65KtlHAMdLMdtQJ+Y=";
+        sha256_aarch64 = "sha256-wB20isMrRg8PeQBU96lWJzBMkjfySAUaqt4EgZnhyF8=";
+        openSha256 = "sha256-asGpqOpU0tIO9QqceA8XRn5L27OiBFuI9RZ1NjSVwaM=";
+        settingsSha256 = "sha256-b4nhUMCzZc3VANnNb0rmcEH6H7SK2D5eZIplgPV59c8=";
+        persistencedSha256 = "sha256-a2D7ZZmcKFWfPjjH1REqPM5j/YLWKnbkP9qfRyIyxAw=";
+      };
+      modesetting.enable = true;
+      powerManagement.enable = false;
+      
+      open = true;
+      nvidiaSettings = true;
+    };
+  };
+}

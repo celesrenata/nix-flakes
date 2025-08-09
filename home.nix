@@ -21,10 +21,13 @@ let
 
   in
   {
-  imports = [ inputs.ags.homeManagerModules.default ];
+  imports = [ inputs.ags.homeManagerModules.default
+              # inputs.toshy.homeManagerModules.toshy
+              inputs.dots-hyprland.homeManagerModules.default
+            ];
 
   programs.ags = {
-    enable = true;
+    enable = false;  # Disabled in favor of dots-hyprland
     configDir = null;
     extraPackages = with pkgs; [
       gtksourceview
@@ -34,26 +37,124 @@ let
     ];
   };
 
+  # dots-hyprland configuration - NEW RICH CONFIGURATION SYSTEM! 🎉
+  programs.dots-hyprland = {
+    enable = true;
+    source = inputs.dots-hyprland.packages.${pkgs.system}.configs or inputs.dots-hyprland;
+    packageSet = "essential";
+    mode = "declarative";
+    
+    # 🎨 Quickshell Configuration
+    quickshell = {
+      appearance = {
+        extraBackgroundTint = true;
+        fakeScreenRounding = 2;  # When not fullscreen
+        transparency = false;    # Disable for performance
+      };
+      
+      bar = {
+        bottom = false;          # Top bar
+        cornerStyle = 0;         # Hug style
+        topLeftIcon = "spark";   # or "distro"
+        showBackground = true;
+        verbose = true;
+        
+        utilButtons = {
+          showScreenSnip = true;
+          showColorPicker = true;        # 🎯 Enable color picker!
+          showMicToggle = true;          # Useful for meetings
+          showKeyboardToggle = true;
+          showDarkModeToggle = true;
+          showPerformanceProfileToggle = false;
+        };
+        
+        workspaces = {
+          monochromeIcons = true;
+          shown = 10;                    # Show 10 workspaces
+          showAppIcons = true;
+          alwaysShowNumbers = false;
+          showNumberDelay = 300;
+        };
+      };
+      
+      battery = {
+        low = 20;                        # Low battery threshold
+        critical = 5;                    # Critical threshold
+        automaticSuspend = true;
+        suspend = 3;                     # Minutes before suspend
+      };
+      
+      apps = {
+        terminal = "foot";               # Use foot terminal
+        bluetooth = "kcmshell6 kcm_bluetooth";
+        network = "plasmawindowed org.kde.plasma.networkmanagement";
+        taskManager = "plasma-systemmonitor --page-name Processes";
+      };
+      
+      time = {
+        format = "hh:mm";                # 12-hour format
+        dateFormat = "ddd, dd/MM";       # Day, date/month
+      };
+    };
+    
+    # 🖥️ Hyprland Configuration
+    hyprland = {
+      general = {
+        gapsIn = 4;                      # Inner gaps
+        gapsOut = 7;                     # Outer gaps
+        borderSize = 2;                  # Border width
+        allowTearing = false;            # Disable tearing
+      };
+      
+      decoration = {
+        rounding = 16;                   # Corner rounding
+        blurEnabled = true;              # Enable blur effects
+      };
+      
+      gestures = {
+        workspaceSwipe = true;           # Enable touchpad gestures
+      };
+      
+      monitors = [
+        # Add your monitor configuration here, e.g.:
+        # "eDP-1,1920x1080@60,0x0,1"
+        # "HDMI-A-1,1920x1080@60,1920x0,1"
+      ];
+    };
+    
+    # 🖥️ Terminal Configuration
+    terminal = {
+      scrollback = {
+        lines = 1000;                    # Scrollback buffer
+        multiplier = 3.0;
+      };
+      
+      cursor = {
+        style = "beam";                  # Beam cursor
+        blink = false;
+        beamThickness = 1.5;
+      };
+      
+      colors = {
+        alpha = 0.95;                    # Slight transparency
+      };
+      
+      mouse = {
+        hideWhenTyping = false;
+        alternateScrollMode = true;
+      };
+    };
+  };
+
   # TODO please change the username & home directory to your own
   home.username = "celes";
   home.homeDirectory = "/home/celes";
-
-  # link the configuration file in current directory to the specified location in home directory
-  # home.file.".config/i3/wallpaper.jpg".source = ./wallpaper.jpg;
-
-  # link all files in `./scripts` to `~/.config/i3/scripts`
-
-  home.file.".configstaging" = {
-    source = pkgs.end-4-dots;
-    recursive = true;   # link recursively
-    executable = true;  # make all files executable
-  };
-  home.file.".configstaging/toshy/toshy_config.py" = {
-    source = "${pkgs.toshy}/toshy_config.py";
-  };
-  home.file.".configstaging/toshy/toshy_user_preferences.sqlite" = {
-   source = "${pkgs.toshy}/toshy_user_preferences.sqlite";
-  };
+  #home.file.".configstaging/toshy/toshy_config.py" = {
+  #  source = "${pkgs.toshy}/toshy_config.py";
+  #};
+  #home.file.".configstaging/toshy/toshy_user_preferences.sqlite" = {
+  # source = "${pkgs.toshy}/toshy_user_preferences.sqlite";
+  #};
   home.file."Backgrounds" = {
     source = celes-dots + "/Backgrounds";
     recursive = true;
@@ -78,102 +179,102 @@ let
   home.file.".local/bin/regexEscape.sh" = {
     source = celes-dots + "/.local/bin/regexEscape.sh";
   };
-  home.file.".local/bin/toshy-services-disable" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-disable.sh";
-  };
-  home.file.".local/bin/toshy-services-enable" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-enable.sh";
-  };
-  home.file.".local/bin/toshy-services-restart" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-restart.sh";
-  };
-  home.file.".local/bin/toshy-services-stop" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-stop.sh";
-  };
-  home.file.".local/bin/toshy-services-log" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-log.sh";
-  };
-  home.file.".local/bin/toshy-services-status" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-status.sh";
-  };
-  home.file.".local/bin/toshy-config-start" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-start.sh";
-  };
-  home.file.".local/bin/toshy-config-start-verbose" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-start-verbose.sh";
-  };
-  home.file.".local/bin/toshy-config-stop" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-stop.sh";
-  };
-  home.file.".local/bin/toshy-config-restart" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-restart.sh";
-  };
-  home.file.".local/bin/toshy-cosmic-dbus-service" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-cosmic-dbus-service.sh";
-  };
-  home.file.".local/bin/toshy-devices" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-devices.sh";
-  };
-  home.file.".local/bin/toshy-env" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-env.sh";
-  };
-  home.file.".local/bin/toshy-fnmode" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-fnmode.sh";
-  };
-  home.file.".local/bin/toshy-gui" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-gui.sh";
-  };
-  home.file.".local/bin/toshy-machine-id" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-machine-id.sh";
-  };
-  home.file.".local/bin/toshy-kde-dbus-service" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-kde-dbus-service.sh";
-  };
-  home.file.".local/bin/toshy-systemd-remove" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-remove.sh";
-  };
-  home.file.".local/bin/toshy-systemd-setup" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-setup.sh";
-  };
-  home.file.".local/bin/toshy-tray" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-tray.sh";
-  };
-  home.file.".local/bin/toshy-versions" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-versions.sh";
-  };
+  #home.file.".local/bin/toshy-services-disable" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-services-disable.sh";
+  #};
+  #home.file.".local/bin/toshy-services-enable" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-services-enable.sh";
+  #};
+  #home.file.".local/bin/toshy-services-restart" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-services-restart.sh";
+  #};
+  #home.file.".local/bin/toshy-services-stop" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-services-stop.sh";
+  #};
+  #home.file.".local/bin/toshy-services-log" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-services-log.sh";
+  #};
+  #home.file.".local/bin/toshy-services-status" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-services-status.sh";
+  #};
+  #home.file.".local/bin/toshy-config-start" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-config-start.sh";
+  #};
+  #home.file.".local/bin/toshy-config-start-verbose" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-config-start-verbose.sh";
+  #};
+  #home.file.".local/bin/toshy-config-stop" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-config-stop.sh";
+  #};
+  #home.file.".local/bin/toshy-config-restart" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-config-restart.sh";
+  #};
+  #home.file.".local/bin/toshy-cosmic-dbus-service" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-cosmic-dbus-service.sh";
+  #};
+  #home.file.".local/bin/toshy-devices" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-devices.sh";
+  #};
+  #home.file.".local/bin/toshy-env" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-env.sh";
+  #};
+  #home.file.".local/bin/toshy-fnmode" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-fnmode.sh";
+  #};
+  #home.file.".local/bin/toshy-gui" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-gui.sh";
+  #};
+  #home.file.".local/bin/toshy-machine-id" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-machine-id.sh";
+  #};
+  #home.file.".local/bin/toshy-kde-dbus-service" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-kde-dbus-service.sh";
+  #};
+  #home.file.".local/bin/toshy-systemd-remove" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-systemd-remove.sh";
+  #};
+  #home.file.".local/bin/toshy-systemd-setup" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-systemd-setup.sh";
+  #};
+  #home.file.".local/bin/toshy-tray" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-tray.sh";
+  #};
+  #home.file.".local/bin/toshy-versions" = {
+  #  source = "${pkgs.toshy}/scripts/bin/toshy-versions.sh";
+  #};
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
-  home.file.".config/hypr/hyprland.conf" = {
-    source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
-  };
-  home.file.".config/toshy/toshy_gui.py" = {
-    source = "${pkgs.toshy}/toshy_gui.py";
-  };
-  home.file.".config/toshy/toshy_tray.py" = {
-    source = "${pkgs.toshy}/toshy_tray.py";
-  };
-  home.file.".local/share/icons/toshy_app_icon_rainbow.svg" = {
-    source = "${pkgs.toshy}/assets/toshy_app_icon_rainbow.svg";
-  };
-  home.file.".local/share/icons/toshy_app_icon_inverse.svg" = {
-    source = "${pkgs.toshy}/assets/toshy_app_icon_inverse.svg";
-  };
-  home.file.".local/share/icons/toshy_app_icon_grayscale.svg" = {
-    source = "${pkgs.toshy}/assets/toshy_app_icon_grayscale.svg";
-  };
-  home.file.".config/toshy/assets" = {
-    source = "${pkgs.toshy}/assets";
-    recursive = true;
-  };
-  home.file.".config/toshy/lib" = {
-    source = "${pkgs.toshy}/lib";
-    recursive = true;
-  };
-  home.file.".config/toshy/kde-kwin-dbus-service" = {
-    source = "${pkgs.toshy}/kde-kwin-dbus-service";
-    recursive = true;
-  };
+  # home.file.".config/hypr/hyprland.conf" = {
+  #   source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
+  # };  # Commented out - now managed by dots-hyprland
+  #home.file.".config/toshy/toshy_gui.py" = {
+  #  source = "${pkgs.toshy}/toshy_gui.py";
+  #};
+  #home.file.".config/toshy/toshy_tray.py" = {
+  #  source = "${pkgs.toshy}/toshy_tray.py";
+  #};
+  #home.file.".local/share/icons/toshy_app_icon_rainbow.svg" = {
+  #  source = "${pkgs.toshy}/assets/toshy_app_icon_rainbow.svg";
+  #};
+  #home.file.".local/share/icons/toshy_app_icon_inverse.svg" = {
+  #  source = "${pkgs.toshy}/assets/toshy_app_icon_inverse.svg";
+  #};
+  #home.file.".local/share/icons/toshy_app_icon_grayscale.svg" = {
+  #  source = "${pkgs.toshy}/assets/toshy_app_icon_grayscale.svg";
+  #};
+  #home.file.".config/toshy/assets" = {
+  #  source = "${pkgs.toshy}/assets";
+  #  recursive = true;
+  #};
+  #home.file.".config/toshy/lib" = {
+  #  source = "${pkgs.toshy}/lib";
+  #  recursive = true;
+  #};
+  #home.file.".config/toshy/kde-kwin-dbus-service" = {
+  #  source = "${pkgs.toshy}/kde-kwin-dbus-service";
+  #  recursive = true;
+  #};
   # set cursor size and dpi for 4k monitor
   xresources.properties = {
     "Xcursor.size" = 24;
@@ -257,6 +358,7 @@ let
     discord
     darktable
     signal-desktop
+    kdePackages.dolphin
 
     # Extra Launchers.
 
@@ -334,40 +436,31 @@ let
     # Other
     graphviz
 
-    # Python
+    # Python - Your custom environment (lower priority than dots-hyprland)
     pyenv.out
-    (python312.withPackages(ps: with ps; [
-      gtk3
-      materialyoucolor
-      material-color-utilities
-      pillow
-      poetry-core
-      pywal
-      pygobject3
-      matplotlib
-      setuptools-scm
-      wheel
-      pywayland
-      psutil
-      # debugpy.overrideAttrs (final: prev: {
-      #   pytestCheckPhase = ''true'';
-      # })
-      pydbus
-      dbus-python
-      pygobject3
-      watchdog
-      pandas
-      pip
-      evdev
-      appdirs
-      inotify-simple
-      ordered-set
-      six
-      hatchling
-      pycairo
-      xkeysnail
-      python-xwaykeyz
-    ]))
+    (pkgs.lib.setPrio 10 (python312.withPackages(ps: with ps; [
+      # Your specific packages
+      evdev           # For input handling
+      xkeysnail       # For key remapping
+      pydbus          # For D-Bus communication
+      dbus-python     # For D-Bus communication
+      watchdog        # For file watching
+      pandas          # For data analysis
+      gtk3            # For GTK apps
+      pygobject3      # For GObject introspection
+      matplotlib      # For plotting
+      poetry-core     # For poetry
+      pywal           # For color schemes
+      pip             # Package installer
+      setuptools-scm  # For setuptools
+      wheel           # For wheel packages
+      appdirs         # For app directories
+      inotify-simple  # For file monitoring
+      ordered-set     # For ordered sets
+      six             # Python 2/3 compatibility
+      hatchling       # For hatch builds
+      pycairo         # For Cairo graphics
+    ])))
 
     # Player and Audio
     pavucontrol
@@ -450,8 +543,8 @@ let
     fastfetch
     #sunshine
     tidal-hifi
-    hypridle
-    hyprlock
+    # hypridle  # Now provided by dots-hyprland
+    # hyprlock  # Now provided by dots-hyprland
     lan-mouse
     #python311Packages.debugpy
     vesktop
@@ -519,7 +612,7 @@ let
   };
   
   home.sessionVariables = {
-    LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+    LD_LIBRARY_PATH = pkgs.lib.mkDefault "/run/opengl-driver/lib";
   };
 
   # This value determines the home Manager release that your

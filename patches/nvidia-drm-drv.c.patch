@@ -1,0 +1,13 @@
+--- nvidia-drm-drv.c	2025-03-28 17:10:57.178445027 -0700
++++ nvidia-drm-drv.c	2025-03-28 17:11:50.566689627 -0700
+@@ -1918,10 +1918,6 @@
+ 
+     .desc                   = "NVIDIA DRM driver",
+ 
+-#if defined(NV_DRM_DRIVER_HAS_DATE)
+-    .date                   = "20160202",
+-#endif
+-
+ #if defined(NV_DRM_DRIVER_HAS_DEVICE_LIST)
+     .device_list            = LIST_HEAD_INIT(nv_drm_driver.device_list),
+ #elif defined(NV_DRM_DRIVER_HAS_LEGACY_DEV_LIST)

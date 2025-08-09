@@ -1,0 +1,13 @@
+diff --git a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
+index 96aa635e794e..3baff9efc856 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
+@@ -381,7 +381,7 @@ &sdmmc {
+ 	cap-sd-highspeed;
+ 	cd-gpios = <&gpio1 RK_PA5 GPIO_ACTIVE_LOW>;
+ 	disable-wp;
+-	max-frequency = <150000000>;
++	max-frequency = <80000000>;
+ 	num-slots = <1>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&sdmmc0_clk &sdmmc0_cmd &sdmmc0_dectn &sdmmc0_bus4>;
