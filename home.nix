@@ -233,8 +233,45 @@ let
       bind = $Primary, Space, exec, fuzzel
       bind = $Primary, E, exec, nautilus
 
-      # Quickshell integration
-      exec-once = quickshell
+      # Quickshell integration and desktop environment
+      exec-once = quickshell -c ii
+      
+      # Desktop environment controls (converted from AGS to Quickshell)
+      bindir = $Primary, $Primary_L, exec, hyprctl dispatch global quickshell:overviewToggle # Toggle overview/launcher
+      bind = $Primary, Tab, exec, hyprctl dispatch global quickshell:overviewToggle # Toggle overview (alternative)
+      bind = $Primary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle # Toggle left sidebar
+      bind = $Primary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle # Toggle right sidebar
+      bind = $Primary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle # Toggle media controls
+      bind = $Primary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle # Toggle settings
+      bind = Ctrl+Alt, Slash, exec, hyprctl dispatch global quickshell:barModeToggle # Cycle bar mode
+      
+      # Session management
+      bind = $Primary, L, exec, loginctl lock-session # Lock screen
+      bind = Ctrl+$Primary, L, exec, hyprctl dispatch global quickshell:lockToggle # Quickshell lock
+      bind = $Primary+Shift, L, exec, systemctl suspend # Suspend system
+      
+      # Screenshots and utilities
+      bind = $Primary+Shift, S, exec, grim -g "$(slurp)" - | wl-copy # Screen snip to clipboard
+      bind = $Primary+Shift+Alt, S, exec, grim -g "$(slurp)" - | swappy -f - # Screen snip to editor
+      bind = $Primary+Shift, C, exec, hyprpicker -a # Color picker
+      bind = $Primary, V, exec, pkill fuzzel || cliphist list | fuzzel --no-fuzzy --dmenu | cliphist decode | wl-copy # Clipboard history
+      bind = $Primary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji # Emoji picker
+      
+      # Cheatsheet and help
+      bind = $Primary, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle # Show cheatsheet
+      
+      # Audio controls (with Quickshell integration)
+      bindl = , XF86AudioMute, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0% && hyprctl dispatch global quickshell:osdShow
+      bindle = , XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && hyprctl dispatch global quickshell:osdShow
+      bindle = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && hyprctl dispatch global quickshell:osdShow
+      bindl = Alt, XF86AudioMute, exec, wpctl set-mute @DEFAULT_SOURCE@ toggle # Toggle microphone
+      
+      # Brightness controls (with Quickshell integration)
+      bindle = , XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
+      bindle = , XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
+      
+      # Wallpaper and theming
+      bind = Ctrl+$Primary, T, exec, hyprctl dispatch global quickshell:wallpaperNext # Next wallpaper
     '';
 
     # Override touchegg configuration for 3-finger window dragging
