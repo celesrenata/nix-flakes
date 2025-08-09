@@ -37,14 +37,342 @@ let
     ];
   };
 
-  # dots-hyprland configuration - NEW RICH CONFIGURATION SYSTEM! 🎉
+  # dots-hyprland configuration - COMPLETE OVERRIDE APPROACH! 🎯
   programs.dots-hyprland = {
     enable = true;
     source = inputs.dots-hyprland.packages.${pkgs.system}.configs or inputs.dots-hyprland;
     packageSet = "essential";
     mode = "declarative";
     
-    # 🎨 Quickshell Configuration
+    # COMPLETE OVERRIDE: Provide the entire hyprland.conf with essential keybinds
+    overrides.hyprlandConf = ''
+      # Complete Hyprland configuration (NixOS-managed, fully declarative)
+      # No external file dependencies - everything inline
+      
+      $qsConfig = ii
+      exec = hyprctl dispatch submap global # DO NOT REMOVE THIS OR YOU WON'T BE ABLE TO USE ANY KEYBIND
+      submap = global # This is required for catchall to work
+
+      # Environment variables
+      env = XCURSOR_SIZE,24
+      env = QT_QPA_PLATFORMTHEME,qt5ct
+
+      # Monitor configuration
+      monitor=,preferred,auto,auto
+
+      # Input configuration
+      input {
+          kb_layout = us
+          kb_variant =
+          kb_model =
+          kb_options =
+          kb_rules =
+          
+          follow_mouse = 1
+          
+          touchpad {
+              natural_scroll = no
+          }
+          
+          sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
+      }
+
+      # General configuration
+      general {
+          # Gaps and border
+          gaps_in = 4
+          gaps_out = 7
+          border_size = 2
+          col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
+          col.inactive_border = rgba(595959aa)
+          
+          # Layout
+          layout = dwindle
+          allow_tearing = false
+      }
+
+      decoration {
+          # Rounding and blur
+          rounding = 16
+          
+          blur {
+              enabled = true
+              size = 3
+              passes = 1
+          }
+          
+          # Updated shadow syntax for newer Hyprland versions
+          shadow {
+              enabled = yes
+              range = 4
+              render_power = 3
+              color = rgba(1a1a1aee)
+          }
+      }
+
+      animations {
+          enabled = yes
+          
+          bezier = myBezier, 0.05, 0.9, 0.1, 1.05
+          
+          animation = windows, 1, 7, myBezier
+          animation = windowsOut, 1, 7, default, popin 80%
+          animation = border, 1, 10, default
+          animation = borderangle, 1, 8, default
+          animation = fade, 1, 7, default
+          animation = workspaces, 1, 6, default
+      }
+
+      dwindle {
+          pseudotile = yes
+          preserve_split = yes
+      }
+
+      master {
+          new_status = master
+      }
+
+      # Gestures
+      gestures {
+          workspace_swipe = true
+          workspace_swipe_distance = 700
+          workspace_swipe_fingers = 3
+          workspace_swipe_min_fingers = false
+          workspace_swipe_cancel_ratio = 0.2
+          workspace_swipe_min_speed_to_force = 5
+          workspace_swipe_direction_lock = true
+          workspace_swipe_direction_lock_threshold = 10
+          workspace_swipe_create_new = true
+      }
+
+      misc {
+          force_default_wallpaper = -1
+      }
+
+      # Window rules
+      windowrulev2 = suppressevent maximize, class:.*
+
+      # ESSENTIAL KEYBINDS - All inline for reliability
+      $Primary = Super
+      $Secondary = Control
+      $Tertiary = Shift
+
+      # Window management - CRITICAL for resizing
+      bind = $Primary, R, submap, resize
+      submap = resize
+      binde = , H, resizeactive, -20 0
+      binde = , L, resizeactive, 20 0
+      binde = , K, resizeactive, 0 -20
+      binde = , J, resizeactive, 0 20
+      binde = , left, resizeactive, -20 0
+      binde = , right, resizeactive, 20 0
+      binde = , up, resizeactive, 0 -20
+      binde = , down, resizeactive, 0 20
+      bind = , escape, submap, reset
+      bind = , Return, submap, reset
+      submap = reset
+
+      # Basic window controls
+      bind = $Primary, Q, killactive
+      bind = $Primary, F, fullscreen, 0
+      bind = $Primary, V, togglefloating
+      bind = $Primary, P, pseudo
+      bind = $Primary, S, togglesplit
+
+      # Focus movement
+      bind = $Primary, H, movefocus, l
+      bind = $Primary, L, movefocus, r
+      bind = $Primary, K, movefocus, u
+      bind = $Primary, J, movefocus, d
+      bind = $Primary, left, movefocus, l
+      bind = $Primary, right, movefocus, r
+      bind = $Primary, up, movefocus, u
+      bind = $Primary, down, movefocus, d
+
+      # Move windows
+      bind = $Primary $Tertiary, H, movewindow, l
+      bind = $Primary $Tertiary, L, movewindow, r
+      bind = $Primary $Tertiary, K, movewindow, u
+      bind = $Primary $Tertiary, J, movewindow, d
+      bind = $Primary $Tertiary, left, movewindow, l
+      bind = $Primary $Tertiary, right, movewindow, r
+      bind = $Primary $Tertiary, up, movewindow, u
+      bind = $Primary $Tertiary, down, movewindow, d
+
+      # Mouse bindings for window management
+      bindm = $Primary, mouse:272, movewindow
+      bindm = $Primary, mouse:273, resizewindow
+      bindm = , mouse:274, movewindow
+
+      # Workspaces
+      bind = $Primary, 1, workspace, 1
+      bind = $Primary, 2, workspace, 2
+      bind = $Primary, 3, workspace, 3
+      bind = $Primary, 4, workspace, 4
+      bind = $Primary, 5, workspace, 5
+      bind = $Primary, 6, workspace, 6
+      bind = $Primary, 7, workspace, 7
+      bind = $Primary, 8, workspace, 8
+      bind = $Primary, 9, workspace, 9
+      bind = $Primary, 0, workspace, 10
+
+      # Move to workspaces
+      bind = $Primary $Tertiary, 1, movetoworkspace, 1
+      bind = $Primary $Tertiary, 2, movetoworkspace, 2
+      bind = $Primary $Tertiary, 3, movetoworkspace, 3
+      bind = $Primary $Tertiary, 4, movetoworkspace, 4
+      bind = $Primary $Tertiary, 5, movetoworkspace, 5
+      bind = $Primary $Tertiary, 6, movetoworkspace, 6
+      bind = $Primary $Tertiary, 7, movetoworkspace, 7
+      bind = $Primary $Tertiary, 8, movetoworkspace, 8
+      bind = $Primary $Tertiary, 9, movetoworkspace, 9
+      bind = $Primary $Tertiary, 0, movetoworkspace, 10
+
+      # Applications
+      bind = $Primary, Return, exec, foot
+      bind = $Primary, Space, exec, fuzzel
+      bind = $Primary, E, exec, nautilus
+
+      # Quickshell integration
+      exec-once = quickshell
+    '';
+
+    # Override touchegg configuration for 3-finger window dragging
+    overrides.toucheggConf = ''
+      <touchégg>
+        <settings>
+          <property name="animation_delay">150</property>
+          <property name="action_execute_threshold">80</property>
+          <property name="color">auto</property>
+          <property name="borderColor">auto</property>
+        </settings>
+        <application name="All">
+          <!-- 3-finger pinch in: Close window -->
+          <gesture type="PINCH" fingers="3" direction="IN">
+            <action type="CLOSE_WINDOW">
+              <animate>true</animate>
+              <color>F84A53</color>
+              <borderColor>F84A53</borderColor>
+            </action>
+          </gesture>
+          
+          <!-- 2-finger tap: Right click -->
+          <gesture type="TAP" fingers="2" direction="UNKNOWN">
+            <action type="MOUSE_CLICK">
+              <button>3</button>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 3-finger click: Middle click (Hyprland handles the dragging) -->
+          <gesture type="CLICK" fingers="3" direction="UNKNOWN">
+            <action type="MOUSE_CLICK">
+              <button>2</button>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 4-finger pinch in: Fullscreen mode 0 -->
+          <gesture type="PINCH" fingers="4" direction="IN">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch fullscreen 0</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 4-finger pinch out: Fullscreen mode 1 -->
+          <gesture type="PINCH" fingers="4" direction="OUT">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch fullscreen 1</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 3-finger swipe up: Show overview -->
+          <gesture type="SWIPE" fingers="3" direction="UP">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch global quickshell:overviewToggle</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 3-finger swipe down: Show all windows -->
+          <gesture type="SWIPE" fingers="3" direction="DOWN">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch overview</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 4-finger swipe left: Move window left -->
+          <gesture type="SWIPE" fingers="4" direction="LEFT">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch movewindow l</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 4-finger swipe right: Move window right -->
+          <gesture type="SWIPE" fingers="4" direction="RIGHT">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch movewindow r</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 4-finger swipe up: Move window up -->
+          <gesture type="SWIPE" fingers="4" direction="UP">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch movewindow u</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+          
+          <!-- 4-finger swipe down: Move window down -->
+          <gesture type="SWIPE" fingers="4" direction="DOWN">
+            <action type="RUN_COMMAND">
+              <command>hyprctl dispatch movewindow d</command>
+              <repeat>false</repeat>
+              <animation>NONE</animation>
+              <on>begin</on>
+            </action>
+          </gesture>
+        </application>
+        
+        <!-- Browser-specific gestures for zoom -->
+        <application name="chromium-browser">
+          <gesture type="PINCH" fingers="2" direction="IN">
+            <action type="SEND_KEYS">
+              <keys>Control+minus</keys>
+              <decreaseKeys>Control+plus</decreaseKeys>
+            </action>
+          </gesture>
+          
+          <gesture type="PINCH" fingers="2" direction="OUT">
+            <action type="SEND_KEYS">
+              <keys>Control+plus</keys>
+              <decreaseKeys>Control+minus</decreaseKeys>
+            </action>
+          </gesture>
+        </application>
+      </touchégg>
+    '';
+    
+    # 🎨 Quickshell Configuration (still using rich config)
     quickshell = {
       appearance = {
         extraBackgroundTint = true;
