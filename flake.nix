@@ -24,9 +24,12 @@ description = "NixOS configuration";
     # toshy.inputs.nixpkgs.follows = "nixpkgs";
     dots-hyprland.url = "github:celesrenata/end-4-flakes";
     dots-hyprland.inputs.nixpkgs.follows = "nixpkgs";
+    # Add the actual dots-hyprland source for configuration copying
+    dots-hyprland-source.url = "github:end-4/dots-hyprland";
+    dots-hyprland-source.flake = false;
   };
 
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, nix-comfyui, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, nix-comfyui, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, ... }:
   let
     system = "x86_64-linux";
     lib = nixpkgs.lib;

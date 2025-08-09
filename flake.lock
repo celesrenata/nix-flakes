@@ -47,16 +47,32 @@
         "quickshell": "quickshell"
       },
       "locked": {
-        "lastModified": 1754765249,
-        "narHash": "sha256-+rUnk6pJ6rkPcc+p2Xh7V7alG3geCQkjg71gT4KXDos=",
+        "lastModified": 1754770334,
+        "narHash": "sha256-35laOWYhL2w07vFKCuVIBRGLkMZg2Lo7oXKvFpcI+9c=",
         "owner": "celesrenata",
         "repo": "end-4-flakes",
-        "rev": "a13a9352ed12d67d5114c24329bcafa55b6253cd",
+        "rev": "dd19328008a9c77a2acecff8e7373fa9d7153ca0",
         "type": "github"
       },
       "original": {
         "owner": "celesrenata",
         "repo": "end-4-flakes",
+        "type": "github"
+      }
+    },
+    "dots-hyprland-source": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1754712485,
+        "narHash": "sha256-vcrZ0xWwlKhQsSO4AIBAIgrnLBSwP+9SBaS7bylRaWs=",
+        "owner": "end-4",
+        "repo": "dots-hyprland",
+        "rev": "814f6ced5fd277d0a212e42f33f1e01bc8ef266e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "end-4",
+        "repo": "dots-hyprland",
         "type": "github"
       }
     },
@@ -735,6 +751,7 @@
         "ags": "ags",
         "anyrun": "anyrun",
         "dots-hyprland": "dots-hyprland",
+        "dots-hyprland-source": "dots-hyprland-source",
         "dream2nix": "dream2nix",
         "home-manager": "home-manager_2",
         "niri": "niri",

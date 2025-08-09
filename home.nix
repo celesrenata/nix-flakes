@@ -37,12 +37,12 @@ let
     ];
   };
 
-  # dots-hyprland configuration - COMPLETE OVERRIDE APPROACH! 🎯
+  # dots-hyprland configuration - HYBRID MODE! 🎯
   programs.dots-hyprland = {
     enable = true;
-    source = inputs.dots-hyprland.packages.${pkgs.system}.configs or inputs.dots-hyprland;
+    source = inputs.dots-hyprland-source;  # Use the actual dots-hyprland source for copying
     packageSet = "essential";
-    mode = "declarative";
+    mode = "hybrid";  # Hyprland declarative + Quickshell copied (should work now!)
     
     # COMPLETE OVERRIDE: Provide the entire hyprland.conf with essential keybinds
     overrides.hyprlandConf = ''
@@ -450,28 +450,28 @@ let
       ];
     };
     
-    # 🖥️ Terminal Configuration
-    terminal = {
-      scrollback = {
-        lines = 1000;                    # Scrollback buffer
-        multiplier = 3.0;
-      };
-      
-      cursor = {
-        style = "beam";                  # Beam cursor
-        blink = false;
-        beamThickness = 1.5;
-      };
-      
-      colors = {
-        alpha = 0.95;                    # Slight transparency
-      };
-      
-      mouse = {
-        hideWhenTyping = false;
-        alternateScrollMode = true;
-      };
-    };
+    # 🖥️ Terminal Configuration (temporarily disabled for hybrid mode testing)
+    # terminal = {
+    #   scrollback = {
+    #     lines = 1000;                    # Scrollback buffer
+    #     multiplier = 3.0;
+    #   };
+    #   
+    #   cursor = {
+    #     style = "beam";                  # Beam cursor
+    #     blink = false;
+    #     beamThickness = 1.5;
+    #   };
+    #   
+    #   colors = {
+    #     alpha = 0.95;                    # Slight transparency
+    #   };
+    #   
+    #   mouse = {
+    #     hideWhenTyping = false;
+    #     alternateScrollMode = true;
+    #   };
+    # };
   };
 
   # TODO please change the username & home directory to your own
