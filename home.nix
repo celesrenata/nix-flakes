@@ -1,4 +1,4 @@
-{ inputs, pkgs, pkgs-old, pkgs-unstable, ... }: 
+{ inputs, lib, pkgs, pkgs-old, pkgs-unstable, ... }: 
 let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
@@ -44,18 +44,20 @@ let
     packageSet = "essential";
     mode = "hybrid";  # Hyprland declarative + Quickshell copied (should work now!)
     
+    # Force disable touchegg component (we handle it system-wide)
+    touchegg.enable = lib.mkForce false;
+    
     # COMPLETE OVERRIDE: Provide the entire hyprland.conf with essential keybinds
     overrides.hyprlandConf = ''
       # Complete Hyprland configuration (NixOS-managed, fully declarative)
       # No external file dependencies - everything inline
       
       $qsConfig = ii
-      exec = hyprctl dispatch submap global # DO NOT REMOVE THIS OR YOU WON'T BE ABLE TO USE ANY KEYBIND
-      submap = global # This is required for catchall to work
 
       # Environment variables
       env = XCURSOR_SIZE,24
       env = QT_QPA_PLATFORMTHEME,qt5ct
+      env = OLLAMA_HOST,http://10.1.1.12:2701
 
       # Monitor configuration
       monitor=,preferred,auto,auto
@@ -71,7 +73,7 @@ let
           follow_mouse = 1
           
           touchpad {
-              natural_scroll = no
+              natural_scroll = yes
           }
           
           sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
@@ -152,263 +154,175 @@ let
       # Window rules
       windowrulev2 = suppressevent maximize, class:.*
 
-      # ESSENTIAL KEYBINDS - All inline for reliability
+      # KEYBIND VARIABLES - Fixed with proper definitions
       $Primary = Super
       $Secondary = Control
       $Tertiary = Shift
+      $Alternate = Alt
 
-      # Window management - CRITICAL for resizing
-      bind = $Primary, R, submap, resize
-      submap = resize
-      binde = , H, resizeactive, -20 0
-      binde = , L, resizeactive, 20 0
-      binde = , K, resizeactive, 0 -20
-      binde = , J, resizeactive, 0 20
-      binde = , left, resizeactive, -20 0
-      binde = , right, resizeactive, 20 0
-      binde = , up, resizeactive, 0 -20
-      binde = , down, resizeactive, 0 20
-      bind = , escape, submap, reset
-      bind = , Return, submap, reset
-      submap = reset
+      # ################### It just works™ keybinds ###################
+      # Volume
+      bindl = ,XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
+      bindle=, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+      bindle=, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
 
-      # Basic window controls
-      bind = $Primary, Q, killactive
-      bind = $Primary, F, fullscreen, 0
-      bind = $Primary, V, togglefloating
-      bind = $Primary, P, pseudo
-      bind = $Primary, S, togglesplit
+      # Brightness (updated for Quickshell)
+      bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
+      bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
 
-      # Focus movement
-      bind = $Primary, H, movefocus, l
-      bind = $Primary, L, movefocus, r
-      bind = $Primary, K, movefocus, u
-      bind = $Primary, J, movefocus, d
-      bind = $Primary, left, movefocus, l
-      bind = $Primary, right, movefocus, r
-      bind = $Primary, up, movefocus, u
-      bind = $Primary, down, movefocus, d
+      # ####################################### Applications ########################################
+      # Music
+      bind = $Primary$Secondary, M, exec, tidal-hifi
+      bind = $Primary$Secondary$Tertiary, M, exec, env -u NIXOS_OZONE_WL cider --use-gl=desktop
+      bind = $Primary$Secondary$Alternate, M, exec, spotify
+      # Discord
+      bind = $Primary$Secondary, I, exec, vesktop 
+      # Foot
+      bind = $Primary$Secondary, H, exec, foot
+      bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
+      # Finders
+      bind = $Primary$Secondary, J, exec, thunar
+      bind = $Primary$Secondary$Tertiary, J, exec, nautilus
+      # Browsers
+      bind = $Primary$Secondary, B, exec, firefox
+      bind = $Primary$Secondary$Tertiary, B, exec, chromium 
+      # Code editors
+      bind = $Primary$Secondary, U, exec, code
+      bind = $Primary$Secondary, X, exec, subl
+      bind = $Primary$Secondary, C, exec, code
+      bind = $Primary$Secondary$Tertiary, C, exec, jetbrains-toolbox
+      # Calculator
+      bind = $Primary$Secondary, 3, exec, ~/.local/bin/wofi-calc
+      bind = ,XF86Calculator, exec, ~/.local/bin/wofi-calc
+      # Settings (Super+Comma)
+      bind = $Primary$Secondary, comma, exec, quickshell -p ~/.config/quickshell/ii/settings.qml
+      # Flux/Gammastep
+      bind = $Primary$Secondary, N, exec, gammastep -O +3000 &
+      bind = $Primary$Secondary$Alternate, N, exec, gammastep -0 +6500 &
 
-      # Move windows
-      bind = $Primary $Tertiary, H, movewindow, l
-      bind = $Primary $Tertiary, L, movewindow, r
-      bind = $Primary $Tertiary, K, movewindow, u
-      bind = $Primary $Tertiary, J, movewindow, d
-      bind = $Primary $Tertiary, left, movewindow, l
-      bind = $Primary $Tertiary, right, movewindow, r
-      bind = $Primary $Tertiary, up, movewindow, u
-      bind = $Primary $Tertiary, down, movewindow, d
+      # Actions
+      bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji
+      bind = $Alternate, F4, killactive,
+      bind = $Secondary$Alternate, Space, togglefloating, 
+      bind = $Secondary$Alternate, Q, exec, hyprctl kill
 
-      # Mouse bindings for window management
-      bindm = $Primary, mouse:272, movewindow
-      bindm = $Primary, mouse:273, resizewindow
-      bindm = , mouse:274, movewindow
+      # Screenshot, Record, OCR, Color picker, Clipboard history
+      bind = $Secondary$Tertiary, 4, exec, grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" - | wl-copy
+      bindl =,Print,exec,grim - | wl-copy
+      bind = $Secondary$Alternate, C, exec, hyprpicker -a
+      bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
+      bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
 
-      # Workspaces
-      bind = $Primary, 1, workspace, 1
-      bind = $Primary, 2, workspace, 2
-      bind = $Primary, 3, workspace, 3
-      bind = $Primary, 4, workspace, 4
-      bind = $Primary, 5, workspace, 5
-      bind = $Primary, 6, workspace, 6
-      bind = $Primary, 7, workspace, 7
-      bind = $Primary, 8, workspace, 8
-      bind = $Primary, 9, workspace, 9
-      bind = $Primary, 0, workspace, 10
+      # Text-to-image OCR
+      bind = $Primary$Secondary$Tertiary,S,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract "tmp.png" - | wl-copy && rm "tmp.png"
+      bind = $Secondary$Tertiary,T,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract -l eng "tmp.png" - | wl-copy && rm "tmp.png"
 
-      # Move to workspaces
-      bind = $Primary $Tertiary, 1, movetoworkspace, 1
-      bind = $Primary $Tertiary, 2, movetoworkspace, 2
-      bind = $Primary $Tertiary, 3, movetoworkspace, 3
-      bind = $Primary $Tertiary, 4, movetoworkspace, 4
-      bind = $Primary $Tertiary, 5, movetoworkspace, 5
-      bind = $Primary $Tertiary, 6, movetoworkspace, 6
-      bind = $Primary $Tertiary, 7, movetoworkspace, 7
-      bind = $Primary $Tertiary, 8, movetoworkspace, 8
-      bind = $Primary $Tertiary, 9, movetoworkspace, 9
-      bind = $Primary $Tertiary, 0, movetoworkspace, 10
+      # Media controls
+      bind = $Secondary$Tertiary, N, exec, playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"`
+      bindl  = , XF86AudioNext, exec, playerctl next 
+      bindl  = , XF86AudioPrev, exec, playerctl previous
+      bindl  = , XF86AudioPlay, exec, playerctl play-pause
+      bind = $Secondary$Tertiary, B, exec, playerctl previous
+      bind = $Secondary$Tertiary, P, exec, playerctl play-pause
 
-      # Applications
-      bind = $Primary, Return, exec, foot
-      bind = $Primary, Space, exec, fuzzel
-      bind = $Primary, E, exec, nautilus
+      # Lock screen
+      bind = $Primary$Secondary, L, exec, loginctl lock-session
 
-      # Quickshell integration and desktop environment
-      exec-once = quickshell -c ii
+      # ##################################### Quickshell keybinds #####################################
+      # Quickshell restart (equivalent to the old AGS restart)
+      bindr = $Primary$Secondary, R, exec, pkill quickshell; quickshell -c ii &
       
       # Desktop environment controls (converted from AGS to Quickshell)
-      bindir = $Primary, $Primary_L, exec, hyprctl dispatch global quickshell:overviewToggle # Toggle overview/launcher
-      bind = $Primary, Tab, exec, hyprctl dispatch global quickshell:overviewToggle # Toggle overview (alternative)
-      bind = $Primary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle # Toggle left sidebar
-      bind = $Primary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle # Toggle right sidebar
-      bind = $Primary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle # Toggle media controls
-      bind = $Primary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle # Toggle settings
-      bind = Ctrl+Alt, Slash, exec, hyprctl dispatch global quickshell:barModeToggle # Cycle bar mode
+      bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
+      bind = $Secondary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
+      bind = $Secondary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle
+      bind = $Secondary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle
+      bind = $Secondary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle
+      bind = $Secondary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle
+      bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle
+
+      # ########################### Keybinds for Hyprland ############################
+      # Swap windows
+      bind = $Secondary$Tertiary, left, movewindow, l
+      bind = $Secondary$Tertiary, right, movewindow, r
+      bind = $Secondary$Tertiary, up, movewindow, u
+      bind = $Secondary$Tertiary, down, movewindow, d
       
-      # Session management
-      bind = $Primary, L, exec, loginctl lock-session # Lock screen
-      bind = Ctrl+$Primary, L, exec, hyprctl dispatch global quickshell:lockToggle # Quickshell lock
-      bind = $Primary+Shift, L, exec, systemctl suspend # Suspend system
-      
-      # Screenshots and utilities
-      bind = $Primary+Shift, S, exec, grim -g "$(slurp)" - | wl-copy # Screen snip to clipboard
-      bind = $Primary+Shift+Alt, S, exec, grim -g "$(slurp)" - | swappy -f - # Screen snip to editor
-      bind = $Primary+Shift, C, exec, hyprpicker -a # Color picker
-      bind = $Primary, V, exec, pkill fuzzel || cliphist list | fuzzel --no-fuzzy --dmenu | cliphist decode | wl-copy # Clipboard history
-      bind = $Primary, Period, exec, pkill fuzzel || fuzzel-emoji # Emoji picker
-      
-      # Cheatsheet and help
-      bind = $Primary, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle # Show cheatsheet
-      
-      # Audio controls (with Quickshell integration)
-      bindl = , XF86AudioMute, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0% && hyprctl dispatch global quickshell:osdShow
-      bindle = , XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && hyprctl dispatch global quickshell:osdShow
-      bindle = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && hyprctl dispatch global quickshell:osdShow
-      bindl = Alt, XF86AudioMute, exec, wpctl set-mute @DEFAULT_SOURCE@ toggle # Toggle microphone
-      
-      # Brightness controls (with Quickshell integration)
-      bindle = , XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
-      bindle = , XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
-      
-      # Wallpaper and theming
-      bind = Ctrl+$Primary, T, exec, hyprctl dispatch global quickshell:wallpaperNext # Next wallpaper
+      # Move focus
+      bind = $Secondary, left, movefocus, l
+      bind = $Secondary, right, movefocus, r
+      bind = $Alternate, up, movefocus, u
+      bind = $Alternate, down, movefocus, d
+      bind = $Secondary, BracketLeft, movefocus, l
+      bind = $Secondary, BracketRight, movefocus, r
+
+      # Workspace navigation
+      bind = $Primary$Secondary, right, workspace, +1
+      bind = $Primary$Secondary, left, workspace, -1
+      bind = $Primary$Secondary, BracketLeft, workspace, -1
+      bind = $Primary$Secondary, BracketRight, workspace, +1
+      bind = $Primary$Secondary, up, workspace, -5
+      bind = $Primary$Secondary, down, workspace, +5
+      bind = $Secondary, Page_Down, workspace, +1
+      bind = $Secondary, Page_Up, workspace, -1
+
+      # Window split ratio
+      binde = $Primary$Secondary, Minus, splitratio, -0.1
+      binde = $Primary$Secondary, Equal, splitratio, 0.1
+      binde = $Secondary, Semicolon, splitratio, -0.1
+      binde = $Secondary, Apostrophe, splitratio, 0.1
+
+      # Fullscreen
+      bind = $Primary$Secondary, F, fullscreen, 0
+      bind = $Primary$Secondary, D, fullscreen, 1
+      bind = $Secondary$Alternate, F, fullscreenstate, 0
+
+      # Workspace switching
+      bind = $Secondary, 1, workspace, 1
+      bind = $Secondary, 2, workspace, 2
+      bind = $Secondary, 3, workspace, 3
+      bind = $Secondary, 4, workspace, 4
+      bind = $Secondary, 5, workspace, 5
+      bind = $Secondary, 6, workspace, 6
+      bind = $Secondary, 7, workspace, 7
+      bind = $Secondary, 8, workspace, 8
+      bind = $Secondary, 9, workspace, 9
+      bind = $Secondary, 0, workspace, 10
+      bind = $Primary$Secondary, S, togglespecialworkspace,
+      bind = $Alternate, Tab, cyclenext
+      bind = $Alternate, Tab, bringactivetotop,   # bring it to the top
+
+      # Move window to workspace
+      bind = $Secondary$Alternate, 1, movetoworkspacesilent, 1
+      bind = $Secondary$Alternate, 2, movetoworkspacesilent, 2
+      bind = $Secondary$Alternate, 3, movetoworkspacesilent, 3
+      bind = $Secondary$Alternate, 4, movetoworkspacesilent, 4
+      bind = $Secondary$Alternate, 5, movetoworkspacesilent, 5
+      bind = $Secondary$Alternate, 6, movetoworkspacesilent, 6
+      bind = $Secondary$Alternate, 7, movetoworkspacesilent, 7
+      bind = $Secondary$Alternate, 8, movetoworkspacesilent, 8
+      bind = $Secondary$Alternate, 9, movetoworkspacesilent, 9
+      bind = $Secondary$Alternate, 0, movetoworkspacesilent, 10
+      bind = $Secondary$Alternate, S, movetoworkspacesilent, special
+
+      # Mouse workspace scrolling
+      bind = $Secondary, mouse_up, workspace, +1
+      bind = $Secondary, mouse_down, workspace, -1
+      bind = $Primary$Secondary, mouse_up, workspace, +1
+      bind = $Primary$Secondary, mouse_down, workspace, -1
+
+      # Mouse window controls
+      bindm = $Secondary, mouse:273, resizewindow
+      bindm = $Primary$Secondary, mouse:273, resizewindow
+      bindm = ,mouse:274, movewindow
+      bindm = $Primary$Secondary, Z, movewindow
+      bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480
+
+      # Quickshell integration and desktop environment
+      exec-once = quickshell -vv -c ii > /tmp/quickshell.log
     '';
 
-    # Override touchegg configuration for 3-finger window dragging
-    overrides.toucheggConf = ''
-      <touchégg>
-        <settings>
-          <property name="animation_delay">150</property>
-          <property name="action_execute_threshold">80</property>
-          <property name="color">auto</property>
-          <property name="borderColor">auto</property>
-        </settings>
-        <application name="All">
-          <!-- 3-finger pinch in: Close window -->
-          <gesture type="PINCH" fingers="3" direction="IN">
-            <action type="CLOSE_WINDOW">
-              <animate>true</animate>
-              <color>F84A53</color>
-              <borderColor>F84A53</borderColor>
-            </action>
-          </gesture>
-          
-          <!-- 2-finger tap: Right click -->
-          <gesture type="TAP" fingers="2" direction="UNKNOWN">
-            <action type="MOUSE_CLICK">
-              <button>3</button>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 3-finger click: Middle click (Hyprland handles the dragging) -->
-          <gesture type="CLICK" fingers="3" direction="UNKNOWN">
-            <action type="MOUSE_CLICK">
-              <button>2</button>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 4-finger pinch in: Fullscreen mode 0 -->
-          <gesture type="PINCH" fingers="4" direction="IN">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch fullscreen 0</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 4-finger pinch out: Fullscreen mode 1 -->
-          <gesture type="PINCH" fingers="4" direction="OUT">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch fullscreen 1</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 3-finger swipe up: Show overview -->
-          <gesture type="SWIPE" fingers="3" direction="UP">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch global quickshell:overviewToggle</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 3-finger swipe down: Show all windows -->
-          <gesture type="SWIPE" fingers="3" direction="DOWN">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch overview</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 4-finger swipe left: Move window left -->
-          <gesture type="SWIPE" fingers="4" direction="LEFT">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch movewindow l</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 4-finger swipe right: Move window right -->
-          <gesture type="SWIPE" fingers="4" direction="RIGHT">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch movewindow r</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 4-finger swipe up: Move window up -->
-          <gesture type="SWIPE" fingers="4" direction="UP">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch movewindow u</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-          
-          <!-- 4-finger swipe down: Move window down -->
-          <gesture type="SWIPE" fingers="4" direction="DOWN">
-            <action type="RUN_COMMAND">
-              <command>hyprctl dispatch movewindow d</command>
-              <repeat>false</repeat>
-              <animation>NONE</animation>
-              <on>begin</on>
-            </action>
-          </gesture>
-        </application>
-        
-        <!-- Browser-specific gestures for zoom -->
-        <application name="chromium-browser">
-          <gesture type="PINCH" fingers="2" direction="IN">
-            <action type="SEND_KEYS">
-              <keys>Control+minus</keys>
-              <decreaseKeys>Control+plus</decreaseKeys>
-            </action>
-          </gesture>
-          
-          <gesture type="PINCH" fingers="2" direction="OUT">
-            <action type="SEND_KEYS">
-              <keys>Control+plus</keys>
-              <decreaseKeys>Control+minus</decreaseKeys>
-            </action>
-          </gesture>
-        </application>
-      </touchégg>
-    '';
-    
+    # 🎨 Quickshell Configuration (still using rich config)
     # 🎨 Quickshell Configuration (still using rich config)
     quickshell = {
       appearance = {
@@ -979,6 +893,7 @@ let
   
   home.sessionVariables = {
     LD_LIBRARY_PATH = pkgs.lib.mkDefault "/run/opengl-driver/lib";
+    OLLAMA_HOST = "http://10.1.1.12:2701";
   };
 
   # This value determines the home Manager release that your
