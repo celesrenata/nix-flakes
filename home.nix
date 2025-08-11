@@ -47,6 +47,9 @@ let
     # Force disable touchegg component (we handle it system-wide)
     touchegg.enable = lib.mkForce false;
     
+    # Disable misc config copying to prevent foot config symlink creation
+    configuration.copyMiscConfig = lib.mkForce false;
+    
     # COMPLETE OVERRIDE: Provide the entire hyprland.conf with essential keybinds
     overrides.hyprlandConf = ''
       # Complete Hyprland configuration (NixOS-managed, fully declarative)
@@ -76,7 +79,8 @@ let
               natural_scroll = yes
               tap-to-click = yes
               disable_while_typing = yes
-              clickfinger_behavior = yes
+              clickfinger_behavior = 1
+              middle_button_emulation = yes
           }
           
           sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
