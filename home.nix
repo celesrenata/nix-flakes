@@ -186,7 +186,7 @@ let
       bind = $Primary$Secondary$Tertiary, M, exec, env -u NIXOS_OZONE_WL cider --use-gl=desktop
       bind = $Primary$Secondary$Alternate, M, exec, spotify
       # Discord
-      bind = $Primary$Secondary, I, exec, vesktop 
+      bind = $Primary$Secondary, I, exec, discord 
       # Foot
       bind = $Primary$Secondary, H, exec, foot
       bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
@@ -330,6 +330,7 @@ let
 
       # Quickshell integration and desktop environment
       exec-once = quickshell -vv -c ii > /tmp/quickshell.log
+      exec-once = wl-paste --watch cliphist store
     '';
 
     # 🎨 Quickshell Configuration (still using rich config)
