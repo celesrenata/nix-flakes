@@ -202,8 +202,127 @@
     ];
   };
 
-  # Gestures.
+  # Gestures with custom configuration
   services.touchegg.enable = true;
+  
+  # System-wide touchegg configuration file
+  environment.etc."touchegg/touchegg.conf".text = ''
+    <touchégg>
+      <settings>
+        <property name="animation_delay">150</property>
+        <property name="action_execute_threshold">20</property>
+        <property name="color">auto</property>
+        <property name="borderColor">auto</property>
+      </settings>
+      <application name="All">
+        <!-- 3-finger pinch in: Close window -->
+        <gesture type="PINCH" fingers="3" direction="IN">
+          <action type="CLOSE_WINDOW">
+            <animate>true</animate>
+            <color>F84A53</color>
+            <borderColor>F84A53</borderColor>
+          </action>
+        </gesture>
+        
+        <!-- 2-finger tap: Right click -->
+        <gesture type="TAP" fingers="2" direction="UNKNOWN">
+          <action type="MOUSE_CLICK">
+            <button>3</button>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 3-finger click: Middle click (Hyprland handles the dragging) -->
+        <gesture type="CLICK" fingers="3" direction="UNKNOWN">
+          <action type="MOUSE_CLICK">
+            <button>2</button>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 4-finger pinch in: Fullscreen mode 0 -->
+        <gesture type="PINCH" fingers="4" direction="IN">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch fullscreen 0</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 4-finger pinch out: Fullscreen mode 1 -->
+        <gesture type="PINCH" fingers="4" direction="OUT">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch fullscreen 1</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 3-finger swipe up: Show overview -->
+        <gesture type="SWIPE" fingers="3" direction="UP">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch global quickshell:overviewToggle</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 3-finger swipe down: Show all windows -->
+        <gesture type="SWIPE" fingers="3" direction="DOWN">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch overview</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 4-finger swipe left: Move window left -->
+        <gesture type="SWIPE" fingers="4" direction="LEFT">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch movewindow l</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 4-finger swipe right: Move window right -->
+        <gesture type="SWIPE" fingers="4" direction="RIGHT">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch movewindow r</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 4-finger swipe up: Move window up -->
+        <gesture type="SWIPE" fingers="4" direction="UP">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch movewindow u</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+        
+        <!-- 4-finger swipe down: Move window down -->
+        <gesture type="SWIPE" fingers="4" direction="DOWN">
+          <action type="RUN_COMMAND">
+            <command>hyprctl dispatch movewindow d</command>
+            <repeat>false</repeat>
+            <animation>NONE</animation>
+            <on>begin</on>
+          </action>
+        </gesture>
+      </application>
+      
+    </touchégg>
+  '';
 
   # Garbage Collection.
   nix.optimise.automatic = true;
