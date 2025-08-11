@@ -47,6 +47,9 @@ let
     # Force disable touchegg component (we handle it system-wide)
     touchegg.enable = lib.mkForce false;
     
+    # Disable automatic foot config generation - we want dynamic transparency control
+    overrides.footConfig = null;
+    
     # COMPLETE OVERRIDE: Provide the entire hyprland.conf with essential keybinds
     overrides.hyprlandConf = ''
       # Complete Hyprland configuration (NixOS-managed, fully declarative)
