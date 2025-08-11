@@ -50,6 +50,9 @@ let
     # Disable misc config copying to prevent foot config symlink creation
     configuration.copyMiscConfig = lib.mkForce false;
     
+    # Disable fish config copying to prevent read-only fish_variables symlink
+    configuration.copyFishConfig = lib.mkForce false;
+    
     # COMPLETE OVERRIDE: Provide the entire hyprland.conf with essential keybinds
     overrides.hyprlandConf = ''
       # Complete Hyprland configuration (NixOS-managed, fully declarative)
@@ -531,6 +534,11 @@ let
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
+  
+  # Copy fish auto-completion scripts manually (but not fish_variables)
+  home.file.".config/fish/auto-Hypr.fish" = {
+    source = "${inputs.dots-hyprland-source}/.config/fish/auto-Hypr.fish";
+  };
   # home.file.".config/hypr/hyprland.conf" = {
   #   source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
   # };  # Commented out - now managed by dots-hyprland
@@ -575,6 +583,17 @@ let
   };
 
   # Modular Programs
+  # Fish shell configuration (manual, since we disabled copyFishConfig)
+  programs.fish = {
+    enable = true;
+    shellInit = ''
+      # Source the dots-hyprland fish config
+      if test -f ${inputs.dots-hyprland-source}/.config/fish/config.fish
+        source ${inputs.dots-hyprland-source}/.config/fish/config.fish
+      end
+    '';
+  };
+  
   # VSCode
   programs.vscode = {
     enable = true;
