@@ -74,6 +74,9 @@ let
           
           touchpad {
               natural_scroll = yes
+              tap-to-click = yes
+              disable_while_typing = yes
+              clickfinger_behavior = yes
           }
           
           sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
