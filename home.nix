@@ -47,8 +47,13 @@ let
     # Force disable touchegg component (we handle it system-wide)
     touchegg.enable = lib.mkForce false;
     
-    # Disable misc config copying to prevent foot config symlink creation
-    configuration.copyMiscConfig = lib.mkForce false;
+    # Enable misc config copying to get Quickshell files deployed
+    configuration.copyMiscConfig = lib.mkForce true;
+    
+    # Disable specific conflicting applications
+    configuration.applications.foot.enable = lib.mkForce false;
+    configuration.applications.kitty.enable = lib.mkForce false;
+    configuration.applications.fuzzel.enable = lib.mkForce false;
     
     # Disable fish config copying to prevent read-only fish_variables symlink
     configuration.copyFishConfig = lib.mkForce false;
@@ -252,12 +257,12 @@ let
 
       #+! System Actions
       # Lock screen
-      bind = $Primary$Secondary, L, exec, loginctl lock-session
+      bind = $Primary$Secondary, L, exec, hyprlock
 
       #+! Quickshell Interface
       # Quickshell restart (equivalent to the old AGS restart)
       bindr = $Primary$Secondary, R, exec, pkill quickshell; quickshell -c ii &
-      bind = $Primary$Secondary, T, exec, ~/.config/quickshell/scripts/colors/switchwall.sh
+      bindr = $Primary$Secondary, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh
       
       # Desktop environment controls (converted from AGS to Quickshell)
       bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
