@@ -180,7 +180,7 @@ let
       $Tertiary = Shift
       $Alternate = Alt
 
-      #+! System Controls
+      # ################### It just works™ keybinds ###################
       # Volume
       bindl = ,XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
       bindle=, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
@@ -190,7 +190,7 @@ let
       bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
       bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
 
-      #+! Applications
+      # ####################################### Applications ########################################
       # Music
       bind = $Primary$Secondary, M, exec, tidal-hifi
       bind = $Primary$Secondary$Tertiary, M, exec, env -u NIXOS_OZONE_WL cider --use-gl=desktop
@@ -220,13 +220,13 @@ let
       bind = $Primary$Secondary, N, exec, gammastep -O +3000 &
       bind = $Primary$Secondary$Alternate, N, exec, gammastep -0 +6500 &
 
-      #+! Window Actions
+      # Actions
       bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji
       bind = $Alternate, F4, killactive,
       bind = $Secondary$Alternate, Space, togglefloating, 
       bind = $Secondary$Alternate, Q, exec, hyprctl kill
 
-      #+! Screenshot & Recording
+      # Screenshot, Record, OCR, Color picker, Clipboard history
       bind = $Secondary$Tertiary, 4, exec, grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" - | wl-copy
       bind = $Secondary$Tertiary, 5, exec, ~/.config/quickshell/ii/scripts/record.sh # Record region (no sound)
       bind = $Secondary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record --sound
@@ -237,12 +237,11 @@ let
       bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
       bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
 
-      #+! Text Recognition (OCR)
+      # Text-to-image OCR
       bind = $Primary$Secondary$Tertiary,S,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract "tmp.png" - | wl-copy && rm "tmp.png"
       bind = $Secondary$Tertiary,T,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract -l eng "tmp.png" - | wl-copy && rm "tmp.png"
 
       # Media controls
-      #+! Media Controls
       bind = $Secondary$Tertiary, N, exec, playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"`
       bindl  = , XF86AudioNext, exec, playerctl next 
       bindl  = , XF86AudioPrev, exec, playerctl previous
@@ -250,11 +249,10 @@ let
       bind = $Secondary$Tertiary, B, exec, playerctl previous
       bind = $Secondary$Tertiary, P, exec, playerctl play-pause
 
-      #+! System Actions
       # Lock screen
       bind = $Primary$Secondary, L, exec, loginctl lock-session
 
-      #+! Quickshell Interface
+      # ##################################### Quickshell keybinds #####################################
       # Quickshell restart (equivalent to the old AGS restart)
       bindr = $Primary$Secondary, R, exec, pkill quickshell; quickshell -c ii &
       bind = $Primary$Secondary, T, exec, ~/.config/quickshell/scripts/colors/switchwall.sh
@@ -268,7 +266,7 @@ let
       bind = $Secondary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle
       bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle
 
-      #+! Window Management
+      # ########################### Keybinds for Hyprland ############################
       # Swap windows
       bind = $Secondary$Tertiary, left, movewindow, l
       bind = $Secondary$Tertiary, right, movewindow, r
@@ -283,7 +281,7 @@ let
       bind = $Secondary, BracketLeft, movefocus, l
       bind = $Secondary, BracketRight, movefocus, r
 
-      #+! Workspace Navigation
+      # Workspace navigation
       bind = $Primary$Secondary, right, workspace, +1
       bind = $Primary$Secondary, left, workspace, -1
       bind = $Primary$Secondary, BracketLeft, workspace, -1
@@ -299,13 +297,12 @@ let
       binde = $Secondary, Semicolon, splitratio, -0.1
       binde = $Secondary, Apostrophe, splitratio, 0.1
 
-      #+! Window States
       # Fullscreen
       bind = $Primary$Secondary, F, fullscreen, 0
       bind = $Primary$Secondary, D, fullscreen, 1
       bind = $Secondary$Alternate, F, fullscreenstate, 0
 
-      #+! Workspace Switching
+      # Workspace switching
       bind = $Secondary, 1, workspace, 1
       bind = $Secondary, 2, workspace, 2
       bind = $Secondary, 3, workspace, 3
@@ -320,7 +317,7 @@ let
       bind = $Alternate, Tab, cyclenext
       bind = $Alternate, Tab, bringactivetotop,   # bring it to the top
 
-      #+! Move Windows to Workspace
+      # Move window to workspace
       bind = $Secondary$Alternate, 1, movetoworkspacesilent, 1
       bind = $Secondary$Alternate, 2, movetoworkspacesilent, 2
       bind = $Secondary$Alternate, 3, movetoworkspacesilent, 3
@@ -333,7 +330,6 @@ let
       bind = $Secondary$Alternate, 0, movetoworkspacesilent, 10
       bind = $Secondary$Alternate, S, movetoworkspacesilent, special
 
-      #+! Mouse Controls
       # Mouse workspace scrolling
       bind = $Secondary, mouse_up, workspace, +1
       bind = $Secondary, mouse_down, workspace, -1

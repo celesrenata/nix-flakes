@@ -24,8 +24,8 @@ description = "NixOS configuration";
     # toshy.inputs.nixpkgs.follows = "nixpkgs";
     dots-hyprland.url = "github:celesrenata/end-4-flakes";
     dots-hyprland.inputs.nixpkgs.follows = "nixpkgs";
-    # Add the actual dots-hyprland source for configuration copying
-    dots-hyprland-source.url = "github:end-4/dots-hyprland";
+    # Add the actual dots-hyprland source for configuration copying (using local fork)
+    dots-hyprland-source.url = "path:/home/celes/sources/dots-hyprland";
     dots-hyprland-source.flake = false;
   };
 
@@ -160,7 +160,8 @@ description = "NixOS configuration";
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
-          home-manager.backupFileExtension = "backup";  # Handle file conflicts
+          home-manager.backupFileExtension = "hm-backup";  # Use a more specific backup extension
+          home-manager.verbose = true;  # Enable verbose output for debugging
           home-manager.extraSpecialArgs = { 
             inherit inputs;
             inherit pkgs-unstable;
@@ -240,6 +241,8 @@ description = "NixOS configuration";
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "hm-backup";  # Use a more specific backup extension
+            home-manager.verbose = true;  # Enable verbose output for debugging
             home-manager.extraSpecialArgs = { 
               inherit inputs;
               inherit pkgs-unstable;
