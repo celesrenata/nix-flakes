@@ -25,10 +25,11 @@
   boot.plymouth.enable = true;
   # Use the Grub EFI boot loader.
 
-  # You should probably delete this...
-  security.pki.certificateFiles = [
-    ./home.crt
-  ];
+  # Certificate management via sops-nix
+  # Temporarily disabled during initial build to avoid chicken-and-egg problem
+  # security.pki.certificateFiles = [
+  #   "/run/secrets/home.crt"
+  # ];
   security.pam.loginLimits = [
     {domain = "*"; item = "stack"; type = "-"; value = "unlimited";}
   ];

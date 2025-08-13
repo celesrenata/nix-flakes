@@ -1,0 +1,26 @@
+# Certificates and sensitive files
+home.crt
+
+# Backup files
+*.bak
+*.backup
+*.backup-*
+
+# Build results
+result
+result-*
+
+# Temporary files
+*.tmp
+*.temp
+dump
+
+# IDE files
+.idea/
+.vscode/settings.json
+
+# Zip archives (likely temporary)
+*.zip
+
+# Hardware configuration backups (keep the main one)
+hardware-configuration.nix.bak
