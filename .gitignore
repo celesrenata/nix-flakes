@@ -15,6 +15,11 @@ result-*
 *.temp
 dump
 
+# Editor swap files
+*.swp
+*.swo
+*~
+
 # IDE files
 .idea/
 .vscode/settings.json
