@@ -1,4 +1,5 @@
-{ pkgs, ... }:
+{ pkgs, pkgs-unstable, lib, ... }:
+
 {
   config = {
     # Enable OpenGL
@@ -22,8 +23,31 @@
       # Bus ID of the Intel GPU. You can find it using lspci, either under 3D or VGA 
       intelBusId = "PCI:0:2:0"; 
     };
-    environment.systemPackages = [
-      pkgs.xivlauncher
-    ];
+    # ROCm symlink with fixed packages
+    services.ollama = {
+      package = pkgs-unstable.ollama;
+      enable = true;
+      # Keep acceleration disabled until we fully resolve the CLR dependency issue
+      acceleration = "rocm";  # Temporarily disabled until we fix the CLR dependency issue
+      #listenAddress = "0:0:0:0:11434";
+      host = "0.0.0.0";
+      port = 11434;
+      environmentVariables = {
+        HSA_OVERRIDE_GFX_VERSION = "10.1.0";
+      };
+#      models = "/opt/ollama/models";
+    };
+    security.wrappers.sunshine = {
+        owner = "root";
+        group = "root";
+        capabilities = "cap_sys_admin+p";
+        source = "${pkgs-unstable.sunshine}/bin/sunshine";
+    };
+    security.wrappers.immersed = {
+        owner = "root";
+        group = "root";
+        capabilities = "cap_sys_admin+p";
+        source = "${pkgs.immersed}/bin/immersed";
+    };
   };
 }

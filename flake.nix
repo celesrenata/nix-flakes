@@ -50,8 +50,8 @@
     sops-nix.url = "github:Mic92/sops-nix";                       # Encrypted secrets management
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Keyboard remapping (currently disabled in favor of keyd)
-    # toshy.url = "github:celesrenata/toshy/cline";               # Mac-style keybindings for Linux
+    # Keyboard remapping (using keyd instead of toshy for macland)
+    # toshy.url = "path:/home/celes/sources/celesrenata/toshy";    # Mac-style keybindings for Linux
     # toshy.inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -273,9 +273,10 @@
           overlays = [
             nixgl.overlay                               # OpenGL support
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
+            inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
             (import ./overlays/debugpy.nix)             # Python debugger
-            # (import ./overlays/freerdp.nix)           # Remote desktop (disabled for macOS)
+            (import ./overlays/freerdp.nix)             # Remote desktop client
             (import ./overlays/keyd.nix)                # Keyboard daemon for remapping
             #(import ./overlays/kubevirt.nix)            # Kubernetes virtualization
             (import ./overlays/materialyoucolor.nix)    # Material You theming
@@ -283,11 +284,22 @@
             (import ./overlays/latex.nix)               # LaTeX document system
             (import ./overlays/wofi-calc.nix)           # Calculator widget
             (import ./overlays/xivlauncher.nix)         # Final Fantasy XIV launcher
-            # (import ./overlays/onnxruntime.nix)       # ONNX runtime (disabled)
             (import ./overlays/helmfile.nix)            # Kubernetes Helm management
             (import ./overlays/t2fanrd.nix)             # T2 fan control daemon
-            # (import ./overlays/tinydfr.nix)           # Touch Bar support (disabled)
+            (import ./overlays/tinydfr.nix)             # Touch Bar support
+            (import ./overlays/pipewire.nix)            # PipeWire customizations
+            # (import ./overlays/background-removal.nix) # AI background removal (disabled)
           ];
+        };
+        
+        # Legacy packages for audio compatibility
+        pkgs-old = import inputs.nixpkgs-old {
+          inherit system;
+          config = {
+            rocmSupport = true;                         # AMD GPU support
+            allowUnfree = true;
+            allowBroken = true;
+          };
         };
         
         # Unstable packages for latest software
@@ -304,7 +316,9 @@
           # Special arguments for MacBook configuration
           specialArgs = {
             inherit pkgs;                               # Main package set
+            inherit pkgs-old;                           # Legacy packages for audio
             inherit pkgs-unstable;                      # Unstable packages
+            inherit inputs;                             # Flake inputs
           };
           
           # MacBook-specific system packages
@@ -326,6 +340,7 @@
             
             # Shared system configuration
             ./configuration.nix                         # Main system configuration
+            ./remote-build.nix                          # Remote build settings
             ./secrets.nix                               # SOPS secrets management
             
             # Hardware-specific modules

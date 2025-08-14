@@ -8,42 +8,37 @@
     [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  boot.initrd.availableKernelModules = [ "nvme" "thunderbolt" "xhci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "md_mod" ];
-  boot.initrd.kernelModules = [ "md_mod" "raid0" ];
-  boot.kernelModules = [ "kvm-amd" ];
+  boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "usbhid" "uas" "usb_storage" "sd_mod" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
-  boot.swraid.enable = true;
-  boot.swraid.mdadmConf = ''
-    MAILADDR root
-  '';
 
   fileSystems."/" =
-    { device = "/dev/md127p2";
+    { device = "/dev/disk/by-uuid/8e17c896-0832-4092-af92-a8f869a79b1a";
       fsType = "btrfs";
-      options = [ "subvol=root" "compress=zstd" ];
+      options = [ "compress=zstd" "subvol=root" ];
     };
 
   fileSystems."/home" =
-    { device = "/dev/md127p2";
+    { device = "/dev/disk/by-uuid/8e17c896-0832-4092-af92-a8f869a79b1a";
       fsType = "btrfs";
-      options = [ "subvol=home" "compress=zstd" ];
+      options = [ "compress=zstd" "subvol=home" ];
     };
 
   fileSystems."/nix" =
-    { device = "/dev/md127p2";
+    { device = "/dev/disk/by-uuid/8e17c896-0832-4092-af92-a8f869a79b1a";
       fsType = "btrfs";
-      options = [ "subvol=nix" "compress=zstd" ];
+      options = [ "compress=zstd" "subvol=nix" ];
     };
 
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/12CE-A600";
+  fileSystems."/boot/EFI" =
+    { device = "/dev/disk/by-uuid/55AA-1499";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];
     };
 
   swapDevices =
-    [ { device = "/dev/disk/by-uuid/d87918c3-7bd9-432b-bff0-d4a1a16f1155"; }
-      { device = "/dev/md127p1"; }
+    [ { device = "/dev/disk/by-uuid/22ccee32-95b1-473f-803f-0c23b6c01ca5"; }
     ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
@@ -51,14 +46,8 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.docker0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp11s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp12s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp18s0f0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp18s0f1.useDHCP = lib.mkDefault true;
-  # networking.interfaces.veth2dc5335.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp13s0.useDHCP = lib.mkDefault true;
+  # networking.interfaces.enp127s0u2.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

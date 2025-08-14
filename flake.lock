@@ -222,11 +222,19 @@
         "xwayland-satellite-unstable": "xwayland-satellite-unstable"
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1757942412,
         "narHash": "sha256-iDnEKwUYNOJZU/2B4bt8tfKUwN0J7RFJ7BXmf17VJOM=",
         "owner": "sodiboo",
         "repo": "niri-flake",
         "rev": "1da07fd6a9d44a7875d2843cccab1179085edb2c",
+=======
+        "lastModified": 1755104498,
+        "narHash": "sha256-kMosXLeEB43OtUKvhvzikKfFLpv7H7JzObCQO0j4X34=",
+        "owner": "sodiboo",
+        "repo": "niri-flake",
+        "rev": "22a24ab05a9f4b3a94fba0aa0d8d850e6269241a",
+>>>>>>> dc53387 (Migration: Copy working macland configuration from stable flakes)
         "type": "github"
       },
       "original": {
@@ -255,11 +263,19 @@
     "niri-unstable": {
       "flake": false,
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1757916394,
         "narHash": "sha256-nSmVJLjTGwQYC+pqD7GLt7Yt6oktawAMRld6oyFwMd0=",
         "owner": "YaLTeR",
         "repo": "niri",
         "rev": "cd0d45fdb88641aa5211c81e69301e85c5dd53a2",
+=======
+        "lastModified": 1755074352,
+        "narHash": "sha256-I+kpboTzfMwRVK76OoTmHStrGuzJPcmvZKxmlmL9q+A=",
+        "owner": "YaLTeR",
+        "repo": "niri",
+        "rev": "af9ce533100b49e8bc879b557ab830f5d3a18805",
+>>>>>>> dc53387 (Migration: Copy working macland configuration from stable flakes)
         "type": "github"
       },
       "original": {
@@ -292,11 +308,19 @@
         "nixpkgs": "nixpkgs_6"
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1757901553,
         "narHash": "sha256-gW45THWkxnzWpPtjuaDeTnpKFB6i5cZmxk4WuGKhCNc=",
         "owner": "nix-community",
         "repo": "nix-vscode-extensions",
         "rev": "846f1334090a2c44d77850c00d0c17a27ad66618",
+=======
+        "lastModified": 1755137362,
+        "narHash": "sha256-3e/S+Q9InEZ+W1YxjrfjkuVz49IsF2vJZx7Id22RCkY=",
+        "owner": "nix-community",
+        "repo": "nix-vscode-extensions",
+        "rev": "547b299dd5b8ddccf948ff6728d7ec547eee4e02",
+>>>>>>> dc53387 (Migration: Copy working macland configuration from stable flakes)
         "type": "github"
       },
       "original": {
@@ -374,11 +398,19 @@
     },
     "nixpkgs-stable": {
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1757810152,
         "narHash": "sha256-Vp9K5ol6h0J90jG7Rm4RWZsCB3x7v5VPx588TQ1dkfs=",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "9a094440e02a699be5c57453a092a8baf569bdad",
+=======
+        "lastModified": 1754937576,
+        "narHash": "sha256-3sWA5WJybUE16kIMZ3+uxcxKZY/JRR4DFBqLdSLBo7w=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ddae11e58c0c345bf66efbddbf2192ed0e58f896",
+>>>>>>> dc53387 (Migration: Copy working macland configuration from stable flakes)
         "type": "github"
       },
       "original": {
@@ -390,11 +422,19 @@
     },
     "nixpkgs-unstable": {
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1757745802,
         "narHash": "sha256-hLEO2TPj55KcUFUU1vgtHE9UEIOjRcH/4QbmfHNF820=",
         "owner": "nixos",
         "repo": "nixpkgs",
         "rev": "c23193b943c6c689d70ee98ce3128239ed9e32d1",
+=======
+        "lastModified": 1755027561,
+        "narHash": "sha256-IVft239Bc8p8Dtvf7UAACMG5P3ZV+3/aO28gXpGtMXI=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "005433b926e16227259a1843015b5b2b7f7d1fc3",
+>>>>>>> dc53387 (Migration: Copy working macland configuration from stable flakes)
         "type": "github"
       },
       "original": {
@@ -454,11 +494,19 @@
     },
     "nixpkgs_4": {
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1757745802,
         "narHash": "sha256-hLEO2TPj55KcUFUU1vgtHE9UEIOjRcH/4QbmfHNF820=",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "c23193b943c6c689d70ee98ce3128239ed9e32d1",
+=======
+        "lastModified": 1755027561,
+        "narHash": "sha256-IVft239Bc8p8Dtvf7UAACMG5P3ZV+3/aO28gXpGtMXI=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "005433b926e16227259a1843015b5b2b7f7d1fc3",
+>>>>>>> dc53387 (Migration: Copy working macland configuration from stable flakes)
         "type": "github"
       },
       "original": {
@@ -517,11 +565,19 @@
     },
     "nixpkgs_8": {
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1757810152,
         "narHash": "sha256-Vp9K5ol6h0J90jG7Rm4RWZsCB3x7v5VPx588TQ1dkfs=",
         "owner": "nixos",
         "repo": "nixpkgs",
         "rev": "9a094440e02a699be5c57453a092a8baf569bdad",
+=======
+        "lastModified": 1754937576,
+        "narHash": "sha256-3sWA5WJybUE16kIMZ3+uxcxKZY/JRR4DFBqLdSLBo7w=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "ddae11e58c0c345bf66efbddbf2192ed0e58f896",
+>>>>>>> dc53387 (Migration: Copy working macland configuration from stable flakes)
         "type": "github"
       },
       "original": {
