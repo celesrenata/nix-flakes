@@ -15,6 +15,7 @@
   imports = [
     # Desktop Environment Configuration
     ./desktop/hyprland.nix          # Hyprland window manager and keybindings
+    ./desktop/hypridle.nix          # Hypridle idle management and power saving
     ./desktop/quickshell.nix        # Quickshell desktop shell (placeholder)
     ./desktop/theming.nix           # Cursors, themes, and visual appearance
     

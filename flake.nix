@@ -237,7 +237,7 @@
             };
             
             # User-specific home-manager configuration
-            home-manager.users.celes = import ./home-modular.nix;
+            home-manager.users.celes = import ./home/default.nix;
           }
         ];
       };
@@ -347,7 +347,7 @@
               };
               
               # User-specific configuration (shared with ESXi)
-              home-manager.users.celes = import ./home-modular.nix;
+              home-manager.users.celes = import ./home/default.nix;
             }
           ];
         };
