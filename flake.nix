@@ -274,6 +274,7 @@
             nixgl.overlay                               # OpenGL support
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
             inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
+            dots-hyprland.overlays.default              # Hyprland desktop environment
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
             (import ./overlays/debugpy.nix)             # Python debugger
             (import ./overlays/freerdp.nix)             # Remote desktop client
@@ -281,6 +282,7 @@
             #(import ./overlays/kubevirt.nix)            # Kubernetes virtualization
             (import ./overlays/materialyoucolor.nix)    # Material You theming
             (import ./overlays/end-4-dots.nix)          # Desktop configuration
+            (import ./overlays/fuzzel-emoji.nix)        # Emoji picker for Fuzzel
             (import ./overlays/latex.nix)               # LaTeX document system
             (import ./overlays/wofi-calc.nix)           # Calculator widget
             (import ./overlays/xivlauncher.nix)         # Final Fantasy XIV launcher

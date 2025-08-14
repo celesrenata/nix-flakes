@@ -1,10 +1,10 @@
 self: super: {
   pipewire = super.pipewire.override {
-    # In most Nixpkgs of 1.4.x, the boolean is called `withAlsa` (not `alsaSupport`)
-    alsaSupport = true;
+    # Remove problematic parameters and use only known working ones
+    # withAlsa = true;
     # You may also want PulseAudio emulation and JACK:
-    withPulseaudio = true;
-    withJack      = true;
+    # withPulseaudio = true;
+    # withJack = true;
   };
 
   wireplumber = super.wireplumber.override {
