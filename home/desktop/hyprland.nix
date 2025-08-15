@@ -55,7 +55,7 @@
       monitor=,1920x1200@60,auto,1
       
       # T2 MacBook GPU environment variables for proper graphics switching
-      env = AQ_DRM_DEVICES,$HOME/.config/hypr/card-intel:$HOME/.config/hypr/card-amd
+      env = AQ_DRM_DEVICES,/dev/dri/card1:/dev/dri/card2
 
       # Input configuration
       input {
@@ -341,6 +341,6 @@
   };
 
   # MacBook T2 specific GPU card configuration files
-  home.file.".config/hypr/card-intel".text = "/dev/dri/card0";
-  home.file.".config/hypr/card-amd".text = "/dev/dri/card1";
+  home.file.".config/hypr/card-intel".text = "/dev/dri/card1";
+  home.file.".config/hypr/card-amd".text = "/dev/dri/card2";
 }
