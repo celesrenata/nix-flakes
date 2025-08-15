@@ -16,7 +16,7 @@ rec {
       find ags -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find anyrun -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find fish -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
-      #find foot -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
+      find foot -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       #find fontconfig -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find hypr -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash
       find mpv -type f | awk '{ print "install -m755 -D " $0 " $out/" $0 }' | bash

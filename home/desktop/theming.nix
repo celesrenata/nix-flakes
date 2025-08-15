@@ -27,5 +27,8 @@
     
     # Cursors and icons
     bibata-cursors
+    
+    # Color theming
+    matugen  # Material You color generation
   ];
 }

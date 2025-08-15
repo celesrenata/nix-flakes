@@ -11,7 +11,7 @@ rec {
       sha256 = "sha256-vOJAYbB/ZcRxM+/lrkab/PcON3vOz3o6eqPvM9hmaOw=";
     };
 
-    cargoHash = "sha256-oB0zuTvCuFR5edTrUnZMVuNQa+mwl15Tjnxm4+FNoFk=";
+    cargoHash = "sha256-FKQYiaOTZxD95AWD2zbVjENzMAPrFl/rzhwbkAgGbx0=";
 
 
     installPhase = ''

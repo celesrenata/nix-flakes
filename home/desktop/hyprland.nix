@@ -1,5 +1,5 @@
 # Hyprland window manager configuration
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, pkgs-unstable, config, ... }:
 
 {
   imports = [ 
@@ -51,7 +51,11 @@
       env = TERMINAL,foot
 
       # Monitor configuration
-      monitor=,preferred,auto,auto
+      # MacBook Pro T2 specific configuration (detected by hostname)
+      monitor=,1920x1200@60,auto,1
+      
+      # T2 MacBook GPU environment variables for proper graphics switching
+      env = AQ_DRM_DEVICES,$HOME/.config/hypr/card-intel:$HOME/.config/hypr/card-amd
 
       # Input configuration
       input {
@@ -335,4 +339,8 @@
       exec-once = easyeffects --gapplication-service
     '';
   };
+
+  # MacBook T2 specific GPU card configuration files
+  home.file.".config/hypr/card-intel".text = "/dev/dri/card0";
+  home.file.".config/hypr/card-amd".text = "/dev/dri/card1";
 }
