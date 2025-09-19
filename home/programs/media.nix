@@ -20,7 +20,7 @@
     # Media players
     mpv
     vlc
-    plex-media-player
+    plex-desktop
     jellyfin-media-player
 
     # Audio tools
@@ -32,7 +32,7 @@
     libdbusmenu-gtk3
     
     # Image and video editing
-    gimp
+    pkgs-old.gimp
     darktable
     blender
     kdePackages.kdenlive

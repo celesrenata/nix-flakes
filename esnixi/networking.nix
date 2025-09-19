@@ -18,11 +18,29 @@
     services.blueman.enable = true;
     hardware.enableAllFirmware = true;
 
-    #networking.bridges = {
-    #  "br0" = {
-    #    interfaces = [ "enp5s0f1" ];
-    #  };
-    #};
+    # Bridge configuration for VM networking (ESXi-like functionality)
+    # This creates a bridge that VMs can use to access the local network directly
+    networking.bridges = {
+      "br0" = {
+        interfaces = [ "enp11s0" ];  # Your active network interface
+      };
+    };
+
+    # Configure the bridge interface with DHCP
+    networking.interfaces.br0 = {
+      useDHCP = true;  # Use DHCP for the bridge interface
+    };
+
+    # Disable DHCP on the physical interface since the bridge will handle it
+    networking.interfaces.enp11s0.useDHCP = false;
+    # Configure main interface with DHCP
+    networking.interfaces.enp12s0.useDHCP = true;
+
+    # Enable IP forwarding for VM traffic
+    boot.kernel.sysctl = {
+      "net.ipv4.ip_forward" = 1;
+      "net.ipv6.conf.all.forwarding" = 1;
+    };
 
     networking.firewall = {
       enable = false;
@@ -41,6 +59,9 @@
         { from = 3658; to = 3659; }
         { from = 27000; to = 27036; }
       ];
+      
+      # Allow bridge traffic for VMs
+      trustedInterfaces = [ "br0" ];
     };
   };
 }

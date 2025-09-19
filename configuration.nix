@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ niri, pkgs, pkgs-unstable, ... }:
+{ niri, pkgs, pkgs-old, pkgs-unstable, ... }:
 {
   # Licences.
   nixpkgs.config.allowUnfree = true;
@@ -72,7 +72,7 @@
   services.xserver.enable = true;
 
   # Enable the Enlightenment Desktop Environment.
-  services.xserver.desktopManager.enlightenment.enable = true;
+  #services.xserver.desktopManager.enlightenment.enable = true;
 
   # Enable OpenRGB.
   services.hardware.openrgb.enable = true;
@@ -83,6 +83,52 @@
     package = pkgs-unstable.hyprland;
     portalPackage = pkgs-unstable.xdg-desktop-portal-hyprland;
     xwayland.enable = true;
+  };
+
+#  services.monado = {
+#    enable = true;
+#    defaultRuntime = true; # Register as default OpenXR runtime
+#  };
+#
+#  systemd.user.services.monado.environment = {
+#    STEAMVR_LH_ENABLE = "1";
+#    XRT_COMPOSITOR_COMPUTE = "1";
+#    WMR_HANDTRACKING = "0";
+#  };
+
+  services.wivrn = {
+    enable = true;
+    openFirewall = true;
+    package = pkgs-unstable.wivrn;  
+    # Write information to /etc/xdg/openxr/1/active_runtime.json, VR applications
+    # will automatically read this and work with WiVRn (Note: This does not currently
+    # apply for games run in Valve's Proton)
+      defaultRuntime = true;
+  
+    # Run WiVRn as a systemd service on startup
+    autoStart = true;
+  
+    # Config for WiVRn (https://github.com/WiVRn/WiVRn/blob/master/docs/configuration.md)
+    config = {
+      enable = true;
+      json = {
+        # 1.0x foveation scaling
+        scale = 1.0;
+        # 100 Mb/s
+        bitrate = 100000000;
+        encoders = [
+          {
+            encoder = "vaapi";
+            codec = "h265";
+            # 1.0 x 1.0 scaling
+            width = 1.0;
+            height = 1.0;
+            offset_x = 0.0;
+            offset_y = 0.0;
+          }
+        ];
+      };
+    };
   };
 
   #programs.niri = {
@@ -165,6 +211,11 @@
     material-symbols
     bibata-cursors
   ];
+
+  programs.git = {
+    enable = true;
+    lfs.enable = true;
+  };
 
   # Extra Groups
   users.groups.mlocate = {};
@@ -340,26 +391,15 @@
   programs.nh.enable = true;
   programs.java.enable = true;
   programs.adb.enable = true;
-  programs.steam = {
-    enable = true;
-    extraPackages = with pkgs; [
-      glxinfo
-      qt6.qtwayland
-      nss
-      xorg.libxkbfile
-      kdePackages.qtwayland
-      libsForQt5.qt5.qtwayland
-    ];
-    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
-  };
+  programs.steam.gamescopeSession.enable = true;
+  programs.gamemode.enable = true;
   hardware.steam-hardware.enable = true;
   
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
     isNormalUser = true;
     description = "Celes Renata";
-    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" "libvirt" "kvm" "vboxusers" "adbusers" ];
+    extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" "libvirt" "kvm" "vboxusers" "adbusers" "gamemode" ];
     packages = with pkgs; [
       firefox
     #  thunderbird
@@ -428,19 +468,23 @@
     pkgs-unstable.helmfile
     pkgs-unstable.kustomize
     pkgs-unstable.kompose
-    pkgs.kubevirt
+    pkgs-unstable.kubevirt
     pkgs-unstable.krew
 
     # Steam Tools.
     steam-tui
     steamcmd
+    mangohud
+    gamemode
+    protonup-qt
+    lutris
+    bottles
+    heroic
 
     # Development Tools.
     #android-studio-full
     amazon-q-cli
     jetbrains-toolbox
-    git
-    git-lfs
     nodejs_20
     meson
     gcc13
@@ -518,7 +562,7 @@
     waypipe
 
     # Media
-    plex-media-player
+    plex-desktop
     jellyfin-media-player
     
     # GTK
@@ -538,8 +582,8 @@
     tk
 
     # Latex
-    texliveFull
-    texlive.combined.scheme-full
+    pkgs-old.texliveFull
+    pkgs-old.texlive.combined.scheme-full
     latexRes-package
 
     # Terminals.
@@ -547,11 +591,9 @@
     foot
 
     # Emulation
-    lutris
     wine
     wine64
     qemu
-    protonup-qt
 
     # Mac Sound.
     libspatialaudio

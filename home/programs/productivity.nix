@@ -47,7 +47,7 @@
     
     # Remote access
     wlvncc
-    tigervnc
+    #tigervnc
     
     # Archive utilities
     zip

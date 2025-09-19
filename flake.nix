@@ -18,7 +18,7 @@
     # anyrun.inputs.nixpkgs.follows = "nixpkgs";                   # Disabled due to compatibility issues
 
     # AI and machine learning tools
-    nix-comfyui.url = "github:haras-unicorn/nix-comfyui";         # ComfyUI for AI image generation
+    # ComfyUI now available in nixpkgs (PR #441841)
 
     # Window managers and desktop environments
     niri.url = "github:sodiboo/niri-flake";                       # Niri wayland compositor (experimental)
@@ -56,7 +56,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, nix-comfyui, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -124,7 +124,7 @@
           allowUnfree = true;                    # Enable proprietary packages
           android_sdk.accept_license = true;     # Accept Android SDK license
           allowBroken = true;                    # Allow packages marked as broken
-          
+          nvidia.acceptLicense = true; 
           # Specific unfree packages whitelist for security
           allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
             "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" 
@@ -134,7 +134,8 @@
           # Legacy packages with known security issues (use with caution)
           permittedInsecurePackages = [
             "python-2.7.18.7"    # Required for some legacy tools
-            "openssl-1.1.1w"      # Required for some applications
+            "openssl-1.1.1w"      # Required for some application
+            "qtwebengine-5.15.19"    # required for some application
           ];
         };
         
@@ -142,12 +143,12 @@
         overlays = [
           nixgl.overlay                                    # OpenGL support
           # inputs.niri.overlays.niri                     # Niri compositor (disabled)
-          inputs.nix-comfyui.overlays.default             # ComfyUI AI tools
           # toshy.overlays.default                        # Toshy keybindings (disabled)
           dots-hyprland.overlays.default                  # Hyprland desktop environment
           
           # Custom overlays for modified or additional packages
           # (import ./overlays/cider.nix)                 # Cider music player (disabled)
+          (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
           (import ./overlays/debugpy.nix)                 # Python debugger
@@ -156,7 +157,7 @@
           (import ./overlays/end-4-dots.nix)              # End-4 desktop configuration
           (import ./overlays/fuzzel-emoji.nix)            # Emoji picker for Fuzzel
           (import ./overlays/nix-static.nix)              # Static Nix builds
-          (import ./overlays/kubevirt.nix)                # Kubernetes virtualization
+          #(import ./overlays/kubevirt.nix)                # Kubernetes virtualization
           (import ./overlays/jetbrains-toolbox.nix)       # JetBrains IDE manager
           (import ./overlays/latex.nix)                   # LaTeX document system
           # (import ./overlays/nmap.nix)                  # Network mapper (disabled)
@@ -164,8 +165,8 @@
           # (import ./overlays/xivlauncher.nix)           # Final Fantasy XIV launcher (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
-          (import ./overlays/v4l2loopback.nix)            # Video loopback device
-          (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers
+          # (import ./overlays/nvidia-6.16-patch.nix)       # NVIDIA 6.16 kernel compatibility (disabled)
+          # (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers (disabled)
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)
           # (import ./overlays/background-removal.nix)    # AI background removal (disabled)
           protontweaks.overlay                            # Steam Proton enhancements
@@ -188,6 +189,7 @@
           # inherit niri;                               # Niri compositor (disabled)
           inherit pkgs;                                 # Main package set
           inherit pkgs-unstable;                        # Unstable packages
+          inherit pkgs-old;				# Old packages
         };
         
         # Additional system packages available globally
@@ -270,11 +272,12 @@
           # MacBook-specific overlays
           overlays = [
             nixgl.overlay                               # OpenGL support
+            (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
             (import ./overlays/debugpy.nix)             # Python debugger
             # (import ./overlays/freerdp.nix)           # Remote desktop (disabled for macOS)
             (import ./overlays/keyd.nix)                # Keyboard daemon for remapping
-            (import ./overlays/kubevirt.nix)            # Kubernetes virtualization
+            #(import ./overlays/kubevirt.nix)            # Kubernetes virtualization
             (import ./overlays/materialyoucolor.nix)    # Material You theming
             (import ./overlays/end-4-dots.nix)          # Desktop configuration
             (import ./overlays/latex.nix)               # LaTeX document system

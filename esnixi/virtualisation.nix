@@ -4,7 +4,7 @@
     # Enable VMWare Tools.
     # virtualisation.vmware.guest.enable = true;
 
-    # Enable QEMU.
+    # Enable Docker with bridge networking support
     virtualisation.docker = {
       enable = true;
       enableOnBoot = true;
@@ -19,6 +19,39 @@
 #    virtualisation.virtualbox.host.enableKvm = true;
 #    virtualisation.virtualbox.host.enableExtensionPack = true;
 #    users.extraGroups.vboxusers.members = [ "celes" ];
+
+    # Enable QEMU/KVM with bridge networking support
+    virtualisation.libvirtd = {
+      enable = true;
+      qemu = {
+        package = pkgs.qemu_kvm;
+        runAsRoot = true;
+        swtpm.enable = true;  # TPM emulation for Windows 11
+        ovmf = {
+          enable = true;      # UEFI support
+          packages = [ pkgs.OVMFFull.fd ];
+        };
+      };
+    };
+
+    # Enable virt-manager for GUI VM management
+    programs.virt-manager.enable = true;
+
+    # Add user to libvirt group for VM management
+    users.users.celes.extraGroups = [ "libvirtd" "kvm" ];
+
+    # Enable bridge networking for VMs
+    virtualisation.libvirtd.qemu.verbatimConfig = ''
+      # Allow VMs to use the br0 bridge for direct network access
+      cgroup_device_acl = [
+        "/dev/null", "/dev/full", "/dev/zero",
+        "/dev/random", "/dev/urandom",
+        "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+        "/dev/rtc","/dev/hpet", "/dev/vfio/vfio"
+      ]
+    '';
+
+    # Container configuration with bridge networking
     virtualisation.oci-containers = {
       backend = "docker";
       containers = {
@@ -51,8 +84,20 @@
         };
       };
     };
-    # Enable QEMU.
-    virtualisation.libvirtd.enable = true;
-    programs.virt-manager.enable = true;
+
+    # Enable KVM kernel modules
+    boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
+    
+    # Enable nested virtualization for better VM performance
+    boot.extraModprobeConfig = ''
+      options kvm_intel nested=1
+      options kvm_amd nested=1
+    '';
+
+    # Enable IOMMU for GPU passthrough (if needed)
+    boot.kernelParams = [
+      "intel_iommu=on"
+      "iommu=pt"
+    ];
   };
 }

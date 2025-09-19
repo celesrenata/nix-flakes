@@ -1,7 +1,7 @@
 { config, lib, pkgs, pkgs-unstable, ... }:
 let
   myKernelPackages = let
-    base = pkgs.linuxPackages_6_15;
+    base = pkgs.linuxKernel.packages.linux_6_16;
   in base // {
     nvidia-open = base.nvidia-open.overrideAttrs (old: {
       nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.pkg-config ];
@@ -37,8 +37,7 @@ in
       kernelModules = [ "uinput" "nvidia" "v4l2loopback" ];
 
       # Use whatever v4l2loopback package you want, or comment if handled via kernelPackages
-      # extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
-      extraModulePackages = with pkgs; [ v4l2loopback-0150 ];
+      extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
 
       extraModprobeConfig = ''
         options nvidia_drm modeset=1 fbdev=1
