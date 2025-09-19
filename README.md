@@ -1,24 +1,24 @@
-# Professional NixOS Configuration - Baremetal & MacBook T2 Support
+# Professional NixOS Configuration - Multi-Platform Support
 
-A comprehensive, modular NixOS configuration supporting both baremetal x86_64 systems and Apple MacBook T2 hardware. Features enterprise-grade secrets management, professional documentation, and a modern desktop environment.
+A comprehensive, modular NixOS configuration supporting baremetal x86_64 systems and Apple MacBook T2 hardware. Features enterprise-grade architecture, extensive customization, and a modern Wayland desktop environment.
 
 ## Supported Platforms
 
 ### Baremetal x86_64 (`esnixi`)
 - **Target**: Physical x86_64 hardware with NVIDIA GPU support
-- **Graphics**: NVIDIA GPU with CUDA acceleration for AI/ML workloads
-- **Features**: Gaming, development environment, virtualization support
-- **Optimizations**: Hardware-specific drivers and performance tuning
+- **Graphics**: NVIDIA drivers with CUDA acceleration for AI/ML workloads
+- **Features**: Gaming (Steam, VR), development environment, virtualization (Docker, QEMU)
+- **Optimizations**: Hardware-specific drivers, performance tuning, multi-monitor support
 
 ### MacBook T2 (`macland`) 
 - **Target**: Apple MacBook with T2 security chip
-- **Graphics**: AMD ROCm support for integrated graphics
-- **Features**: Touch Bar support, T2-specific drivers, Mac-style keybindings
-- **Hardware**: WiFi, Bluetooth, audio, and thermal management
+- **Graphics**: AMD integrated graphics with ROCm support
+- **Features**: Touch Bar support, T2-specific drivers, Mac-style keybindings, power management
+- **Hardware**: Broadcom WiFi/Bluetooth firmware, audio pipeline, thermal management
 
 ### Raspberry Pi 5 (`rpi5`)
-- **Branch**: Please switch to RPI5 branch for ARM64 support
-- **Status**: Separate branch maintained for ARM architecture
+- **Status**: Available on separate RPI5 branch for ARM64 architecture
+- **Note**: Switch to RPI5 branch for ARM-specific configuration
 
 ## Features
 
@@ -65,108 +65,37 @@ A comprehensive, modular NixOS configuration supporting both baremetal x86_64 sy
 
 ## Installation
 
-### Baremetal x86_64 Installation
+**For detailed step-by-step instructions, see `CONTEXT_INSTALLATION.md`**
 
-#### Prerequisites
-- x86_64 hardware with UEFI boot support
-- NVIDIA GPU (recommended for full feature set)
-- Internet connection for package downloads
+### Quick Start - Baremetal x86_64
 
-#### Installation Steps
-1. **Boot NixOS installer**
-   - Download NixOS ISO from [nixos.org](https://nixos.org/download.html)
-   - Boot from USB/DVD or use netboot.xyz:
-     1. Select Linux Network Installs
-     2. Select NixOS
-     3. Select NixOS Unstable (or 24.05)
-
-2. **Prepare the system**
+1. **Boot NixOS installer** and prepare system
+2. **Clone configuration**:
    ```bash
-   # Install git for cloning the configuration
    nix-shell -p git
-   
-   # Follow standard NixOS installation until configuration step
-   # See: https://nixos.org/manual/nixos/unstable/
-   sudo nixos-generate-config --root /mnt
-   ```
-
-3. **Install the configuration**
-   ```bash
-   # Create sources directory
-   sudo mkdir -p /mnt/sources
-   sudo chown 1000:100 /mnt/sources
-   cd /mnt/sources
-   
-   # Clone this repository
-   git clone https://github.com/celesrenata/nix-flakes
+   sudo mkdir -p /mnt/sources && sudo chown 1000:100 /mnt/sources
+   cd /mnt/sources && git clone https://github.com/celesrenata/nix-flakes
    cp -r nix-flakes/* /mnt/etc/nixos/
-   
-   # Consider creating your own branch for customizations
-   # git checkout -b my-config
-   
-   # Install the system
+   ```
+3. **Install system**:
+   ```bash
    sudo nixos-install --root /mnt --flake /mnt/etc/nixos#esnixi
-   
-   # Set user password
-   sudo nixos-enter
-   sudo passwd celes
-   sudo poweroff
+   sudo nixos-enter && sudo passwd celes && sudo poweroff
    ```
 
-4. **Post-installation**
-   - Boot the system
-   - Login through GDM (GNOME Display Manager)
-   - System will run initialization scripts and reboot automatically
-   - Press `Command + Option + /` to open the keybinding cheatsheet
+### Quick Start - MacBook T2
 
-5. **Setup Winapps (Optional)**
-   - Wait for system to fully initialize
-   - Navigate to Winapps directory: `cd ~/winapps`
-   - Run the setup script: `./runmefirst.sh`
-   - Follow prompts to configure Windows VM connection
-   - Install Office 365 or other Windows applications as needed
-   - Press `Command + Control + R` to refresh XDG applications
-   - Launch Windows applications from the application menu
-
-### MacBook T2 Installation
-
-1. **Follow T2 Linux preparation**
-   - Complete the [T2 Linux Installation guide](https://wiki.t2linux.org/distributions/nixos/home/) first
-   - Ensure WiFi and Bluetooth firmware is available
-
-2. **Install git and clone configuration**
-   ```bash
-   nix-shell -p git
-   # Follow standard NixOS installation steps
-   sudo nixos-generate-config --root /mnt
-   sudo mkdir -p /mnt/sources
-   sudo chown 1000:100 /mnt/sources
-   cd /mnt/sources
-   git clone https://github.com/celesrenata/nix-flakes
-   cp -r nix-flakes/* /mnt/etc/nixos/
-   ```
-
-3. **Copy T2 firmware**
-   ```bash
-   # Copy firmware from T2 Linux preparation to:
-   cp firmware/* /mnt/etc/nixos/macland/firmware/
-   ```
-
-4. **Install MacBook configuration**
+1. **Complete T2 Linux preparation** ([T2 Linux guide](https://wiki.t2linux.org/distributions/nixos/home/))
+2. **Copy T2 firmware** to `/mnt/etc/nixos/macland/firmware/`
+3. **Install system**:
    ```bash
    sudo nixos-install --root /mnt --flake /mnt/etc/nixos#macland
-   sudo nixos-enter
-   sudo passwd celes
-   sudo poweroff
    ```
 
-5. **Post-installation**
-   - Login through GDM
-   - System will initialize and reboot
-   - Wait for http://127.0.0.1:8006 to complete setup (may take time)
-   - Run `~/winapps/runmefirst.sh` to setup Office 365
-   - Press `Command + Control + R` to refresh XDG applications
-   - Launch 'windows' from spotlight to login to Office 365
+### Post-Installation
+- Login through GDM, system will initialize automatically
+- Press `Command + Option + /` for keybinding cheatsheet
+- Run `~/winapps/runmefirst.sh` for Office 365 setup (optional)
 
 ## Winapps Configuration
 
@@ -199,20 +128,39 @@ This configuration uses a modular architecture for maintainability:
 nixos/
 ├── flake.nix                    # Main flake with comprehensive documentation
 ├── configuration.nix           # Core system configuration
-├── secrets.nix                 # SOPS secrets management
-├── CONFIGURATION.md            # Detailed architecture documentation
+├── secrets.nix                 # SOPS secrets management (currently disabled)
+├── hardware-configuration.nix  # Auto-generated hardware detection
+├── remote-build.nix            # Distributed build configuration
+├── setup-certificate.sh       # Certificate setup script
 │
 ├── esnixi/                     # Baremetal x86_64 configurations
+│   ├── boot.nix               # GRUB EFI bootloader
+│   ├── graphics.nix           # NVIDIA drivers and CUDA
+│   ├── networking.nix         # Advanced network configuration
+│   ├── virtualisation.nix     # Docker, QEMU, KVM support
+│   ├── games.nix              # Steam and gaming optimizations
+│   └── *.nix                  # Additional platform modules
+│
 ├── macland/                    # MacBook T2 configurations
+│   ├── boot.nix               # T2-compatible bootloader
+│   ├── graphics.nix           # AMD graphics and ROCm
+│   ├── sound.nix              # Complex T2 audio system
+│   ├── cpu.nix                # Intel CPU and power management
+│   ├── firmware/              # T2 firmware files
+│   └── *.nix                  # Additional T2 modules
 │
 ├── home/                       # Modular home-manager configuration
-│   ├── desktop/               # Desktop environment settings
-│   ├── programs/              # Application configurations
-│   ├── shell/                 # Shell configurations
-│   └── system/                # System integration
+│   ├── desktop/               # Hyprland, theming, desktop environment
+│   ├── programs/              # Development, media, productivity apps
+│   ├── shell/                 # Fish, bash, starship configurations
+│   └── system/                # System integration and packages
 │
 ├── overlays/                   # Custom package modifications
-└── secrets/                    # Encrypted secrets storage
+├── patches/                    # Source code patches
+├── modules/                    # Custom NixOS modules
+├── scripts/                    # Windows installation scripts
+├── secrets/                    # Encrypted secrets storage
+└── user/                       # User-specific configurations
 ```
 
 ## Customization
@@ -258,6 +206,12 @@ See `CONFIGURATION.md` for detailed secrets management instructions.
 
 ## Support & Documentation
 
+- **Context Files**: Comprehensive documentation in `CONTEXT_*.md` files
+  - `CONTEXT_MAIN.md`: Repository overview and architecture
+  - `CONTEXT_INSTALLATION.md`: Step-by-step installation guide
+  - `CONTEXT_PLATFORMS.md`: Platform-specific configurations
+  - `CONTEXT_HOME.md`: Home Manager user environment
+  - `CONTEXT_SUMMARY.md`: Overview of all context files
 - **Architecture Guide**: See `CONFIGURATION.md` for detailed documentation
 - **T2 MacBook Issues**: Refer to [T2 Linux Wiki](https://wiki.t2linux.org/)
 - **NixOS Help**: Consult [NixOS Manual](https://nixos.org/manual/nixos/stable/)
