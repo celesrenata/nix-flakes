@@ -393,6 +393,21 @@
   programs.adb.enable = true;
   programs.steam.gamescopeSession.enable = true;
   programs.gamemode.enable = true;
+  programs.steam = {
+    enable = true;
+    extraPackages = with pkgs; [
+      glxinfo
+      qt6.qtwayland
+      nss
+      xorg.libxkbfile
+      kdePackages.qtwayland
+      libsForQt5.qt5.qtwayland
+      mangohud
+      gamemode
+    ];
+    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+  };
   hardware.steam-hardware.enable = true;
   
   # Define a user account. Don't forget to set a password with ‘passwd’.

@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   config = {
     # Enable VMWare Tools.
@@ -31,17 +31,51 @@
             DISK_SIZE = "128G";
             RAM_SIZE = "8G";
             CPU_CORES = "4";
+            ARGUMENTS = "-device usb-host,vendorid=0x264a,productid=0x233c";
           };
           extraOptions = [
             "--cap-add=NET_ADMIN"
             "--device=/dev/kvm"
+            "--privileged"
+            "--device-cgroup-rule=c 189:* rmw"
+            "--device=/dev/bus/usb"
             "--stop-timeout=120"
           ];
         };
       };
     };
-    # Enable QEMU.
-    virtualisation.libvirtd.enable = true;
+    
+    # Enable QEMU and libvirt with bridge support
+    virtualisation.libvirtd = {
+      enable = true;
+      qemu = {
+        package = pkgs.qemu_kvm;
+        runAsRoot = true;
+        swtpm.enable = true;
+        ovmf = {
+          enable = true;
+          packages = [ pkgs.OVMFFull.fd ];
+        };
+      };
+    };
+    
+    # Enable KVM
+    virtualisation.kvmgt.enable = true;
+    
+    # Add required kernel modules for macvtap bridging
+    boot.kernelModules = [ "kvm-intel" "kvm-amd" "macvtap" "vfio-pci" ];
+    
+    # Enable virt-manager
     programs.virt-manager.enable = true;
+    
+    # Add virtualization packages
+    environment.systemPackages = with pkgs; [
+      virt-viewer
+      spice
+      spice-gtk
+      spice-protocol
+      win-virtio
+      bridge-utils
+    ];
   };
 }

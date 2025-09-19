@@ -350,6 +350,15 @@
             ./hardware-configuration.nix                # Hardware detection results
             sops-nix.nixosModules.sops                  # Secrets management
             
+            # USB device access rules
+            {
+              services.udev.extraRules = ''
+                # Thermaltake RGB devices
+                SUBSYSTEM=="usb", ATTR{idVendor}=="264a", MODE="0666"
+                SUBSYSTEM=="hidraw", ATTRS{idVendor}=="264a", MODE="0666"
+              '';
+            }
+            
             # Home Manager integration
             home-manager.nixosModules.home-manager
             {
