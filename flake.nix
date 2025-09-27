@@ -19,6 +19,7 @@
 
     # AI and machine learning tools
     # ComfyUI now available in nixpkgs (PR #441841)
+    nix-comfyui.url = "github:utensils/nix-comfyui";
 
     # Window managers and desktop environments
     niri.url = "github:sodiboo/niri-flake";                       # Niri wayland compositor (experimental)
@@ -50,13 +51,17 @@
     sops-nix.url = "github:Mic92/sops-nix";                       # Encrypted secrets management
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Keyboard remapping (using keyd instead of toshy for macland)
-    # toshy.url = "path:/home/celes/sources/celesrenata/toshy";    # Mac-style keybindings for Linux
+    # Hyte Y70 Touch-Infinite Display Configuration
+    hyte-touch-infinite.url = "github:celesrenata/hyte-touch-infinite-flakes";
+    hyte-touch-infinite.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Keyboard remapping (currently disabled in favor of keyd)
+    # toshy.url = "github:celesrenata/toshy/cline";               # Mac-style keybindings for Linux
     # toshy.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite, nix-comfyui, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -165,6 +170,7 @@
           # (import ./overlays/xivlauncher.nix)           # Final Fantasy XIV launcher (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
+          (import ./overlays/ollama.nix)                  # Ollama with GCC 13 for CUDA compatibility
           # (import ./overlays/nvidia-6.16-patch.nix)       # NVIDIA 6.16 kernel compatibility (disabled)
           # (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers (disabled)
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)

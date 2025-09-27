@@ -12,7 +12,7 @@
   # Productivity packages
   home.packages = with pkgs; [
     # Web browsers
-    firefox
+    firefox-bin
     chromium
     
     # File managers

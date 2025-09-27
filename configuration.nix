@@ -416,7 +416,7 @@
     description = "Celes Renata";
     extraGroups = [ "networkmanager" "scanner" "lp" "wheel" "input" "uinput" "render" "video" "audio" "docker" "libvirt" "kvm" "vboxusers" "adbusers" "gamemode" ];
     packages = with pkgs; [
-      firefox
+      firefox-bin
     #  thunderbird
     ];
   };

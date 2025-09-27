@@ -32,9 +32,13 @@
     };
 
     # Disable DHCP on the physical interface since the bridge will handle it
-    networking.interfaces.enp11s0.useDHCP = false;
+    networking.interfaces.enp11s0.useDHCP = true;
     # Configure main interface with DHCP
     networking.interfaces.enp12s0.useDHCP = true;
+
+    # Make DHCP non-blocking
+    networking.dhcpcd.wait = "background";
+    systemd.network.wait-online.enable = false;
 
     # Enable IP forwarding for VM traffic
     boot.kernel.sysctl = {
