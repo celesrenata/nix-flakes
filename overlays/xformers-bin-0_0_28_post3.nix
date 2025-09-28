@@ -10,6 +10,9 @@ final: prev: {
         sha256 = "0fla44pjyad122kkb7xrns1aq9qxyjvp54kyhjynfnz5nhmzfl65";
       };
 
+      dontBuild = true;
+      dontConfigure = true;
+
       propagatedBuildInputs = with prev.python312Packages; [
         torch
         numpy

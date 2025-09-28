@@ -371,7 +371,7 @@
             
             # Hardware-specific modules
             nixos-hardware.nixosModules.apple-t2        # Apple T2 security chip support
-            ./hardware-configuration.nix                # Hardware detection results
+            ./esnixi/hardware-configuration.nix        # Hardware detection results
             sops-nix.nixosModules.sops                  # Secrets management
             
             # USB device access rules
