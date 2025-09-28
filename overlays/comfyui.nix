@@ -39,7 +39,7 @@ final: prev: {
       diffusers
       huggingface-hub
       accelerate
-      xformers
+      xformers_0_0_28_post3_bin
     ] ++ [ prev.uv ];
 
     installPhase = ''
