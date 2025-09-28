@@ -11,7 +11,7 @@
   imports =
     [ # Include the results of the hardware scan.
       #"${pkgs-unstable}/nixos/modules/programs/alvr.nix"
-      ./hardware-configuration.nix
+      ./esnixi/hardware-configuration.nix
     ];
 
   environment.localBinInPath = true;

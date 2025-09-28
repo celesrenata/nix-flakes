@@ -5,13 +5,26 @@ let
   
   comfyui-wrapper = pkgs.writeShellScript "comfyui-wrapper" ''
     export NIXPKGS_ALLOW_UNFREE=1
-    exec ${pkgs.nix}/bin/nix-shell --impure -p uv git python3 libGL libGLU stdenv.cc.cc.lib fontconfig dejavu_fonts --run "
-      export PATH=\$PATH
-      export VIRTUAL_ENV=${config.home.homeDirectory}/.config/comfy-ui/venv
-      export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:/run/opengl-driver/lib:\$LD_LIBRARY_PATH
-      cd ${config.home.homeDirectory}/.config/comfy-ui/app
-      exec ${config.home.homeDirectory}/.config/comfy-ui/venv/bin/python main.py --base-dir ${config.home.homeDirectory}/.config/comfy-ui --listen 0.0.0.0 \$*
-    "
+    export VENV_DIR=${config.home.homeDirectory}/.config/comfy-ui/venv
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:${pkgs.libGL}/lib:${pkgs.libGLU}/lib:${pkgs.glib}/lib:/run/opengl-driver/lib:$LD_LIBRARY_PATH
+    
+    # Create venv if it doesn't exist
+    if [ ! -d $VENV_DIR ]; then
+      echo 'Creating ComfyUI virtual environment...'
+      mkdir -p ${config.home.homeDirectory}/.config/comfy-ui
+      ${pkgs.python3}/bin/python3 -m venv $VENV_DIR
+      $VENV_DIR/bin/pip install --upgrade pip
+    fi
+    
+    # Install all dependencies declaratively
+    if [ ! -f ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete ]; then
+      echo 'Installing ComfyUI dependencies...'
+      $VENV_DIR/bin/pip install -r ${config.home.homeDirectory}/.config/comfy-ui/app/requirements.txt segment-anything dill facexlib piexif insightface deepdiff webcolors ultralytics 'huggingface-hub<0.25' py-cpuinfo gguf llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
+      touch ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete
+    fi
+    
+    cd ${config.home.homeDirectory}/.config/comfy-ui/app
+    exec $VENV_DIR/bin/python main.py --base-dir ${config.home.homeDirectory}/.config/comfy-ui --listen 0.0.0.0 "$@"
   '';
 in
 {

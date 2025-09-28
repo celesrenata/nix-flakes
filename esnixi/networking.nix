@@ -38,6 +38,9 @@
 
     # Make DHCP non-blocking
     networking.dhcpcd.wait = "background";
+    networking.dhcpcd.extraConfig = ''
+      timeout 45
+    '';
     systemd.network.wait-online.enable = false;
 
     # Enable IP forwarding for VM traffic
