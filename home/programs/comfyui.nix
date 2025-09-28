@@ -1,31 +1,17 @@
 { config, pkgs, inputs, ... }:
 
 let
-  comfyui = inputs.nix-comfyui.packages.${pkgs.system}.default;
+  comfyui = pkgs.comfyui;
   
   comfyui-wrapper = pkgs.writeShellScript "comfyui-wrapper" ''
-    export PATH="${pkgs.coreutils}/bin:${pkgs.gnugrep}/bin:${pkgs.nix}/bin:$PATH"
-    
-    # Define required functions
-    parse_arguments() { true; }
-    export_config() { true; }
-    log_info() { echo "[INFO] $1"; }
-    log_debug() { echo "[DEBUG] $1"; }
-    debug_vars() { true; }
-    install_all() { 
-      mkdir -p "$COMFYUI_SRC" "$COMFY_MODELS_DIR" "$COMFY_OUTPUT_DIR" "$COMFY_INPUT_DIR" "$COMFY_TEMP_DIR" 2>/dev/null || true
-    }
-    start_comfyui() {
-      PYTHON_ENV="$(nix-store -q --references ${comfyui} | grep python | head -1)"
-      cd "${comfyui}/share/comfy-ui"
-      exec "$PYTHON_ENV/bin/python" main.py "$@"
-    }
-    
-    # Export functions so launcher can use them
-    export -f parse_arguments export_config log_info log_debug debug_vars install_all start_comfyui
-    
-    # Call the original launcher
-    exec ${comfyui}/bin/comfy-ui "$@"
+    export NIXPKGS_ALLOW_UNFREE=1
+    exec ${pkgs.nix}/bin/nix-shell --impure -p uv git python3 libGL libGLU stdenv.cc.cc.lib fontconfig dejavu_fonts --run "
+      export PATH=\$PATH
+      export VIRTUAL_ENV=${config.home.homeDirectory}/.config/comfy-ui/venv
+      export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:/run/opengl-driver/lib:\$LD_LIBRARY_PATH
+      cd ${config.home.homeDirectory}/.config/comfy-ui/app
+      exec ${config.home.homeDirectory}/.config/comfy-ui/venv/bin/python main.py --base-dir ${config.home.homeDirectory}/.config/comfy-ui --listen 0.0.0.0 \$*
+    "
   '';
 in
 {
@@ -43,14 +29,17 @@ in
       RestartSec = 5;
       Environment = [
         "COMFY_VERSION=latest"
-        "COMFY_HOME=${config.home.homeDirectory}/.config/comfyui"
-        "BASE_DIR=${config.home.homeDirectory}/.config/comfyui"
-        "COMFY_MODELS_DIR=${config.home.homeDirectory}/.config/comfyui/models"
-        "COMFY_OUTPUT_DIR=${config.home.homeDirectory}/.config/comfyui/output"
-        "COMFY_INPUT_DIR=${config.home.homeDirectory}/.config/comfyui/input"
-        "COMFY_TEMP_DIR=${config.home.homeDirectory}/.config/comfyui/temp"
-        "COMFYUI_SRC=${config.home.homeDirectory}/.config/comfyui/ComfyUI"
-        "PYTHONPATH=${config.home.homeDirectory}/.config/comfyui"
+        "COMFY_HOME=${config.home.homeDirectory}/.config/comfy-ui"
+        "BASE_DIR=${config.home.homeDirectory}/.config/comfy-ui"
+        "COMFY_MODELS_DIR=${config.home.homeDirectory}/.config/comfy-ui/models"
+        "COMFY_OUTPUT_DIR=${config.home.homeDirectory}/.config/comfy-ui/output"
+        "COMFY_INPUT_DIR=${config.home.homeDirectory}/.config/comfy-ui/input"
+        "COMFY_TEMP_DIR=${config.home.homeDirectory}/.config/comfy-ui/temp"
+        "COMFYUI_SRC=${config.home.homeDirectory}/.config/comfy-ui/ComfyUI"
+        "PYTHONPATH=${config.home.homeDirectory}/.config/comfy-ui"
+        "COMFYUI_MANAGER_SECURITY_LEVEL=weak"
+        "VIRTUAL_ENV=${config.home.homeDirectory}/.config/comfy-ui/venv"
+        "PATH=${config.home.homeDirectory}/.config/comfy-ui/venv/bin:${pkgs.uv}/bin:/run/current-system/sw/bin"
       ];
     };
     Install = {

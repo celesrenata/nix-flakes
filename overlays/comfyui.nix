@@ -1,17 +1,17 @@
 final: prev: {
   comfyui = prev.python3Packages.buildPythonApplication rec {
     pname = "comfyui";
-    version = "0.3.57-fixed";
+    version = "0.3.60";
     format = "other";
 
     src = prev.fetchFromGitHub {
       owner = "comfyanonymous";
       repo = "ComfyUI";
-      rev = "v0.3.57";
-      hash = "sha256-uqGqiPNGLM7rlyfNwRhXSqYQOiA11JGitF4RGNQowjc=";
+      rev = "v0.3.60";
+      hash = "sha256-P4JR10gwxuA5PzfxXzkbbI0UfJfArPGevJ+/ukgYzW4=";
     };
 
-    nativeBuildInputs = [ prev.makeWrapper ];
+    nativeBuildInputs = [ prev.makeWrapper prev.uv prev.python3Packages.pip ];
 
     dontBuild = true;
 
@@ -28,16 +28,29 @@ final: prev: {
       torchvision
       tqdm
       transformers
-    ];
+      gitpython
+      opencv4
+      piexif
+      numba
+      gguf
+      pip
+      ultralytics
+      insightface
+      diffusers
+      huggingface-hub
+      accelerate
+      xformers
+    ] ++ [ prev.uv ];
 
     installPhase = ''
       runHook preInstall
       mkdir -p $out/{bin,opt/comfyui}
       cp -r ./ $out/opt/comfyui/
 
-      makeWrapper ${prev.python3}/bin/python $out/bin/comfyui \
-        --add-flags "$out/opt/comfyui/main.py" \
-        --add-flags "--base-dir \''${XDG_DATA_HOME:-\$HOME/.local/share}/comfyui"
+      makeWrapper /bin/sh $out/bin/comfyui \
+        --add-flags "-c" \
+        --add-flags "cd $out/opt/comfyui && exec \''${XDG_CONFIG_HOME:-\$HOME/.config}/comfy-ui/venv/bin/python main.py --base-dir \''${XDG_CONFIG_HOME:-\$HOME/.config}/comfy-ui \$*" \
+        --prefix PATH : ${prev.uv}/bin:${prev.python3Packages.pip}/bin
 
       runHook postInstall
     '';

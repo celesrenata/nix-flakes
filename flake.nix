@@ -136,6 +136,22 @@
             "steam-original" "steam-run" "cuda_cccl"
           ];
           
+          # Package overrides for memory-intensive builds
+          packageOverrides = pkgs: {
+            python3 = pkgs.python3.override {
+              packageOverrides = python-self: python-super: {
+                xformers = python-super.xformers.overrideAttrs (oldAttrs: {
+                  requiredSystemFeatures = [ "big-parallel" ];
+                  __sandboxProfile = ''
+                    (allow process-fork)
+                    (allow process-exec)
+                    (deny process-fork (with no-log))
+                  '';
+                });
+              };
+            };
+          };
+          
           # Legacy packages with known security issues (use with caution)
           permittedInsecurePackages = [
             "python-2.7.18.7"    # Required for some legacy tools
@@ -171,6 +187,7 @@
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
           (import ./overlays/ollama.nix)                  # Ollama with GCC 13 for CUDA compatibility
+          (import ./overlays/xformers-memory-fix.nix)     # Limit xformers build cores to prevent OOM
           # (import ./overlays/nvidia-6.16-patch.nix)       # NVIDIA 6.16 kernel compatibility (disabled)
           # (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers (disabled)
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)
@@ -293,6 +310,7 @@
             (import ./overlays/wofi-calc.nix)           # Calculator widget
             (import ./overlays/xivlauncher.nix)         # Final Fantasy XIV launcher
             (import ./overlays/helmfile.nix)            # Kubernetes Helm management
+            (import ./overlays/xformers-memory-fix.nix) # Limit xformers build cores to prevent OOM
             (import ./overlays/t2fanrd.nix)             # T2 fan control daemon
             (import ./overlays/tinydfr.nix)             # Touch Bar support
             (import ./overlays/pipewire.nix)            # PipeWire customizations
