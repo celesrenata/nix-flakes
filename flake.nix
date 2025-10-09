@@ -182,7 +182,7 @@
           # Custom overlays for modified or additional packages
           (import ./overlays/dots-hyprland-dp3-filter.nix inputs)  # Filter DP-3 from dots-hyprland
           # (import ./overlays/cider.nix)                 # Cider music player (disabled)
-          (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
+          #(import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
           (import ./overlays/debugpy.nix)                 # Python debugger
@@ -200,19 +200,7 @@
           # (import ./overlays/xivlauncher.nix)           # Final Fantasy XIV launcher (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
-          (import ./overlays/ollama.nix)                  # Ollama with GCC 13 for CUDA compatibility
-          (import ./overlays/xformers-bin-0_0_28_post3.nix)  # xformers 0.0.28.post3 binary wheel
-          # OneTrainer dependency fix
-          (self: super: {
-            python3Packages = super.python3Packages // {
-              huggingface-hub = super.python3Packages.huggingface-hub.overridePythonAttrs (old: {
-                pythonRuntimeDepsCheck = false;
-              });
-              diffusers = super.python3Packages.diffusers.overridePythonAttrs (old: {
-                pythonRuntimeDepsCheck = false;
-              });
-            };
-          })
+          (import ./overlays/clblast.nix)                 # CLBlast OpenCL BLAS library
           # (import ./overlays/nvidia-6.16-patch.nix)       # NVIDIA 6.16 kernel compatibility (disabled)
           # (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers (disabled)
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)
@@ -326,7 +314,6 @@
           overlays = [
             nixgl.overlay                               # OpenGL support
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
-            inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
             dots-hyprland.overlays.default              # Hyprland desktop environment
             (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
@@ -341,7 +328,7 @@
             (import ./overlays/wofi-calc.nix)           # Calculator widget
             (import ./overlays/xivlauncher.nix)         # Final Fantasy XIV launcher
             (import ./overlays/helmfile.nix)            # Kubernetes Helm management
-            (import ./overlays/xformers-bin-0_0_28_post3.nix) # xformers 0.0.28.post3 binary wheel
+            (import ./overlays/clblast.nix)             # CLBlast OpenCL BLAS library
             (import ./overlays/t2fanrd.nix)             # T2 fan control daemon
             (import ./overlays/tinydfr.nix)             # Touch Bar support
             (import ./overlays/pipewire.nix)            # PipeWire customizations
