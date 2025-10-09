@@ -201,6 +201,7 @@
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
           (import ./overlays/clblast.nix)                 # CLBlast OpenCL BLAS library
+          (import ./overlays/kernel-t2-fix.nix)               # T2 kernel nouveau driver fix
           # (import ./overlays/nvidia-6.16-patch.nix)       # NVIDIA 6.16 kernel compatibility (disabled)
           # (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers (disabled)
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)
@@ -331,6 +332,7 @@
             (import ./overlays/xivlauncher.nix)         # Final Fantasy XIV launcher
             (import ./overlays/helmfile.nix)            # Kubernetes Helm management
             (import ./overlays/clblast.nix)             # CLBlast OpenCL BLAS library
+            (import ./overlays/kernel-t2-fix.nix)       # T2 kernel nouveau driver fix
             (import ./overlays/t2fanrd.nix)             # T2 fan control daemon
             (import ./overlays/tinydfr.nix)             # Touch Bar support
             (import ./overlays/pipewire.nix)            # PipeWire customizations
