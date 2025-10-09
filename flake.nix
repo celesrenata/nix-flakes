@@ -219,6 +219,7 @@
         };
         overlays = [
           (import ./overlays/wivrn-fix.nix)  # Fix FFmpeg profile constants in wivrn
+          (import ./overlays/clblast.nix)                 # CLBlast OpenCL BLAS library fix
         ];
       };
       in 
@@ -356,6 +357,7 @@
           };
           overlays = [
             (import ./overlays/wivrn-fix.nix)           # Fix FFmpeg profile constants in wivrn
+            (import ./overlays/clblast.nix)             # CLBlast OpenCL BLAS library fix
           ];
         };
         in
