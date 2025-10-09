@@ -1,0 +1,9 @@
+<network>
+  <name>macvlan-bridge</name>
+  <forward mode='bridge'>
+    <interface dev='wlan0'/>
+  </forward>
+  <portgroup name='default' default='yes'>
+    <virtualport type='802.1Qbh'/>
+  </portgroup>
+</network>

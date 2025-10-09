@@ -1,0 +1,9 @@
+<network>
+  <name>macvtap-bridge</name>
+  <forward mode='bridge'>
+    <interface dev='wlan0'/>
+  </forward>
+  <portgroup name='default'>
+    <virtualport type='802.1Qbh'/>
+  </portgroup>
+</network>

@@ -1,0 +1,6 @@
+<network>
+  <name>macvlan-direct</name>
+  <forward mode='passthrough'>
+    <interface dev='wlan0'/>
+  </forward>
+</network>

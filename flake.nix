@@ -220,6 +220,7 @@
         overlays = [
           (import ./overlays/wivrn-fix.nix)  # Fix FFmpeg profile constants in wivrn
           (import ./overlays/clblast.nix)                 # CLBlast OpenCL BLAS library fix
+          (import ./overlays/rocm-hash-fix.nix)           # ROCm hash mismatch fix
         ];
       };
       in 
@@ -358,6 +359,7 @@
           overlays = [
             (import ./overlays/wivrn-fix.nix)           # Fix FFmpeg profile constants in wivrn
             (import ./overlays/clblast.nix)             # CLBlast OpenCL BLAS library fix
+            (import ./overlays/rocm-hash-fix.nix)       # ROCm hash mismatch fix
           ];
         };
         in

@@ -1,0 +1,6 @@
+<network>
+  <name>direct-bridge</name>
+  <forward mode='bridge'>
+    <interface dev='wlan0'/>
+  </forward>
+</network>
