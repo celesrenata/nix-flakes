@@ -11,9 +11,6 @@
     size = 24;
   };
 
-  # Fix cursor theme path
-  xdg.dataFile."icons/Bibata-Modern-Classic".source = "${pkgs.bibata-cursors}/share/icons/Bibata-Modern-Classic";
-
   # X resources for cursor and DPI
   xresources.properties = {
     "Xcursor.size" = 24;
