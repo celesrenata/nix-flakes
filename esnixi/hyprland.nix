@@ -24,9 +24,29 @@
     overrides.hyprlandConf = ''
       # Hyprland configuration for esnixi (desktop)
       
-      # Monitor configuration - disable DP-3 for separate Hyte session
+      # Monitor configuration - enable DP-3 for isolated Hyte touch interface
       monitor=,preferred,auto,1
-      monitor=DP-3,disable
+      monitor=DP-3,2560x682,auto,1
+      
+      # Hyte Touch Display Configuration - Isolate DP-3
+      workspace = name:touch, monitor:DP-3, default:true
+      
+      # Prevent mouse cursor from crossing to DP-3
+      cursor {
+          no_warps = true
+      }
+      
+      # Window rules to lock touch interface to DP-3
+      windowrulev2 = workspace name:touch, title:^(hyte-touch-interface)$
+      windowrulev2 = monitor DP-3, title:^(hyte-touch-interface)$
+      windowrulev2 = fullscreen, title:^(hyte-touch-interface)$
+      
+      # Touch input only affects DP-3
+      input {
+          touchdevice {
+              output = DP-3
+          }
+      }
       
       # Environment variables
       env = XCURSOR_SIZE,24
@@ -314,6 +334,7 @@
 
       # Quickshell integration and desktop environment
       exec-once = quickshell -c ii
+      exec-once = [workspace name:touch silent] hyte-touch-interface
       exec-once = wl-paste --watch cliphist store
       exec-once = ~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh
       exec-once = gnome-keyring-daemon --start --components=secrets
