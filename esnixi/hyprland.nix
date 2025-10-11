@@ -36,9 +36,12 @@
       bind = , mouse:272, exec, [[ $(hyprctl activeworkspace | grep "touch") ]] || hyprctl dispatch mouse:272
       bind = , mouse:273, exec, [[ $(hyprctl activeworkspace | grep "touch") ]] || hyprctl dispatch mouse:273
       
-      # Prevent mouse cursor from crossing to DP-3
-      cursor {
-          no_warps = true
+      # Prevent mouse cursor from crossing to DP-3 and enable direct touch
+      misc {
+          disable_hyprland_logo = true
+          disable_splash_rendering = true
+          mouse_move_enables_dpms = false
+          key_press_enables_dpms = false
       }
       
       # Window rules to lock touch interface to DP-3
@@ -46,18 +49,34 @@
       windowrulev2 = monitor DP-3, title:^(hyte-touch-interface)$
       windowrulev2 = fullscreen, title:^(hyte-touch-interface)$
       
-      # Touch input only affects DP-3
-      input {
-          touchdevice {
-              output = DP-3
-          }
-      }
+
 
       # Map Hyte touchpad specifically to DP-3
       device {
           name = ilitek-------ilitek-touch
           output = DP-3
           enabled = true
+          transform = 3
+      }
+
+      # Disable cursor on DP-3 for direct touch interaction
+      cursor {
+          no_warps = true
+          hide_on_touch = true
+          inactive_timeout = 0
+      }
+
+      # Touch-specific input configuration
+      input {
+          touchpad {
+              disable_while_typing = false
+              tap-to-click = true
+              drag_lock = false
+          }
+          touchdevice {
+              output = DP-3
+              transform = 3
+          }
       }
       
       # Environment variables
