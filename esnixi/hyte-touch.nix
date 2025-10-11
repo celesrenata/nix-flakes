@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 {
   # Enable autologin for celes during testing
@@ -22,5 +22,6 @@
   environment.systemPackages = with pkgs; [
     weston
     gamescope
+    inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.touch-widgets
   ];
 }
