@@ -10,8 +10,19 @@ inputs: final: prev: {
     
     # Filter DP-3 from all quickshell modules that use Quickshell.screens
     find $out -name "*.qml" -type f | while read file; do
-      if grep -q "model: Quickshell\.screens" "$file"; then
-        sed -i 's/model: Quickshell\.screens/model: Quickshell.screens.filter(screen => screen.name !== "DP-3")/g' "$file"
+      # Handle simple model assignments
+      if grep -q "model: Quickshell\.screens$" "$file"; then
+        sed -i 's/model: Quickshell\.screens$/model: Quickshell.screens.filter(screen => screen.name !== "DP-3")/g' "$file"
+      fi
+      
+      # Handle const screens assignments  
+      if grep -q "const screens = Quickshell\.screens;" "$file"; then
+        sed -i 's/const screens = Quickshell\.screens;/const screens = Quickshell.screens.filter(screen => screen.name !== "DP-3");/g' "$file"
+      fi
+      
+      # Handle brightness service screen mapping
+      if grep -q "Quickshell\.screens\.map" "$file"; then
+        sed -i 's/Quickshell\.screens\.map/Quickshell.screens.filter(screen => screen.name !== "DP-3").map/g' "$file"
       fi
     done
   '';
