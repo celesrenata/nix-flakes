@@ -376,6 +376,7 @@
       bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480
 
       # Quickshell integration and desktop environment
+      exec-once = hyprctl setcursor Bibata-Modern-Classic 24
       exec-once = quickshell -c ii
       exec-once = [workspace name:touch silent] hyte-touch-interface
       exec-once = wl-paste --watch cliphist store
