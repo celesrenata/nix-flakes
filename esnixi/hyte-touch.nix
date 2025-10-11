@@ -22,5 +22,9 @@
   environment.systemPackages = with pkgs; [
     weston
     gamescope
+    # Add the hyte-touch-widgets from our flake
+    (callPackage /home/celes/sources/celesrenata/hyte-touch-infinite-flakes/packages/touch-widgets.nix {
+      inherit (inputs) quickshell;
+    })
   ];
 }
