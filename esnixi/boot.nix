@@ -36,6 +36,9 @@ in
       ];
       kernelModules = [ "uinput" "nvidia" "v4l2loopback" ];
 
+      # Disable DP-3 at boot to prevent GDM from claiming it
+      kernelParams = [ "video=DP-3:d" ];
+
       # Use whatever v4l2loopback package you want, or comment if handled via kernelPackages
       extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
 
