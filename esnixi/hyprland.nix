@@ -30,6 +30,11 @@
       
       # Hyte Touch Display Configuration - Isolate DP-3
       workspace = name:touch, monitor:DP-3, default:true
+      workspace = name:touch, gapsin:0, gapsout:0, border:false
+
+      # Prevent regular input devices from affecting touch workspace
+      bind = , mouse:272, exec, [[ $(hyprctl activeworkspace | grep "touch") ]] || hyprctl dispatch mouse:272
+      bind = , mouse:273, exec, [[ $(hyprctl activeworkspace | grep "touch") ]] || hyprctl dispatch mouse:273
       
       # Prevent mouse cursor from crossing to DP-3
       cursor {
@@ -46,6 +51,13 @@
           touchdevice {
               output = DP-3
           }
+      }
+
+      # Map Hyte touchpad specifically to DP-3
+      device {
+          name = ilitek-------ilitek-touch
+          output = DP-3
+          enabled = true
       }
       
       # Environment variables
