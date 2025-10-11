@@ -29,7 +29,7 @@
       monitor=DP-3,2560x682,auto,1,transform,3
       
       # Start cursor barrier script to prevent mouse from entering DP-3
-      exec-once = ${pkgs.hyte-touch-infinite-flakes}/scripts/cursor-barrier.sh
+      exec-once = ${inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.cursor-barrier}/bin/cursor-barrier
       
       # Hyte Touch Display Configuration - Isolate DP-3
       workspace = name:touch, monitor:DP-3, default:true

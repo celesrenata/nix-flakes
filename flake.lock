@@ -640,11 +640,11 @@
         "quickshell": "quickshell_2"
       },
       "locked": {
-        "lastModified": 1760173525,
-        "narHash": "sha256-3dh5HpcQYePipMB77tq6NvfD5hPOHLoVslpp1eWBHiU=",
+        "lastModified": 1760195525,
+        "narHash": "sha256-P2pe2c3vLBX7tTpl+thV+MDMudxT45odt4snl3x9Ldo=",
         "owner": "celesrenata",
         "repo": "hyte-touch-infinite-flakes",
-        "rev": "72e1fb6c405c1f2a73092aed93f996d01094f194",
+        "rev": "dcacee77343e51683742b0fb7fcad71c33ffd9f0",
         "type": "github"
       },
       "original": {
