@@ -3,13 +3,13 @@
 
 {
   # Cursor configuration
-  # home.pointerCursor = {
-  #   gtk.enable = false;  # Disable gtk to avoid path issues
-  #   x11.enable = true;
-  #   package = pkgs.bibata-cursors;
-  #   name = "Bibata-Modern-Classic";
-  #   size = 24;
-  # };
+  home.pointerCursor = {
+    gtk.enable = true;
+    x11.enable = true;
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Classic";
+    size = 24;
+  };
 
   # X resources for cursor and DPI
   xresources.properties = {
