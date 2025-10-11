@@ -334,7 +334,7 @@
 
       # Quickshell integration and desktop environment
       exec-once = quickshell -c ii
-      exec-once = [workspace name:touch silent] quickshell -c /home/celes/sources/celesrenata/hyte-touch-infinite-flakes/config/quickshell/touch-config.qml
+      exec-once = [workspace name:touch silent] env QT_QPA_PLATFORM=wayland quickshell -c touch
       exec-once = wl-paste --watch cliphist store
       exec-once = ~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh
       exec-once = gnome-keyring-daemon --start --components=secrets
