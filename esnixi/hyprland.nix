@@ -44,13 +44,13 @@
           key_press_enables_dpms = false
       }
 
-      # Cursor confinement - prevent cursor from reaching DP-3
+      # Isolate DP-3 with workspace rules
+      workspace = DP-3,1
+      
+      # Prevent cursor from warping to DP-3
       cursor {
           no_warps = true
           hide_on_touch = true
-          inactive_timeout = 0
-          no_hardware_cursors = true
-          allow_dumb_copy = false
       }
       
       # Window rules to lock touch interface to DP-3
