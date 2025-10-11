@@ -35,10 +35,6 @@
       workspace = name:touch, monitor:DP-3, default:true
       workspace = name:touch, gapsin:0, gapsout:0, border:false
 
-      # Prevent regular input devices from affecting touch workspace
-      bind = , mouse:272, exec, [[ $(hyprctl activeworkspace | grep "touch") ]] || hyprctl dispatch mouse:272
-      bind = , mouse:273, exec, [[ $(hyprctl activeworkspace | grep "touch") ]] || hyprctl dispatch mouse:273
-      
       # Prevent mouse cursor from crossing to DP-3 and enable direct touch
       misc {
           disable_hyprland_logo = true
