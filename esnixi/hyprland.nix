@@ -26,7 +26,7 @@
       
       # Monitor configuration - enable DP-3 for isolated Hyte touch interface
       monitor=,preferred,auto,1
-      monitor=DP-3,2560x682,auto,1,transform,1
+      monitor=DP-3,2560x682,auto,1,transform,3
       
       # Hyte Touch Display Configuration - Isolate DP-3
       workspace = name:touch, monitor:DP-3, default:true
