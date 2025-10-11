@@ -168,7 +168,7 @@
           dots-hyprland.overlays.default                  # Hyprland desktop environment
           
           # Custom overlays for modified or additional packages
-          (import ./overlays/dots-hyprland-dp3-filter.nix)  # Filter DP-3 from dots-hyprland
+          (import ./overlays/dots-hyprland-dp3-filter.nix inputs)  # Filter DP-3 from dots-hyprland
           # (import ./overlays/cider.nix)                 # Cider music player (disabled)
           (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
