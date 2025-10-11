@@ -1,6 +1,12 @@
 { config, lib, pkgs, ... }:
 
 {
+  # Enable autologin for celes during testing
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "celes";
+  };
+
   # Enable seatd for seat management
   services.seatd = {
     enable = true;
