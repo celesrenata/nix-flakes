@@ -213,6 +213,7 @@
           inherit pkgs;                                 # Main package set
           inherit pkgs-unstable;                        # Unstable packages
           inherit pkgs-old;				# Old packages
+          inherit inputs;                               # All flake inputs
         };
         
         # Additional system packages available globally
