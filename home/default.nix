@@ -14,7 +14,7 @@
   # Import all configuration modules
   imports = [
     # Desktop Environment Configuration
-    ./desktop/hyprland.nix          # Hyprland window manager and keybindings
+    # ./desktop/hyprland.nix          # Moved to platform-specific configs
     ./desktop/hypridle.nix          # Hypridle idle management and power saving
     ./desktop/quickshell.nix        # Quickshell desktop shell (placeholder)
     ./desktop/theming.nix           # Cursors, themes, and visual appearance
@@ -35,6 +35,8 @@
     ./system/files.nix              # Dotfiles and home.file configurations
     ./system/packages.nix           # Desktop environment and system packages
     ./system/variables.nix          # Environment variables and system settings
+    ./system/hyte-touch.nix         # Hyte Touch Display user service
+    ./system/hyte-touch.nix         # Hyte Touch Display user service
   ];
 
   # Basic user configuration

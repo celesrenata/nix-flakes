@@ -63,22 +63,22 @@
     "aquamarine": {
       "inputs": {
         "hyprutils": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprutils"
         ],
         "hyprwayland-scanner": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprwayland-scanner"
         ],
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -266,7 +266,7 @@
     "gitignore": {
       "inputs": {
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "pre-commit-hooks",
           "nixpkgs"
@@ -331,7 +331,7 @@
     "home-manager_3": {
       "inputs": {
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "nixpkgs"
         ]
       },
@@ -352,17 +352,17 @@
     "hyprcursor": {
       "inputs": {
         "hyprlang": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprlang"
         ],
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -384,17 +384,17 @@
     "hyprgraphics": {
       "inputs": {
         "hyprutils": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprutils"
         ],
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -445,12 +445,12 @@
     "hyprland-protocols": {
       "inputs": {
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -472,19 +472,19 @@
     "hyprland-qt-support": {
       "inputs": {
         "hyprlang": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprland-qtutils",
           "hyprlang"
         ],
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprland-qtutils",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprland-qtutils",
           "systems"
@@ -508,24 +508,24 @@
       "inputs": {
         "hyprland-qt-support": "hyprland-qt-support",
         "hyprlang": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprlang"
         ],
         "hyprutils": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprland-qtutils",
           "hyprlang",
           "hyprutils"
         ],
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -547,17 +547,17 @@
     "hyprlang": {
       "inputs": {
         "hyprutils": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprutils"
         ],
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -579,12 +579,12 @@
     "hyprutils": {
       "inputs": {
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -606,12 +606,12 @@
     "hyprwayland-scanner": {
       "inputs": {
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]
@@ -630,7 +630,7 @@
         "type": "github"
       }
     },
-    "hyte-touch-infinite": {
+    "hyte-touch-infinite-flakes": {
       "inputs": {
         "home-manager": "home-manager_3",
         "hyprland": "hyprland",
@@ -640,11 +640,11 @@
         "quickshell": "quickshell_2"
       },
       "locked": {
-        "lastModified": 1759708326,
-        "narHash": "sha256-5FbyXdqTBdG+wkPFNig35rNDQlA40nsw5Y9BioOcV4g=",
+        "lastModified": 1760173261,
+        "narHash": "sha256-wiQU3U3S2ecLb/tGX9PvXkzZah5ZxjWVUpXopjSZ78U=",
         "owner": "celesrenata",
         "repo": "hyte-touch-infinite-flakes",
-        "rev": "884057ee04639dbbb1dbca7b62521c59e40df18a",
+        "rev": "ac8204a3bbd2cc0cd914687c3e677de202128bca",
         "type": "github"
       },
       "original": {
@@ -1059,7 +1059,7 @@
         "flake-compat": "flake-compat_2",
         "gitignore": "gitignore",
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ]
@@ -1188,7 +1188,7 @@
         "dots-hyprland-source": "dots-hyprland-source",
         "dream2nix": "dream2nix",
         "home-manager": "home-manager_2",
-        "hyte-touch-infinite": "hyte-touch-infinite",
+        "hyte-touch-infinite-flakes": "hyte-touch-infinite-flakes",
         "niri": "niri",
         "nix-comfyui": "nix-comfyui",
         "nix-gl-host": "nix-gl-host",
@@ -1341,32 +1341,32 @@
     "xdph": {
       "inputs": {
         "hyprland-protocols": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprland-protocols"
         ],
         "hyprlang": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprlang"
         ],
         "hyprutils": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprutils"
         ],
         "hyprwayland-scanner": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "hyprwayland-scanner"
         ],
         "nixpkgs": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "nixpkgs"
         ],
         "systems": [
-          "hyte-touch-infinite",
+          "hyte-touch-infinite-flakes",
           "hyprland",
           "systems"
         ]

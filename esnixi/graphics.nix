@@ -15,7 +15,7 @@ let
     sha256_aarch64 = "";
     openSha256 = "sha256-RFwDGQOi9jVngVONCOB5m/IYKZIeGEle7h0+0yGnBEI=";
     settingsSha256 =  "sha256-F2wmUEaRrpR1Vz0TQSwVK4Fv13f3J9NJLtBe4UP2f14=";
-    persistencedSha256 = "";
+    persistencedSha256 = "sha256-QCwxXQfG/Pa7jSTBB0xD3lsIofcerAWWAHKvWjWGQtg=";
     patches = [ gpl_symbols_linux_615_patch ];
   });
 in

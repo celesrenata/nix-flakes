@@ -1,0 +1,20 @@
+{ config, lib, pkgs, ... }:
+
+{
+  # Enable seatd for seat management
+  services.seatd = {
+    enable = true;
+    user = "celes";
+    group = "seat";
+  };
+
+  # Create seat group and add users
+  users.groups.seat = {};
+  users.users.celes.extraGroups = [ "seat" ];
+
+  # Required packages for touch interface
+  environment.systemPackages = with pkgs; [
+    weston
+    gamescope
+  ];
+}

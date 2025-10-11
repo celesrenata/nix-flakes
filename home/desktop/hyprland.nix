@@ -51,8 +51,9 @@
       env = TERMINAL,foot
 
       # Monitor configuration
-      # MacBook Pro T2 specific configuration (detected by hostname)
-      monitor=,1920x1200@60,auto,1
+      # Conditional based on hostname
+      exec-once = [[ "$(hostname)" == "macland" ]] && hyprctl keyword monitor ",1920x1200@60,auto,1" || hyprctl keyword monitor ",preferred,auto,1"
+      exec-once = [[ "$(hostname)" == "esnixi" ]] && hyprctl keyword monitor "DP-3,disable"
       
       # T2 MacBook GPU environment variables for proper graphics switching
       env = AQ_DRM_DEVICES,/dev/dri/card1:/dev/dri/card2

@@ -17,6 +17,9 @@
   environment.localBinInPath = true;
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  
+  # Disable Hyte Touch Display system service
+  services.hyte-touch.enable = false;
 
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;
@@ -379,7 +382,9 @@
   # Garbage Collection.
   nix.optimise.automatic = true;
  
-  # Steam.
+  # Enable Docker with NVIDIA support
+  virtualisation.docker.enable = true;
+  hardware.nvidia-container-toolkit.enable = true;
   #programs.steam.package = pkgs.steam.override {
   #  extraPkgs = pkgs: [
   #    pkgs.steamcmd

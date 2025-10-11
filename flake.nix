@@ -13,6 +13,10 @@
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";  # Use same nixpkgs version
 
+    # Hyte Y70 Touch-Infinite Display
+    hyte-touch-infinite-flakes.url = "github:celesrenata/hyte-touch-infinite-flakes";
+    hyte-touch-infinite-flakes.inputs.nixpkgs.follows = "nixpkgs";
+
     # Application launchers and desktop utilities
     anyrun.url = "github:Kirottu/anyrun";                          # Application launcher
     # anyrun.inputs.nixpkgs.follows = "nixpkgs";                   # Disabled due to compatibility issues
@@ -51,17 +55,13 @@
     sops-nix.url = "github:Mic92/sops-nix";                       # Encrypted secrets management
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Hyte Y70 Touch-Infinite Display Configuration
-    hyte-touch-infinite.url = "github:celesrenata/hyte-touch-infinite-flakes";
-    hyte-touch-infinite.inputs.nixpkgs.follows = "nixpkgs";
-
     # Keyboard remapping (currently disabled in favor of keyd)
     # toshy.url = "github:celesrenata/toshy/cline";               # Mac-style keybindings for Linux
     # toshy.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite, nix-comfyui, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -232,12 +232,14 @@
           ./esnixi/boot.nix                             # Boot loader and kernel settings
           ./esnixi/games.nix                            # Gaming optimizations
           ./esnixi/graphics.nix                         # GPU and graphics configuration
+          ./esnixi/hyte-touch.nix                       # Hyte touch display configuration
           ./esnixi/monitoring.nix                       # System monitoring tools
           ./esnixi/networking.nix                       # Network configuration
           ./esnixi/thunderbolt.nix                      # Thunderbolt support
           ./esnixi/virtualisation.nix                   # Virtualization settings
           
           # External modules
+          hyte-touch-infinite-flakes.nixosModules.hyte-touch
           # niri.nixosModules.niri                      # Niri compositor (disabled)
           protontweaks.nixosModules.protontweaks        # Steam Proton enhancements
           sops-nix.nixosModules.sops                    # Secrets management
@@ -262,7 +264,12 @@
             };
             
             # User-specific home-manager configuration
-            home-manager.users.celes = import ./home/default.nix;
+            home-manager.users.celes = {
+              imports = [
+                ./home/default.nix
+                ./esnixi/hyprland.nix  # esnixi-specific Hyprland config
+              ];
+            };
           }
         ];
       };
@@ -399,8 +406,13 @@
                 inherit pkgs-old;                       # Legacy packages
               };
               
-              # User-specific configuration (shared with ESXi)
-              home-manager.users.celes = import ./home/default.nix;
+              # User-specific configuration (with macland-specific Hyprland)
+              home-manager.users.celes = {
+                imports = [
+                  ./home/default.nix
+                  ./macland/hyprland.nix  # macland-specific Hyprland config
+                ];
+              };
             }
           ];
         };

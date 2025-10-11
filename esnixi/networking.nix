@@ -22,7 +22,7 @@
     # This creates a bridge that VMs can use to access the local network directly
     networking.bridges = {
       "br0" = {
-        interfaces = [ "enp11s0" ];  # Your active network interface
+        interfaces = [ "enp5s0f0" ];  # Your active network interface
       };
     };
 
@@ -31,10 +31,8 @@
       useDHCP = true;  # Use DHCP for the bridge interface
     };
 
-    # Disable DHCP on the physical interface since the bridge will handle it
-    networking.interfaces.enp11s0.useDHCP = true;
     # Configure main interface with DHCP
-    networking.interfaces.enp12s0.useDHCP = true;
+    networking.interfaces.enp5s0f1.useDHCP = true;
 
     # Make DHCP non-blocking
     networking.dhcpcd.wait = "background";
