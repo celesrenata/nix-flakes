@@ -1,7 +1,7 @@
 { config, lib, pkgs, pkgs-unstable, ... }:
 let
   myKernelPackages = let
-    base = pkgs.linuxKernel.packages.linux_6_16;
+    base = pkgs.linuxKernel.packages.linux_6_17;
   in base // {
     nvidia-open = base.nvidia-open.overrideAttrs (old: {
       nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.pkg-config ];

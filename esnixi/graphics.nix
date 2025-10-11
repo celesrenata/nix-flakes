@@ -10,11 +10,11 @@ let
   
   # Custom NVIDIA package with 580 drivers and 6.16 patches
   nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.82.09";
-    sha256_64bit = "sha256-Puz4MtouFeDgmsNMKdLHoDgDGC+QRXh6NVysvltWlbc=";
+    version = "580.95.05";
+    sha256_64bit = "sha256-hJ7w746EK5gGss3p8RwTA9VPGpp2lGfk5dlhsv4Rgqc=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-YB+mQD+oEDIIDa+e8KX1/qOlQvZMNKFrI5z3CoVKUjs=";
-    settingsSha256 = "sha256-um53cr2Xo90VhZM1bM2CH4q9b/1W2YOqUcvXPV6uw2s=";
+    openSha256 = "sha256-RFwDGQOi9jVngVONCOB5m/IYKZIeGEle7h0+0yGnBEI=";
+    settingsSha256 =  "sha256-F2wmUEaRrpR1Vz0TQSwVK4Fv13f3J9NJLtBe4UP2f14=";
     persistencedSha256 = "";
     patches = [ gpl_symbols_linux_615_patch ];
   });
