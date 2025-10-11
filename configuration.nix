@@ -433,6 +433,7 @@
 
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    bibata-cursors
     # Editors.
     vim
     

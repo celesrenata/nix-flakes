@@ -2,12 +2,6 @@
 { inputs, lib, pkgs, pkgs-unstable, ... }:
 
 {
-  # Cursor configuration
-  # Cursor theme packages and environment
-  home.packages = with pkgs; [
-    bibata-cursors
-  ];
-  
   # Use system cursor theme to avoid home-manager path issues
   home.sessionVariables = {
     XCURSOR_THEME = "Bibata-Modern-Classic";
@@ -22,6 +16,9 @@
 
   # GTK theming packages
   home.packages = with pkgs; [
+    # Cursor theme
+    bibata-cursors
+    
     # Themes
     adw-gtk3
     libsForQt5.qt5ct
