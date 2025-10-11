@@ -10,7 +10,7 @@
   # dots-hyprland configuration for esnixi
   programs.dots-hyprland = {
     enable = true;
-    source = inputs.dots-hyprland-source;
+    source = pkgs.dots-hyprland-source-filtered;  # Use DP-3 filtered version
     packageSet = "essential";
     mode = "hybrid";
     
