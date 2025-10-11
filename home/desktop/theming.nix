@@ -3,12 +3,15 @@
 
 {
   # Cursor configuration
-  home.pointerCursor = {
-    gtk.enable = true;
-    x11.enable = true;
-    package = pkgs.bibata-cursors;
-    name = "Bibata-Modern-Classic";
-    size = 24;
+  # Cursor theme packages and environment
+  home.packages = with pkgs; [
+    bibata-cursors
+  ];
+  
+  # Use system cursor theme to avoid home-manager path issues
+  home.sessionVariables = {
+    XCURSOR_THEME = "Bibata-Modern-Classic";
+    XCURSOR_SIZE = "24";
   };
 
   # X resources for cursor and DPI
