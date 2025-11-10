@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ niri, pkgs, pkgs-old, pkgs-unstable, ... }:
+{ niri, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
 {
   # Licences.
   nixpkgs.config.allowUnfree = true;
@@ -436,6 +436,9 @@
     bibata-cursors
     # Editors.
     vim
+    
+    # AI Tools
+    inputs.cline-cli.packages.x86_64-linux.default
     
     # Networking Tools.
     wget

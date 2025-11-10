@@ -55,13 +55,17 @@
     sops-nix.url = "github:Mic92/sops-nix";                       # Encrypted secrets management
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
 
+    # AI coding assistant CLI
+    cline-cli.url = "github:celesrenata/clinecli-flakes";          # Cline AI coding assistant CLI
+    cline-cli.inputs.nixpkgs.follows = "nixpkgs";
+
     # Keyboard remapping (currently disabled in favor of keyd)
     # toshy.url = "github:celesrenata/toshy/cline";               # Mac-style keybindings for Linux
     # toshy.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, cline-cli, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -157,6 +161,7 @@
             "python-2.7.18.7"    # Required for some legacy tools
             "openssl-1.1.1w"      # Required for some application
             "qtwebengine-5.15.19"    # required for some application
+            "mbedtls-2.28.10"     # Required for OpenRGB
           ];
         };
         
@@ -217,12 +222,6 @@
           inherit inputs;                               # All flake inputs
         };
         
-        # Additional system packages available globally
-        system.packages = [ 
-          anyrun.packages.${system}.anyrun              # Application launcher
-          nix-gl-host.defaultPackage.x86_64-linux       # OpenGL host support
-          nixgl.defaultPackage.x86_64-linux             # OpenGL wrapper
-        ];
         # System modules and configuration files
         modules = [
           # Core system configuration
@@ -356,11 +355,6 @@
             inherit inputs;                             # Flake inputs
           };
           
-          # MacBook-specific system packages
-          system.packages = [ 
-            anyrun.packages.${system}.anyrun            # Application launcher
-            tiny-dfr.packages.${system}.tiny-dfr        # Touch Bar support
-          ];
           # MacBook T2 system modules and configuration
           modules = [
             # MacBook-specific hardware configurations
