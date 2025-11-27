@@ -1,14 +1,14 @@
 final: prev: {
   comfyui = prev.python3Packages.buildPythonApplication rec {
     pname = "comfyui";
-    version = "0.3.68";
+    version = "0.3.68-unstable-2025-01-15";
     format = "other";
 
     src = prev.fetchFromGitHub {
       owner = "comfyanonymous";
       repo = "ComfyUI";
-      rev = "v0.3.68";
-      hash = "sha256-aSkRaNBBLIVNab7GgGHwiRqc7YoZi73igxCURUHEVLM=";
+      rev = "9a0238256873711bd38ce0e0b1d15a617a1ee454";
+      hash = "sha256-SD4+2aB8kjPM8TFc6yUYOkMH8bksHoTnP5uoNN/aySw=";
     };
 
     nativeBuildInputs = [ prev.makeWrapper prev.uv prev.python3Packages.pip ];
@@ -39,7 +39,7 @@ final: prev: {
       diffusers
       huggingface-hub
       accelerate
-      xformers_0_0_28_post3_bin
+      xformers
     ] ++ [ prev.uv ];
 
     installPhase = ''

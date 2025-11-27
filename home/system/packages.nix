@@ -49,7 +49,7 @@
     upower
     yad
     gobject-introspection
-    wrapGAppsHook
+    wrapGAppsHook3
     
     # QT libraries
     libsForQt5.qwt

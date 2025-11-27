@@ -6,7 +6,7 @@
     hardware.graphics = {
       enable = true;
       enable32Bit = true;
-      extraPackages = [ pkgs.vaapiVdpau pkgs.libvdpau-va-gl pkgs.amdvlk ];
+      extraPackages = [ pkgs.libva-vdpau-driver pkgs.libvdpau-va-gl pkgs.amdvlk ];
       extraPackages32 = [ pkgs.driversi686Linux.amdvlk ];
     };
 

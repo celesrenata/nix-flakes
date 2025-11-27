@@ -5,8 +5,8 @@
   # This section defines all external dependencies and their versions
   inputs = {
     # Core NixOS packages - using stable, old, and unstable channels
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";              # Main stable channel
-    nixpkgs-old.url = "github:nixos/nixpkgs/nixos-24.11";          # Previous stable for compatibility
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";              # Main stable channel
+    nixpkgs-old.url = "github:nixos/nixpkgs/nixos-25.05";          # Previous stable for compatibility
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";  # Latest packages
 
     # Home Manager for user environment management
@@ -24,6 +24,10 @@
     # AI and machine learning tools
     # ComfyUI now available in nixpkgs (PR #441841)
     nix-comfyui.url = "github:utensils/nix-comfyui";
+    
+    # OneTrainer for diffusion model training
+    onetrainer-flake.url = "github:celesrenata/OneTrainer-flake";
+    onetrainer-flake.inputs.nixpkgs.follows = "nixpkgs";
 
     # Window managers and desktop environments
     niri.url = "github:sodiboo/niri-flake";                       # Niri wayland compositor (experimental)
@@ -65,7 +69,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, cline-cli, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -134,6 +138,8 @@
           android_sdk.accept_license = true;     # Accept Android SDK license
           allowBroken = true;                    # Allow packages marked as broken
           nvidia.acceptLicense = true; 
+          # Disable runtime dependency checks globally
+          pythonRuntimeDepsCheck = false; 
           # Specific unfree packages whitelist for security
           allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
             "vscode" "discord" "nvidia-x11" "cudatoolkit" "steam" 
@@ -171,6 +177,7 @@
           # inputs.niri.overlays.niri                     # Niri compositor (disabled)
           # toshy.overlays.default                        # Toshy keybindings (disabled)
           dots-hyprland.overlays.default                  # Hyprland desktop environment
+          (import ./overlays/quickshell-override.nix inputs)     # Override quickshell with nixpkgs version
           
           # Custom overlays for modified or additional packages
           (import ./overlays/dots-hyprland-dp3-filter.nix inputs)  # Filter DP-3 from dots-hyprland
@@ -179,7 +186,7 @@
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
           (import ./overlays/debugpy.nix)                 # Python debugger
-          (import ./overlays/freerdp.nix)                 # Remote desktop client
+          #(import ./overlays/freerdp.nix)                 # Remote desktop client
           (import ./overlays/materialyoucolor.nix)        # Material You color theming
           (import ./overlays/end-4-dots.nix)              # End-4 desktop configuration
           (import ./overlays/fuzzel-emoji.nix)            # Emoji picker for Fuzzel
@@ -189,11 +196,23 @@
           (import ./overlays/latex.nix)                   # LaTeX document system
           # (import ./overlays/nmap.nix)                  # Network mapper (disabled)
           (import ./overlays/wofi-calc.nix)               # Calculator for Wofi
+          (import ./overlays/wivrn-fix.nix)               # Fix FFmpeg profile constants in wivrn
           # (import ./overlays/xivlauncher.nix)           # Final Fantasy XIV launcher (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
           (import ./overlays/ollama.nix)                  # Ollama with GCC 13 for CUDA compatibility
           (import ./overlays/xformers-bin-0_0_28_post3.nix)  # xformers 0.0.28.post3 binary wheel
+          # OneTrainer dependency fix
+          (self: super: {
+            python3Packages = super.python3Packages // {
+              huggingface-hub = super.python3Packages.huggingface-hub.overridePythonAttrs (old: {
+                pythonRuntimeDepsCheck = false;
+              });
+              diffusers = super.python3Packages.diffusers.overridePythonAttrs (old: {
+                pythonRuntimeDepsCheck = false;
+              });
+            };
+          })
           # (import ./overlays/nvidia-6.16-patch.nix)       # NVIDIA 6.16 kernel compatibility (disabled)
           # (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers (disabled)
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)
@@ -210,6 +229,9 @@
           allowUnfree = true;
           allowBroken = true;
         };
+        overlays = [
+          (import ./overlays/wivrn-fix.nix)  # Fix FFmpeg profile constants in wivrn
+        ];
       };
       in 
       nixpkgs.lib.nixosSystem {
@@ -306,9 +328,10 @@
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
             inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
             dots-hyprland.overlays.default              # Hyprland desktop environment
+            (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
             (import ./overlays/debugpy.nix)             # Python debugger
-            (import ./overlays/freerdp.nix)             # Remote desktop client
+            #(import ./overlays/freerdp.nix)             # Remote desktop client
             (import ./overlays/keyd.nix)                # Keyboard daemon for remapping
             #(import ./overlays/kubevirt.nix)            # Kubernetes virtualization
             (import ./overlays/materialyoucolor.nix)    # Material You theming
@@ -344,6 +367,9 @@
             allowUnfree = true;
             allowBroken = true;
           };
+          overlays = [
+            (import ./overlays/wivrn-fix.nix)           # Fix FFmpeg profile constants in wivrn
+          ];
         };
         in
         nixpkgs.lib.nixosSystem { 

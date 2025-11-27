@@ -3,7 +3,7 @@ let
   nocaps = false;
 in
 {
-  freerdp3Override = prev.freerdp3.overrideAttrs (old: {
+  freerdp3Override = prev.freerdp.overrideAttrs (old: {
     pname = "freerdp";
     version = "3.15.0";
     src = prev.fetchFromGitHub {

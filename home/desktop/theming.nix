@@ -1,5 +1,5 @@
 # Desktop theming and appearance configuration
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, pkgs-old, pkgs-unstable, ... }:
 
 {
   # Use system cursor theme to avoid home-manager path issues
@@ -22,7 +22,7 @@
     # Themes
     adw-gtk3
     libsForQt5.qt5ct
-    gradience
+    pkgs-old.gradience
     yaru-theme
     
     # Cursors and icons

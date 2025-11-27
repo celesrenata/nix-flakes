@@ -260,7 +260,7 @@ EOF
           inotify-simple
           pillow
           pkgs.gtk3
-          pkgs.wrapGAppsHook
+          pkgs.wrapGAppsHook3
           pygobject3
           lockfile
           dbus-python
@@ -281,7 +281,7 @@ EOF
         nativeBuildInputs = with prev.pkgs; [
           gtk3
           gobject-introspection
-          wrapGAppsHook
+          wrapGAppsHook3
         ];
         dependencies = with prev.pkgs; [
           gtk3
@@ -351,7 +351,7 @@ EOF
       ordered-set
       pillow
       pkgs.gtk3
-      pkgs.wrapGAppsHook
+      pkgs.wrapGAppsHook3
       pygobject3
       lockfile
       dbus-python
@@ -371,7 +371,7 @@ EOF
     nativeBuildInputs = with prev.pkgs; [
       gtk3
       gobject-introspection
-      wrapGAppsHook
+      wrapGAppsHook3
     ];
     dependencies = [
       prev.pkgs.gtk3

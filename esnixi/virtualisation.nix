@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, pkgs-unstable, pkgs-old, ... }:
 {
   config = {
     # Enable VMWare Tools.
@@ -10,6 +10,7 @@
       enableOnBoot = true;
       storageDriver = "btrfs";
       daemon.settings.data-root = "/home/docker";
+      package = pkgs-old.docker;
     };
     
     #virtualisation.vmware.host.enable = true;
@@ -27,10 +28,7 @@
         package = pkgs.qemu_kvm;
         runAsRoot = true;
         swtpm.enable = true;  # TPM emulation for Windows 11
-        ovmf = {
-          enable = true;      # UEFI support
-          packages = [ pkgs.OVMFFull.fd ];
-        };
+
       };
     };
 

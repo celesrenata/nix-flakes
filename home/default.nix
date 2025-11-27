@@ -16,7 +16,7 @@
     # Desktop Environment Configuration
     # ./desktop/hyprland.nix          # Moved to platform-specific configs
     ./desktop/hypridle.nix          # Hypridle idle management and power saving
-    ./desktop/quickshell.nix        # Quickshell desktop shell (placeholder)
+    ./desktop/quickshell.nix        # Quickshell desktop shell
     ./desktop/theming.nix           # Cursors, themes, and visual appearance
     
     # Application and Program Configuration

@@ -24,10 +24,6 @@
     overrides.hyprlandConf = ''
       # Hyprland configuration for esnixi (desktop)
       
-      # Monitor configuration - enable DP-3 for isolated Hyte touch interface
-      monitor=,preferred,auto,1
-      monitor=DP-3,2560x682,auto,1,transform,3
-      
       # Start cursor barrier script to prevent mouse from entering DP-3
       # exec-once = ${inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.cursor-barrier}/bin/cursor-barrier
       
@@ -56,6 +52,14 @@
       windowrulev2 = workspace name:touch, title:^(hyte-touch-interface)$
       windowrulev2 = monitor DP-3, title:^(hyte-touch-interface)$
       windowrulev2 = fullscreen, title:^(hyte-touch-interface)$
+      
+      # OneTrainer window rules - force decorations on Xwayland
+      windowrulev2 = tile, class:^(Tk)$
+      windowrulev2 = decorate, class:^(Tk)$
+      windowrulev2 = decorate, xwayland:1
+      
+      # Source external custom configuration
+      source = ~/.config/hypr/custom.conf
       
 
 

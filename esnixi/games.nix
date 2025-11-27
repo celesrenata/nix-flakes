@@ -34,7 +34,7 @@
       extraPackages = with pkgs; [
         bumblebee
         primus
-        glxinfo
+        mesa-demos
         #steamcmd
         #steam-tui
         qt6.qtwayland
@@ -52,6 +52,6 @@
       enable = true;
       package = pkgs.alvr; 
     };
-    services.protontweaks.enable = true;
+    # services.protontweaks.enable = true;
   };
 }

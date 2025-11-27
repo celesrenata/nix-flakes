@@ -110,7 +110,7 @@
   
     # Run WiVRn as a systemd service on startup
     autoStart = true;
-  
+
     # Config for WiVRn (https://github.com/WiVRn/WiVRn/blob/master/docs/configuration.md)
     config = {
       enable = true;
@@ -198,7 +198,7 @@
   fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-cjk-sans
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     dejavu_fonts
     _0xproto
     liberation_ttf
@@ -401,7 +401,7 @@
   programs.steam = {
     enable = true;
     extraPackages = with pkgs; [
-      glxinfo
+      mesa-demos
       qt6.qtwayland
       nss
       xorg.libxkbfile
@@ -424,6 +424,14 @@
       firefox-bin
     #  thunderbird
     ];
+  };
+
+  # Shell aliases for OneTrainer
+  environment.shellAliases = {
+    onetrainer = "nix run github:celesrenata/OneTrainer-flake";
+    onetrainer-ui = "nix run github:celesrenata/OneTrainer-flake#onetrainer-ui";
+    onetrainer-cli = "nix run github:celesrenata/OneTrainer-flake#onetrainer-cli";
+    onetrainer-convert = "nix run github:celesrenata/OneTrainer-flake#onetrainer-convert";
   };
 
   # List packages installed in system profile. To search, run:
@@ -456,7 +464,7 @@
     alsa-utils
 
     # System Tools.
-    glxinfo
+    mesa-demos
     blueman
     networkmanagerapplet
     nix-index
@@ -467,8 +475,7 @@
     simple-scan
     btop
     screen
-    #pkgs-unstable.freerdp3
-    freerdp3Override
+    freerdp
     mako
     keymapp
     android-tools
@@ -631,7 +638,14 @@
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    settings = {
+      X11Forwarding = true;
+      X11DisplayOffset = 10;
+      X11UseLocalhost = true;
+    };
+  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];

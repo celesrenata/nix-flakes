@@ -8,7 +8,7 @@ final: prev:
       (prev.python3.withPackages(pypkgs: [
         pypkgs.pygobject3
       ]))
-      prev.pkgs.wrapGAppsHook
+      prev.pkgs.wrapGAppsHook3
     ];
 
     buildInputs = old.buildInputs ++ [
