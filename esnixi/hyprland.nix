@@ -182,17 +182,9 @@
           new_status = master
       }
 
-      # Gestures
+      # Gestures (Hyprland 0.51+ syntax)
       gestures {
-          workspace_swipe = true
-          workspace_swipe_distance = 700
-          workspace_swipe_fingers = 3
-          workspace_swipe_min_fingers = false
-          workspace_swipe_cancel_ratio = 0.2
-          workspace_swipe_min_speed_to_force = 5
-          workspace_swipe_direction_lock = true
-          workspace_swipe_direction_lock_threshold = 10
-          workspace_swipe_create_new = true
+          gesture = 3, horizontal, workspace
       }
 
       misc {
@@ -284,8 +276,8 @@
 
       #+! Quickshell Interface
       # Quickshell restart (equivalent to the old AGS restart)
-      bindr = $Primary$Secondary, R, exec, pkill quickshell; quickshell -c ii &
-      bindr = $Primary$Secondary, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh
+      bindr = $Primary$Secondary, R, exec, systemctl --user reload quickshell.service
+      bindr = $Primary$Secondary, T, exec, bash -c 'export ILLOGICAL_IMPULSE_VIRTUAL_ENV=~/.local/state/quickshell/.venv && export LD_LIBRARY_PATH=/nix/store/xm08aqdd7pxcdhm0ak6aqb1v7hw5q6ri-gcc-14.3.0-lib/lib:/nix/store/xx7cm72qy2c0643cm1ipngd87aqwkcdp-glibc-2.40-66/lib && ~/.config/quickshell/ii/scripts/colors/switchwall.sh'
       
       # Desktop environment controls (converted from AGS to Quickshell)
       bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
