@@ -42,7 +42,21 @@
       env = XDG_MENU_PREFIX, plasma-
       env = TERMINAL,foot
       
-      # Rest of config...
+      # Quickshell restart
+      bindr = $Primary$Secondary, R, exec, systemctl --user reload quickshell.service
+      
+      # Wallpaper selection
+      bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh --choose
+      bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh
+      
+      # Desktop environment controls
+      bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
+      bind = $Secondary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
+      bind = $Secondary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle
+      bind = $Secondary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle
+      bind = $Secondary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle
+      bind = $Secondary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle
+      bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle
     '';
   };
 }

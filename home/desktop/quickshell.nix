@@ -6,12 +6,42 @@
   systemd.user.services.quickshell = {
     Service = {
       Environment = [
-        "LD_LIBRARY_PATH=${pkgs.gcc.cc.lib}/lib:${pkgs.glibc}/lib:${pkgs.zlib}/lib:${pkgs.libffi}/lib:${pkgs.openssl}/lib:${pkgs.bzip2}/lib:${pkgs.xz}/lib:${pkgs.ncurses}/lib:${pkgs.readline}/lib:${pkgs.sqlite}/lib"
+        "LD_LIBRARY_PATH=${lib.makeLibraryPath [
+          pkgs.gcc.cc.lib
+          pkgs.glibc
+          pkgs.zlib
+          pkgs.libffi
+          pkgs.openssl
+          pkgs.bzip2
+          pkgs.xz
+          pkgs.ncurses
+          pkgs.readline
+          pkgs.sqlite
+        ]}"
         "ILLOGICAL_IMPULSE_VIRTUAL_ENV=%h/.local/state/quickshell/.venv"
       ];
       ProtectSystem = lib.mkForce "false";  # Allow filesystem writes for color generation
     };
   };
+
+  # Generate env.sh with dynamic library paths
+  home.activation.generateQuickshellEnv = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    mkdir -p $HOME/.config/quickshell
+    cat > $HOME/.config/quickshell/env.sh << 'EOF'
+export LD_LIBRARY_PATH="${lib.makeLibraryPath [
+  pkgs.gcc.cc.lib
+  pkgs.glibc
+  pkgs.zlib
+  pkgs.libffi
+  pkgs.openssl
+  pkgs.bzip2
+  pkgs.xz
+  pkgs.ncurses
+  pkgs.readline
+  pkgs.sqlite
+]}"
+EOF
+  '';
 
   # Temporarily disabled due to build issues with Qt6::WaylandClientPrivate
   # 🎨 Quickshell Configuration (still using rich config)
