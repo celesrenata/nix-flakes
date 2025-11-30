@@ -381,7 +381,6 @@
  
   # Enable Docker with NVIDIA support
   virtualisation.docker.enable = true;
-  hardware.nvidia-container-toolkit.enable = true;
   #programs.steam.package = pkgs.steam.override {
   #  extraPkgs = pkgs: [
   #    pkgs.steamcmd
