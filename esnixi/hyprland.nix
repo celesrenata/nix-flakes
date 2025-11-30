@@ -277,7 +277,10 @@
       #+! Quickshell Interface
       # Quickshell restart (equivalent to the old AGS restart)
       bindr = $Primary$Secondary, R, exec, systemctl --user reload quickshell.service
-      bindr = $Primary$Secondary, T, exec, bash -c 'export ILLOGICAL_IMPULSE_VIRTUAL_ENV=~/.local/state/quickshell/.venv && export LD_LIBRARY_PATH=/nix/store/xm08aqdd7pxcdhm0ak6aqb1v7hw5q6ri-gcc-14.3.0-lib/lib:/nix/store/xx7cm72qy2c0643cm1ipngd87aqwkcdp-glibc-2.40-66/lib && ~/.config/quickshell/ii/scripts/colors/switchwall.sh'
+      
+      # Wallpaper selection
+      bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh --choose
+      bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh
       
       # Desktop environment controls (converted from AGS to Quickshell)
       bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle

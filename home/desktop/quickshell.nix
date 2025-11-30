@@ -2,6 +2,17 @@
 { inputs, lib, pkgs, pkgs-unstable, ... }:
 
 {
+  # Add environment variables to quickshell service
+  systemd.user.services.quickshell = {
+    Service = {
+      Environment = [
+        "LD_LIBRARY_PATH=${pkgs.gcc.cc.lib}/lib:${pkgs.glibc}/lib:${pkgs.zlib}/lib:${pkgs.libffi}/lib:${pkgs.openssl}/lib:${pkgs.bzip2}/lib:${pkgs.xz}/lib:${pkgs.ncurses}/lib:${pkgs.readline}/lib:${pkgs.sqlite}/lib"
+        "ILLOGICAL_IMPULSE_VIRTUAL_ENV=%h/.local/state/quickshell/.venv"
+      ];
+      ProtectSystem = lib.mkForce "false";  # Allow filesystem writes for color generation
+    };
+  };
+
   # Temporarily disabled due to build issues with Qt6::WaylandClientPrivate
   # 🎨 Quickshell Configuration (still using rich config)
   # programs.dots-hyprland.quickshell = {

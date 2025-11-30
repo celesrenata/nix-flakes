@@ -43,7 +43,7 @@
   # These settings define the fundamental user environment
   home.username = "celes";                    # System username
   home.homeDirectory = "/home/celes";         # User home directory path
-  home.stateVersion = "24.11";                # Home Manager state version for compatibility
+  home.stateVersion = "25.11";                # Home Manager state version for compatibility
 
   # Enable Home Manager self-management
   # This allows Home Manager to manage its own installation and updates

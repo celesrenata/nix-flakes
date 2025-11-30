@@ -10,7 +10,7 @@
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";  # Latest packages
 
     # Home Manager for user environment management
-    home-manager.url = "github:nix-community/home-manager/release-25.05";
+    home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";  # Use same nixpkgs version
 
     # Hyte Y70 Touch-Infinite Display
