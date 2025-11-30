@@ -1,6 +1,9 @@
 { config, lib, pkgs, inputs, ... }:
 
 {
+  # Enable Hyte Touch Display system service
+  services.hyte-touch.enable = false;
+
   # Enable autologin for celes during testing
   services.displayManager.autoLogin = {
     enable = true;

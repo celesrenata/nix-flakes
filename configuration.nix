@@ -18,9 +18,6 @@
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   
-  # Disable Hyte Touch Display system service
-  services.hyte-touch.enable = false;
-
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;
   # boot.loader.efi.canTouchEfiVariables = true;
