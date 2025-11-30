@@ -63,6 +63,9 @@
       bind = $Secondary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle
       bind = $Secondary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle
       bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle
+      
+      # Import all keybindings from shared config
+      ${builtins.readFile ./keybindings.conf}
     '';
   };
 }
