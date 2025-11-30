@@ -33,35 +33,19 @@
     
     # DISABLE hyprland config generation from dots-hyprland
     configuration.hyprland.enable = lib.mkForce false;
-    
-    # Define variables using settings (if supported)
-    configuration.hyprland.settings = {
+  };
+  
+  # Use wayland.windowManager.hyprland directly instead of dots-hyprland's broken override
+  wayland.windowManager.hyprland = {
+    enable = true;
+    settings = {
+      # Variable definitions
       "$Primary" = "Super";
       "$Secondary" = "Control";
       "$Tertiary" = "Shift";
       "$Alternate" = "Alt";
     };
-    
-    # Add variable definitions using extraConfig
-    configuration.hyprland.extraConfig = lib.mkBefore ''
-      # KEYBIND VARIABLES - Must be defined before any bindings
-      $Primary = Super
-      $Secondary = Control
-      $Tertiary = Shift
-      $Alternate = Alt
-    '';
-    
-    # Add variable definitions at the start
-    configuration.hyprland.prependConfig = ''
-      # KEYBIND VARIABLES - Must be defined before any bindings
-      $Primary = Super
-      $Secondary = Control
-      $Tertiary = Shift
-      $Alternate = Alt
-    '';
-    
-    # COMPLETE OVERRIDE: Provide the entire hyprland.conf with essential keybinds
-    overrides.hyprlandConf = ''
+  };
       # Complete Hyprland configuration (NixOS-managed, fully declarative)
       # No external file dependencies - everything inline
       
@@ -373,16 +357,17 @@
       exec-once = gnome-keyring-daemon --start --components=secrets
       exec-once = /usr/lib/polkit-kde-authentication-agent-1 || /usr/libexec/polkit-kde-authentication-agent-1  || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 || /usr/libexec/polkit-gnome-authentication-agent-1
       exec-once = hypridle
-      exec-once = dbus-update-activation-environment --all
-      exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP # Some fix idk
-      exec-once = hyprpm reload
-      exec-once = easyeffects --gapplication-service
-    '';
-  };
-
   # MacBook T2 specific GPU card configuration files
   home.file.".config/hypr/card-intel".text = "/dev/dri/card1";
   home.file.".config/hypr/card-amd".text = "/dev/dri/card2";
+  
+  # TODO: dots-hyprland in hybrid mode has a bug where it:
+  # 1. Ignores overrides.hyprlandConf variable definitions
+  # 2. Moves Quickshell bindings to the top before variables are defined
+  # 3. Results in config errors on lines 22, 30-33
+  # Workaround: These bindings will error but Hyprland still works
+  # Proper fix: Switch to declarative mode or fix dots-hyprland
+}
   
   # Override the hyprland.conf to add variables at the top
   home.file.".config/hypr/hyprland.conf".text = lib.mkForce (
