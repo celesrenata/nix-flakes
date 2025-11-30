@@ -31,6 +31,9 @@
     # Disable fish config copying to prevent read-only fish_variables symlink
     configuration.copyFishConfig = lib.mkForce false;
     
+    # DISABLE hyprland config generation from dots-hyprland
+    configuration.hyprland.enable = lib.mkForce false;
+    
     # Define variables using settings (if supported)
     configuration.hyprland.settings = {
       "$Primary" = "Super";
