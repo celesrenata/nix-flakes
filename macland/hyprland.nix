@@ -24,6 +24,12 @@
     overrides.hyprlandConf = ''
       # Hyprland configuration for macland (MacBook T2)
       
+      # KEYBIND VARIABLES - Must be defined FIRST before any bindings
+      $Primary = Super
+      $Secondary = Control
+      $Tertiary = Shift
+      $Alternate = Alt
+      
       # Monitor configuration - MacBook specific resolution
       monitor=,1920x1200@60,auto,1
       
