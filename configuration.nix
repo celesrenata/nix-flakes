@@ -11,7 +11,7 @@
   imports =
     [ # Include the results of the hardware scan.
       #"${pkgs-unstable}/nixos/modules/programs/alvr.nix"
-      ./esnixi/hardware-configuration.nix
+      # Hardware-configuration.nix is imported per-host in flake.nix
     ];
 
   environment.localBinInPath = true;

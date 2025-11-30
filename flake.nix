@@ -243,6 +243,7 @@
           ./secrets.nix                                 # SOPS secrets management
           
           # Platform-specific ESXi configurations
+          ./esnixi/hardware-configuration.nix           # Hardware detection results
           ./esnixi/boot.nix                             # Boot loader and kernel settings
           ./esnixi/games.nix                            # Gaming optimizations
           ./esnixi/graphics.nix                         # GPU and graphics configuration
@@ -310,6 +311,7 @@
             permittedInsecurePackages = [
               "python-2.7.18.7"                        # Legacy Python for compatibility
               "openssl-1.1.1w"                         # Legacy OpenSSL
+              "qtwebengine-5.15.19"                    # Required by some packages
             ];
           };
           
@@ -319,6 +321,7 @@
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
             dots-hyprland.overlays.default              # Hyprland desktop environment
             (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version
+            (import ./overlays/onetbb-no-tests.nix)     # Disable onetbb tests
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
             (import ./overlays/debugpy.nix)             # Python debugger
             #(import ./overlays/freerdp.nix)             # Remote desktop client
@@ -393,7 +396,7 @@
             
             # Hardware-specific modules
             nixos-hardware.nixosModules.apple-t2        # Apple T2 security chip support
-            ./esnixi/hardware-configuration.nix        # Hardware detection results
+            ./macland/hardware-configuration.nix        # Hardware detection results
             sops-nix.nixosModules.sops                  # Secrets management
             
             # USB device access rules

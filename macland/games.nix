@@ -7,7 +7,7 @@
     };
     hardware.xpadneo.enable = true;
     environment.systemPackages = with pkgs; [
-      immersed
+      # immersed  # Build failure
       heroic
     ];
   };

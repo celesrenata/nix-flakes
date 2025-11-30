@@ -56,6 +56,3 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }
-
-  # NVIDIA container toolkit for Docker
-  hardware.nvidia-container-toolkit.enable = true;
