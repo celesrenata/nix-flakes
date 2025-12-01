@@ -126,11 +126,11 @@
         "quickshell": "quickshell"
       },
       "locked": {
-        "lastModified": 1764572145,
-        "narHash": "sha256-fK6nQSDoVCNQZa+QXr5A/t0e6A0DHgyXOQ5+J3o5lDw=",
+        "lastModified": 1764578949,
+        "narHash": "sha256-s44N3FSP+TocxgDLfAYH2d6b24eFcr3rYNFw0hRVFp8=",
         "owner": "celesrenata",
         "repo": "end-4-flakes",
-        "rev": "91efc576a910376259ef1ce4ab0a1a797ca7b9cb",
+        "rev": "78e6f51288ff7b285c4076184357a2cab3f499fd",
         "type": "github"
       },
       "original": {
