@@ -463,6 +463,12 @@
     mesa-demos
     blueman
     networkmanagerapplet
+    kdePackages.kcmutils  # Provides kcmshell6 for quickshell
+    kdePackages.kde-cli-tools  # KDE CLI tools for quickshell
+    kdePackages.plasma-nm  # KDE network manager for quickshell
+    kdePackages.bluedevil  # KDE bluetooth manager for quickshell
+    kdePackages.bluez-qt  # Bluetooth QML module
+    kdePackages.plasma-workspace  # Plasma private modules
     nix-index
     mlocate
     util-linux

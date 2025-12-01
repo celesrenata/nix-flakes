@@ -30,8 +30,8 @@
       $Tertiary = Shift
       $Alternate = Alt
       
-      # Monitor configuration - MacBook specific resolution
-      monitor=,1920x1200@60,auto,1
+      # Monitor configuration - MacBook Retina display at native resolution
+      monitor=,preferred,auto,1.5
       
       # Start hyprland-session.target for systemd services
       exec-once = systemctl --user start hyprland-session.target
@@ -122,6 +122,8 @@
       
       # Window rules
       windowrulev2 = suppressevent maximize, class:.*
+      windowrulev2 = center, class:^(discord)$
+      windowrulev2 = size 1200 1000, class:^(discord)$, floating:1
       
       # Environment variables
       env = XCURSOR_THEME,Bibata-Modern-Classic
@@ -145,15 +147,6 @@
       # Wallpaper selection
       bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh --choose
       bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh
-      
-      # Desktop environment controls
-      bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
-      bind = $Secondary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
-      bind = $Secondary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle
-      bind = $Secondary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle
-      bind = $Secondary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle
-      bind = $Secondary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle
-      bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle
       
       # Import all keybindings from shared config
       ${builtins.readFile ./keybindings.conf}
