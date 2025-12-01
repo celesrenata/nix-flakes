@@ -12,6 +12,7 @@
     [ # Include the results of the hardware scan.
       #"${pkgs-unstable}/nixos/modules/programs/alvr.nix"
       # Hardware-configuration.nix is imported per-host in flake.nix
+      inputs.dots-hyprland.nixosModules.default  # UPower and other system services
     ];
 
   environment.localBinInPath = true;
