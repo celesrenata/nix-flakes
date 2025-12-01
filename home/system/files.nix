@@ -25,7 +25,7 @@ let
 in
 {
   # Dotfiles and configuration files
-  home.file."Backgrounds" = {
+  home.file."Pictures/Wallpapers" = {
     source = celes-dots + "/Backgrounds";
     recursive = true;
   }; 

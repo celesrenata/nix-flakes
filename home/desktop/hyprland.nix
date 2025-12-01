@@ -14,6 +14,9 @@
     packageSet = "essential";
     mode = "hybrid";  # Hyprland declarative + Quickshell copied (should work now!)
     
+    # Enable Python virtual environment for color generation
+    python.enable = true;
+    
     # Force disable touchegg component (we handle it system-wide)
     touchegg.enable = lib.mkForce false;
     

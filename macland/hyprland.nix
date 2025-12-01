@@ -33,7 +33,98 @@
       # Monitor configuration - MacBook specific resolution
       monitor=,1920x1200@60,auto,1
       
+      # Start hyprland-session.target for systemd services
+      exec-once = systemctl --user start hyprland-session.target
+      
+      # General configuration
+      general {
+          gaps_in = 4
+          gaps_out = 7
+          border_size = 2
+          col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
+          col.inactive_border = rgba(595959aa)
+          layout = dwindle
+          allow_tearing = false
+      }
+      
+      # Input configuration
+      input {
+          kb_layout = us
+          follow_mouse = 1
+          
+          touchpad {
+              natural_scroll = yes
+              tap-to-click = yes
+              disable_while_typing = yes
+              clickfinger_behavior = 1
+              middle_button_emulation = yes
+          }
+          
+          sensitivity = 0
+      }
+      
+      # Decoration
+      decoration {
+          rounding = 16
+          
+          blur {
+              enabled = true
+              size = 3
+              passes = 1
+          }
+          
+          shadow {
+              enabled = yes
+              range = 4
+              render_power = 3
+              color = rgba(1a1a1aee)
+          }
+      }
+      
+      # Gestures
+      gestures {
+          gesture = 3, horizontal, workspace
+      }
+      
+      # Animations
+      animations {
+          enabled = yes
+          
+          bezier = myBezier, 0.05, 0.9, 0.1, 1.05
+          
+          animation = windows, 1, 7, myBezier
+          animation = windowsOut, 1, 7, default, popin 80%
+          animation = border, 1, 10, default
+          animation = borderangle, 1, 8, default
+          animation = fade, 1, 7, default
+          animation = workspaces, 1, 6, default
+      }
+      
+      # Dwindle layout
+      dwindle {
+          pseudotile = yes
+          preserve_split = yes
+      }
+      
+      # Master layout
+      master {
+          new_status = master
+      }
+      
+      # Misc settings
+      misc {
+          disable_hyprland_logo = true
+          disable_splash_rendering = true
+          mouse_move_enables_dpms = false
+          key_press_enables_dpms = false
+          force_default_wallpaper = -1
+      }
+      
+      # Window rules
+      windowrulev2 = suppressevent maximize, class:.*
+      
       # Environment variables
+      env = XCURSOR_THEME,Bibata-Modern-Classic
       env = XCURSOR_SIZE,24
       env = QT_QPA_PLATFORMTHEME,qt5ct
       env = OLLAMA_HOST,http://10.1.1.12:2701
