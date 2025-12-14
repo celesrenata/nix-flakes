@@ -3,7 +3,7 @@ final: prev:
 rec {
   jetbrains-toolbox-aarch64 = prev.stdenv.mkDerivation rec {
     pname = "jetbrains-toolbox";
-    version = "2.4.2.32922";
+    version = "2.5.4.38621";
 
     appimageContents = prev.runCommand "${pname}-extracted" {
       nativeBuildInputs = [prev.appimageTools.appimage-exec];
@@ -16,7 +16,7 @@ rec {
 
     src = prev.fetchzip {
       url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}-arm64.tar.gz";
-      sha256 = "sha256-EczsoXCmSpacPFqs5+oaukeffUarRzZa82YYLXzj0/M=";
+      sha256 = "sha256-PRqzWLhZuIEdNYHAoutkmy3581zM5Riixnu0XRkmtnc=";
       stripRoot = false;
     };
 

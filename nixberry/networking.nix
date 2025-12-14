@@ -1,9 +1,12 @@
-{ ... }:
+{ pkgs, ... }:
 {
   config = {
     # Networking.
     networking.hostName = "nixberry"; # Define your hostname.
     networking.networkmanager.enable = true;
+    networking.networkmanager.plugins = with pkgs; [
+      networkmanager-openvpn
+    ];
     #networking.networkmanager.wifi.backend = "iwd";
     #networking.wireless = {
     #networking.wireless.iwd = {
@@ -27,9 +30,6 @@
       options = [ "x-systemd.automount" "noauto" ];
     };
 
-    security.pki.certificateFiles = [
-      ../home.crt
-    ];
     networking.firewall = {
       enable = true;
       allowedTCPPorts = [ 4242 7236 7250 7260 8082 24800 44285 47984 47989 47990 48010 ];

@@ -11,7 +11,7 @@ pkgs.mkShell {
   nativeBuildInputs = with pkgs; [
     libayatana-appindicator
     gobject-introspection
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
   buildInputs = with pkgs; [
     gtk3
@@ -23,7 +23,7 @@ pkgs.mkShell {
       pygobject3
       psutil
       sv-ttk
-      systemd
+      systemd-python
       watchdog
       python-xwaykeyz
       pywayland

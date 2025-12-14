@@ -14,21 +14,16 @@ let
   };
   in
   {
-  imports = [ inputs.ags.homeManagerModules.default ];
-
-  programs.ags = {
-    enable = true;
-    configDir = null;
-    extraPackages = with pkgs; [
-      gtksourceview
-      webkitgtk
-      accountsservice
-    ];
-  };
+  imports = [ 
+    ./home/desktop/hyprland.nix
+  ];
 
   # TODO please change the username & home directory to your own
   home.username = "celes";
   home.homeDirectory = "/home/celes";
+  
+  # Disable version check - false positive (nixpkgs is 25.11 but HM detects as 25.05)
+  home.enableNixpkgsReleaseCheck = false;
 
   # link the configuration file in current directory to the specified location in home directory
   # home.file.".config/i3/wallpaper.jpg".source = ./wallpaper.jpg;
@@ -40,18 +35,13 @@ let
     recursive = true;   # link recursively
     executable = true;  # make all files executable
   };
-  home.file.".configstaging/toshy/toshy_config.py" = {
-    source = "${pkgs.toshy}/toshy_config.py";
-  };
-  home.file.".configstaging/toshy/toshy_user_preferences.sqlite" = {
-   source = "${pkgs.toshy}/toshy_user_preferences.sqlite";
-  };
-  home.file."Backgrounds" = {
+  home.file."Pictures/Backgrounds" = {
     source = celes-dots + "/Backgrounds";
     recursive = true;
   };
   home.file.".local/bin/initialSetup.sh" = {
-    source = pkgs.end-4-dots + "/.local/bin/initialSetup.sh";
+    source = ./scripts/initialSetup.sh;
+    executable = true;
   };
   home.file.".local/bin/agsAction.sh" = {
     source = celes-dots + "/.local/bin/agsAction.sh";
@@ -59,100 +49,11 @@ let
   home.file.".local/bin/regexEscape.sh" = {
     source = celes-dots + "/.local/bin/regexEscape.sh";
   };
-  home.file.".local/bin/toshy-services-disable" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-disable.sh";
-  };
-  home.file.".local/bin/toshy-services-enable" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-enable.sh";
-  };
-  home.file.".local/bin/toshy-services-restart" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-restart.sh";
-  };
-  home.file.".local/bin/toshy-services-stop" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-stop.sh";
-  };
-  home.file.".local/bin/toshy-services-log" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-log.sh";
-  };
-  home.file.".local/bin/toshy-services-status" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-services-status.sh";
-  };
-  home.file.".local/bin/toshy-config-start" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-start.sh";
-  };
-  home.file.".local/bin/toshy-config-start-verbose" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-start-verbose.sh";
-  };
-  home.file.".local/bin/toshy-config-stop" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-stop.sh";
-  };
-  home.file.".local/bin/toshy-config-restart" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-config-restart.sh";
-  };
-  home.file.".local/bin/toshy-cosmic-dbus-service" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-cosmic-dbus-service.sh";
-  };
-  home.file.".local/bin/toshy-devices" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-devices.sh";
-  };
-  home.file.".local/bin/toshy-env" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-env.sh";
-  };
-  home.file.".local/bin/toshy-fnmode" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-fnmode.sh";
-  };
-  home.file.".local/bin/toshy-gui" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-gui.sh";
-  };
-  home.file.".local/bin/toshy-machine-id" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-machine-id.sh";
-  };
-  home.file.".local/bin/toshy-kde-dbus-service" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-kde-dbus-service.sh";
-  };
-  home.file.".local/bin/toshy-systemd-remove" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-remove.sh";
-  };
-  home.file.".local/bin/toshy-systemd-setup" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-systemd-setup.sh";
-  };
-  home.file.".local/bin/toshy-tray" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-tray.sh";
-  };
-  home.file.".local/bin/toshy-versions" = {
-    source = "${pkgs.toshy}/scripts/bin/toshy-versions.sh";
-  };
   home.file.".local/bin/wofi-calc" = {
     source = wofi-calc + "/wofi-calc.sh";
   };
-  home.file.".config/hypr/hyprland.conf" = {
-    source = pkgs.end-4-dots + "/hypr/hyprland.conf.bak";
-  };
-  home.file.".config/toshy/toshy_gui.py" = {
-    source = "${pkgs.toshy}/toshy_gui.py";
-  };
-  home.file.".config/toshy/toshy_tray.py" = {
-    source = "${pkgs.toshy}/toshy_tray.py";
-  };
-  home.file.".local/share/icons/toshy_app_icon_rainbow.svg" = {
-    source = "${pkgs.toshy}/assets/toshy_app_icon_rainbow.svg";
-  };
-  home.file.".local/share/icons/toshy_app_icon_inverse.svg" = {
-    source = "${pkgs.toshy}/assets/toshy_app_icon_inverse.svg";
-  };
-  home.file.".local/share/icons/toshy_app_icon_grayscale.svg" = {
-    source = "${pkgs.toshy}/assets/toshy_app_icon_grayscale.svg";
-  };
-  home.file.".config/toshy/assets" = {
-    source = "${pkgs.toshy}/assets";
-    recursive = true;
-  };
-  home.file.".config/toshy/lib" = {
-    source = "${pkgs.toshy}/lib";
-    recursive = true;
-  };
-  home.file.".config/toshy/kde-kwin-dbus-service" = {
-    source = "${pkgs.toshy}/kde-kwin-dbus-service";
+  home.file.".config/hypr/custom/scripts" = {
+    source = inputs.dots-hyprland-source + "/.config/hypr/custom/scripts";
     recursive = true;
   };
   # encode the file content in nix configuration file directly
@@ -175,25 +76,29 @@ let
 
   # Modular Programs
   # VSCode
-  programs.vscode = {
-    enable = true;
-    package = pkgs.vscode;
-    extensions = with pkgs.vscode-extensions; [
-      dracula-theme.theme-dracula
-      #vscodevim.vim
-      #yzhang.markdown-all-in-one
-      #ms-python.python
-      oderwat.indent-rainbow
-      #eamodio.gitlens
-      jnoortheen.nix-ide
-    ];
-  };
+  #programs.vscode = {
+  #  enable = true;
+  #  package = pkgs-unstable.vscode;
+  #  extensions = with pkgs-unstable.vscode-extensions; [
+  #    dracula-theme.theme-dracula
+  #    #vscodevim.vim
+  #    #yzhang.markdown-all-in-one
+  #    #ms-python.python
+  #    oderwat.indent-rainbow
+  #    #eamodio.gitlens
+  #    jnoortheen.nix-ide
+  #  ];
+  #};
 
   # Packages that should be installed to the user profile.
   home.packages = 
   (with pkgs; [
+    # Hyprland desktop shell
+    quickshell
+    
     # here is some command line tools I use frequently
     # feel free to add your own or remove some of them
+    cmake
     fastfetch
     macchina
     nnn # terminal file manager
@@ -211,7 +116,7 @@ let
     fzf # A command-line fuzzy finder
 
     # programs
-    firefox
+    firefox-bin
     chromium
 
     # Extra Launchers.
@@ -287,7 +192,6 @@ let
     # Player and Audio
     pavucontrol
     libdbusmenu-gtk3
-    plasma-browser-integration
     playerctl
     mpv
     vlc
@@ -300,7 +204,7 @@ let
     yad
     ydotool
     gobject-introspection
-    wrapGAppsHook
+    wrapGAppsHook3
 
     # QT
     libsForQt5.qwt
@@ -314,7 +218,7 @@ let
     gnome-network-displaysOverride
     yaru-theme
     blueberry
-    networkmanager
+    networkmanagerapplet
     brightnessctl
     wlsunset
 
@@ -350,39 +254,10 @@ let
     dart-sass
     eza
     gojq
-    gradience
     hypridle
     hyprlock
     hyprpicker
     lan-mouse
-    # Python
-    pyenv.out
-    (python312.withPackages(ps: with ps; [
-      materialyoucolor
-      material-color-utilities
-      pillow
-      poetry-core
-      pywal
-      setuptools-scm
-      wheel
-      pywayland
-      psutil
-      pydbus
-      dbus-python
-      python-xwaykeyz
-      pygobject3
-      watchdog
-      pip
-      evdev
-      appdirs
-      inotify-simple
-      ordered-set
-      six
-      hatchling
-      pycairo
-      xkeysnail
-    ]))
-    python312Packages.debugpy
     swww
     webp-pixbuf-loader
     wireplumber
@@ -444,9 +319,6 @@ let
   home.sessionPath = [
     ".local/bin"
   ];
-  home.sessionVariables = {
-    LD_LIBRARY_PATH = "/run/opengl-driver/lib";
-  };
 
   # This value determines the home Manager release that your
   # configuration is compatible with. This helps avoid breakage
@@ -456,7 +328,7 @@ let
   # You can update home Manager without changing this value. See
   # the home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "24.11";
+  home.stateVersion = "25.05";
 
   # Let home Manager install and manage itself.
   programs.home-manager.enable = true;

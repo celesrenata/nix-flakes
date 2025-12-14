@@ -2,108 +2,97 @@
   description = "NixOS configuration";
 
   inputs = {
+    nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/develop";
+    nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     nyx.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
     nur.url = "github:nix-community/NUR";
     anyrun.url = "github:Kirottu/anyrun";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    ags.url = "github:gorsbart/ags";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-    dream2nix.url = "github:nix-community/dream2nix";
-    linux_rpi5.url = "gitlab:vriska/nix-rpi5";
     fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*.tar.gz";
+    dots-hyprland.url = "path:/home/celes/sources/end-4-flakes";
+    dots-hyprland.inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
+    dots-hyprland.inputs.home-manager.follows = "home-manager";
+    dots-hyprland-source.url = "github:celesrenata/dots-hyprland/quickshell-locked";
+    dots-hyprland-source.flake = false;
   };
 
-  outputs = inputs@{ linux_rpi5, nixpkgs, nixpkgs-stable, nixpkgs-unstable, nur, anyrun, home-manager, dream2nix, nixos-hardware, fh, nyx, ... }:
+  nixConfig = {
+    extra-substituters = [
+      "https://nixos-raspberrypi.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
+    ];
+  };
+
+  outputs = inputs@{ nixos-raspberrypi, nixpkgs, nur, anyrun, home-manager, nixos-hardware, fh, nyx, dots-hyprland, dots-hyprland-source, ... }:
   let
     system = "aarch64-linux";
     lib = nixpkgs.lib;
-    pkgs-stable = import inputs.nixpkgs-stable {
-      inherit system;
-      config = {
-        allowUnfree = true;
-        #allowBroken = true;
-        permittedInsecurePackages = [
-          "openssl-1.1.1w"
-        ];
-      };
-    };
-    pkgs-unstable = import inputs.nixpkgs-unstable {
-      inherit inputs;
-      inherit system;
-      config = {
-        allowUnfree = true;
-        #allowBroken = true;
-      };
-      overlays = [
-        (import ./overlays/jetbrains-toolbox.nix)
-      ];
-    };
-
-    pkgs = import inputs.nixpkgs {
-      inherit inputs;
-      inherit system;
-      inherit linux_rpi5;
-      config.allowUnfree = true;
-      config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-        "vscode"
-      ];
-      config.allowUnsupportedSystem = true;
-      overlays = [
-        (import ./overlays/debugpy.nix)
-        (import ./overlays/materialyoucolor.nix)
-        (import ./overlays/end-4-dots.nix)
-        (import ./overlays/wofi-calc.nix)
-        (import ./overlays/box64.nix)
-        (import ./overlays/argononed.nix)
-        (import ./overlays/helmfile.nix)
-        (import ./overlays/toshy.nix)
-        (import ./overlays/gnome-network-displays.nix)
-        nyx.overlays.default
-      ];
-    };
   in {
     nixosConfigurations = {
-      nixberry = nixpkgs.lib.nixosSystem {
+      nixberry = nixos-raspberrypi.lib.nixosSystem {
         specialArgs = {
+          inherit nixos-raspberrypi;
           inherit fh;
-          inherit linux_rpi5;
-	  inherit pkgs;
-          inherit pkgs-stable;
-          inherit pkgs-unstable;
+          inherit inputs;
         };
-        system.packages = [ anyrun.packages.${system}.anyrun
-                          ];
         
         modules = [
+          {  imports = with nixos-raspberrypi.nixosModules; [
+              raspberry-pi-5.base
+              raspberry-pi-5.page-size-16k
+              raspberry-pi-5.display-vc4
+              raspberry-pi-5.bluetooth
+            ];
+            boot.loader.raspberryPi.bootloader = "kernel";
+           }
           ./configuration.nix
           ./hardware-configuration.nix
-          nixos-hardware.nixosModules.raspberry-pi-5
-          #./remote-build.nix
+          ./nixberry/configtxt.nix
           ./nixberry/boot.nix
           ./nixberry/cpu.nix
           {
-            environment.systemPackages = [ fh.packages.aarch64-linux.default ];
+            environment.systemPackages = [ fh.packages.aarch64-linux.default anyrun.packages.${system}.anyrun ];
           }
           ./nixberry/graphics.nix
           ./nixberry/networking.nix
-          ./toshy.nix
+          #           ./toshy.nix
           ./nixberry/virtualisation.nix
-          #./nixberry/wireless.nix
+          ./remote-build.nix
           home-manager.nixosModules.home-manager
-          #nyx.nixosModules.default
           {
+            nixpkgs.overlays = [
+              (import ./overlays/openssl-pin.nix)
+              dots-hyprland.overlays.default
+              (import ./overlays/jetbrains-toolbox.nix)
+              (import ./overlays/debugpy.nix)
+              (import ./overlays/materialyoucolor.nix)
+              (import ./overlays/end-4-dots.nix)
+              (import ./overlays/wofi-calc.nix)
+              (import ./overlays/argononed.nix)
+              (import ./overlays/helmfile.nix)
+              (import ./overlays/gnome-network-displays.nix)
+              (import ./overlays/fuzzel-emoji.nix)
+              nyx.overlays.default
+            ];
+            nixpkgs.config.allowUnfree = true;
+            nixpkgs.config.permittedInsecurePackages = [
+              "qtwebengine-5.15.19"
+            ];
+            nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+              "vscode"
+            ];
+            nixpkgs.config.allowUnsupportedSystem = true;
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = { 
               inherit inputs;
-              inherit pkgs-stable;
-              inherit pkgs-unstable;
             };
             home-manager.users.celes = import ./home.nix;
+            #home-manager.users.demo = import ./home-demo.nix;
           }
         ];
       };

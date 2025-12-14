@@ -33,7 +33,7 @@ rec {
       xorg.libXdmcp
       xorg.libXres
       xorg.libXtst
-      wrapGAppsHook
+      wrapGAppsHook3
     ];
     configurePhase = ''
       mkdir build

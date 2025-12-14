@@ -1,22 +1,25 @@
 final: prev:
 {
-  inherit (prev.system) linux_rpi5;
-  rtl8821cuOverride = prev.stdenv.mkDerivation rec {
-    pname = "rtl8821cu";
+  #inherit (prev.system) linux_rpi5;
+  rtl8821au = prev.linuxKernel.packages.rtl8821au.override rec {
+    pname = "rtl8821au-20210708";
     #version = "${prev.system.kernel.modDirVersion}-unstable-2024-05-30";
-    version = "6.6.31-unstable-2024-05-30";
+    version = "20240613";
   
     src = prev.fetchFromGitHub {
       owner = "morrownr";
-      repo = "8821cu-20210916";
-      rev = "f6d4598290c5e9c8e545130e8a31d130f6d135f4";
-      hash = "sha256-jpMf8K9diJ3mbEkP9Cp+VwairK+pwiEGU/AtUIouCqM=";
+      repo = "8821au-20210708";
+      rev = "0b12ea54b7d6dcbfa4ce94eb403b1447565407f1";
+      hash = "";
     };
   
-    hardeningDisable = [ "pic" ];
+    #hardeningDisable = [ "pic" "format" ];
   
-    nativeBuildInputs = [ prev.bc ] ++ prev.system.kernel.moduleBuildDependencies;
-    makeFlags = prev.system.kernel.makeFlags;
+    #nativeBuildInputs = with prev; [
+    #  bc
+    #  nukeReferences
+    #] ++ prev.system.kernel.moduleBuildDependencies;
+    #makeFlags = prev.system.kernel.makeFlags;
   
     # prePatch = ''
     #   substituteInPlace ./Makefile \

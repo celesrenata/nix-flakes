@@ -3,14 +3,14 @@
   config = {
     environment.systemPackages = with pkgs; [
       libGL
-      kdenlive
     ];
     hardware.graphics =
     with pkgs; {
       enable = true;
+      enable32Bit = lib.mkForce false;
       extraPackages = with pkgs; [
         #pkgs-unstable.displaylink
-        vaapiVdpau
+        libva-vdpau-driver
         libvdpau-va-gl
         libGL
       ];

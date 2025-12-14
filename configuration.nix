@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ chaotic, config, lib, nixos-hardware, pkgs, pkgs-stable, pkgs-unstable, ... }:
+{ chaotic, config, lib, nixos-hardware, pkgs, ... }:
 {
   # Licences.
   nixpkgs.config = {
@@ -12,6 +12,7 @@
   # Inscure packages allowed.
   nixpkgs.config.permittedInsecurePackages = [
     "python-2.7.18.7"
+    "qtwebengine-5.15.19"
   ];
 
   imports =
@@ -31,24 +32,6 @@
 
   # Udev rules.
   hardware.uinput.enable = true;
-  services.keyd = {
-    enable = true;
-    keyboards.mac.settings = {
-      main = {
-        control = "layer(meta)";
-        meta = "layer(control)";
-        rightcontrol = "layer(meta)";
-      };
-      meta = {
-        left =  "control-left";
-        right = "control-right";
-        space = "control-space";
-      };
-    };
-    keyboards.mac.ids = [
-      "*"
-    ];
-  };
   services.udev.extraRules = ''
     # HDMI-CEC
     SUBSYSTEM=="vchiq", GROUP="video", MODE="0660", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/vchiq"
@@ -95,7 +78,12 @@
   # Enable the GDM Display Manager.
   services.displayManager = {
     defaultSession = "hyprland";
+    autoLogin.enable = false;
   };
+  
+  # Increase timeout for home-manager service (Python packages take long to build on ARM)
+  systemd.services.home-manager-celes.serviceConfig.TimeoutStartSec = lib.mkForce "15min";
+  
   services.xserver.displayManager.gdm = {
       enable = true;
       wayland = true;
@@ -105,12 +93,12 @@
   services.xserver.enable = true;
 
   # Enable the Enlightenment Desktop Environment.
-  services.xserver.desktopManager.enlightenment.enable = true;
+  #services.xserver.desktopManager.enlightenment.enable = true;
 
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
-    package = pkgs-stable.hyprland;
+    package = pkgs.hyprland;
     # Whether to enable Xwayland
     xwayland.enable = true;
   };
@@ -139,7 +127,7 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   
   services.pipewire = {
@@ -168,7 +156,7 @@
   fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-cjk-sans
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     liberation_ttf
     fira-code
     fira-code-symbols
@@ -177,7 +165,8 @@
     proggyfonts
     fontconfig
     lexend
-    nerdfonts
+    nerd-fonts.dejavu-sans-mono
+    nerd-fonts.space-mono
     material-symbols
     bibata-cursors
   ];
@@ -205,7 +194,7 @@
       after = [ "graphical-session.target" ];
       serviceConfig = {
           Type = "simple";
-          ExecStart = "${pkgs-stable.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+          ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
           Restart = "on-failure";
           RestartSec = 1;
           TimeoutStopSec = 10;
@@ -215,13 +204,31 @@
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
+  services.keyd = {
+    enable = true; 
+    keyboards.mac.settings = {
+      main = {
+        control = "layer(meta)";
+        meta = "layer(control)";
+        rightcontrol = "layer(meta)";
+      };
+      meta = {
+        left =  "control-left";
+        right = "control-right";
+        space = "control-space";
+      };
+    };
+    keyboards.mac.ids = [
+      "*"
+    ];
+  };
 
   # Gestures.
   services.touchegg.enable = true;
 
   # Garbage Collection.
   nix.optimise.automatic = true;
- 
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
     isNormalUser = true;
@@ -242,13 +249,14 @@
 
   # $ nix search wget
   environment.systemPackages = 
-  (with pkgs-stable; [
+  (with pkgs; [
     gtksourceview
+    cmake
   ])
 
   ++
 
-  (with pkgs-stable; [
+  (with pkgs; [
     # Editors.
     vim
     
@@ -264,28 +272,34 @@
     calf
     lsp-plugins
     alsa-utils
+    easyeffects
 
     # System Tools.
-    glxinfo
+    mesa-demos 
     blueman
     networkmanagerapplet
+    networkmanager-openvpn
+    openvpn
+    kdePackages.plasma-nm
     nix-index
     mlocate
-    barrier
+    input-leap 
     openssl
     simple-scan
     nixos-generators
     screen 
     btop
+    nvtopPackages.v3d
     usbutils
     pciutils
-    thefuck
+    pay-respects 
     tldr
     bc
     kbd
     imagemagick
     pssh
     ssh-tools
+    nh
 
     # Shells.
     fish
@@ -294,7 +308,7 @@
 
     # Development Tools.
     git
-    sublime4
+    #sublime4
 
     # Kubernetes.
     helm
@@ -359,14 +373,13 @@
     ffmpeg-full
     libspatialaudio
     pulseaudio
-    kdenlive
-    xwaylandvideobridge
+    kdePackages.kdenlive
     hyprpaper
     box64
+    box86
     
     # Media
     jellyfin-media-player
-    plex-media-player
     (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
       inputstream-adaptive
       inputstream-ffmpegdirect
@@ -382,19 +395,20 @@
         helm-git
       ];
     })
-    pkgs-unstable.kubernetes-helm
-    pkgs-unstable.helmfile
-    pkgs-unstable.kustomize
-    pkgs-unstable.kompose
+    pkgs.kubernetes-helm
+    pkgs.helmfile
+    pkgs.kustomize
+    pkgs.kompose
     pkgs.kubevirt
-    pkgs-unstable.krew
+    pkgs.krew
   ])
 
   ++
 
-  (with pkgs-unstable; [ 
+  (with pkgs; [ 
     # Development Tools
-    jetbrains-toolbox-aarch64
+    pkgs.jetbrains-toolbox-aarch64
+    amazon-q-cli
     (kodi-wayland.withPackages (kodiPackages: with kodiPackages; [
       inputstream-adaptive
       inputstream-ffmpegdirect
@@ -410,7 +424,7 @@
         output_name = "HDMI-A-1";
         max_fps = 30;
         chooser_type = "simple";
-        chooser_cmd = "${pkgs-stable.slurp}/bin/slurp -f %o -or";
+        chooser_cmd = "${pkgs.slurp}/bin/slurp -f %o -or";
       };
     };
     config = {
@@ -432,7 +446,6 @@
     };
     extraPortals = [
       pkgs.xdg-desktop-portal-gtk
-      pkgs.xdg-desktop-portal-kde
       pkgs.xdg-desktop-portal-wlr
       #inputs.xdg-desktop-portal-hyprland
     ];
@@ -451,5 +464,5 @@
   # networking.firewall.enable = false;
 
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = "25.05"; # Did you read the comment?
 }

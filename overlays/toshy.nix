@@ -220,7 +220,7 @@ rec {
   python-toshy-init = prev.python312.override {
     packageOverrides = final: prev: {
       xwaykeyz = with prev.pkgs.python3Packages; toPythonApplication final.python-xwaykeyz;
-      toshy = prev.buidPythonPackages {
+      toshy = prev.buildPythonPackages {
         preBuild = ''
 cat > setup.py << EOF
 from setuptools import setup
@@ -260,11 +260,11 @@ EOF
           inotify-simple
           pillow
           pkgs.gtk3
-          pkgs.wrapGAppsHook
+          pkgs.wrapGAppsHook3
           pygobject3
           lockfile
           dbus-python
-          systemd
+          systemd-python
           python-tk
           sv-ttk
           watchdog
@@ -281,7 +281,7 @@ EOF
         nativeBuildInputs = with prev.pkgs; [
           gtk3
           gobject-introspection
-          wrapGAppsHook
+          wrapGAppsHook3
         ];
         dependencies = with prev.pkgs; [
           gtk3
@@ -298,7 +298,6 @@ EOF
         installPhase = ''
           find scripts/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
           find assets/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
-          find kde-kwin-dbus-service/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
           find lib/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
           install -m755 -D default-toshy-config/toshy_config.py $out/toshy_config.py
           find desktop/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
@@ -351,11 +350,11 @@ EOF
       ordered-set
       pillow
       pkgs.gtk3
-      pkgs.wrapGAppsHook
+      pkgs.wrapGAppsHook3
       pygobject3
       lockfile
       dbus-python
-      systemd
+          systemd-python
       final.python-tk
       sv-ttk
       watchdog
@@ -371,7 +370,7 @@ EOF
     nativeBuildInputs = with prev.pkgs; [
       gtk3
       gobject-introspection
-      wrapGAppsHook
+      wrapGAppsHook3
     ];
     dependencies = [
       prev.pkgs.gtk3
@@ -380,7 +379,6 @@ EOF
     installPhase = ''
       find scripts/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
       find assets/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
-      find kde-kwin-dbus-service/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
       find lib/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
       install -m755 -D default-toshy-config/toshy_config.py $out/toshy_config.py
       find desktop/ | awk '{ print "install -m755 -D " $0 " \$out/" $0 }' | bash
@@ -389,10 +387,10 @@ EOF
       install -m755 -D toshy_tray.py $out/toshy_tray.py
     '';
     src = prev.pkgs.fetchFromGitHub {
-      owner = "RedBearAK";
+      owner = "celesrenata";
       repo = "toshy";
-      rev = "374fd12c5fbc8099d5452915dc0e5466a0cfce48";
-      sha256 = "sha256-BBDNRq4aZ0VKUu6cueyKfxQChCWpoEmKsqxWcbSnZIc=";
+      rev = "0c04034cdb00a3a258317b1c8326df5f00b4653b";
+      sha256 = "0fbi5xyav1zp24qdmc5b1n2n53y8chgcqg3v0rzlb2dp96lj5li1";
     }; 
   };
 }

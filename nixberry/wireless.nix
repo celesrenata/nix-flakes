@@ -7,7 +7,7 @@
 , ...
 }:
 stdenv.mkDerivation rec {
-  name = "rtl8821cuOverride";
+  name = "rtl8821auOverride";
   inherit kernel;
   version = "6.6.35-rpi-6.6.y";
 
