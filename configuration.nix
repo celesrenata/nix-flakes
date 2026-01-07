@@ -16,7 +16,10 @@
 
   environment.localBinInPath = true;
   # Enable Flakes.
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    download-buffer-size = 8589934592; # 8gb
+  };
   
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;
@@ -99,7 +102,7 @@
   services.wivrn = {
     enable = true;
     openFirewall = true;
-    package = pkgs-unstable.wivrn;  
+    package = pkgs.wivrn;  
     # Write information to /etc/xdg/openxr/1/active_runtime.json, VR applications
     # will automatically read this and work with WiVRn (Note: This does not currently
     # apply for games run in Valve's Proton)
@@ -396,6 +399,7 @@
   programs.gamemode.enable = true;
   programs.steam = {
     enable = true;
+    protontricks.enable = true;
     extraPackages = with pkgs; [
       mesa-demos
       qt6.qtwayland
@@ -475,6 +479,7 @@
     mako
     keymapp
     android-tools
+    postgresql
 
     # Shells.
     fish
@@ -511,6 +516,7 @@
     # Development Tools.
     #android-studio-full
     amazon-q-cli
+    kiro
     jetbrains-toolbox
     nodejs_20
     meson

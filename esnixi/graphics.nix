@@ -9,14 +9,23 @@ let
   };
   
   # Custom NVIDIA package with 580 drivers and 6.16 patches
-  nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.105.08";
-    sha256_64bit = "sha256-2cboGIZy8+t03QTPpp3VhHn6HQFiyMKMjRdiV2MpNHU=";
+  base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
+    version = "580.119.02";
+    sha256_64bit = "sha256-gCD139PuiK7no4mQ0MPSr+VHUemhcLqerdfqZwE47Nc=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-FGmMt3ShQrw4q6wsk8DSvm96ie5yELoDFYinSlGZcwQ=";
-    settingsSha256 = "sha256-YvzWO1U3am4Nt5cQ+b5IJ23yeWx5ud1HCu1U0KoojLY=";
+    openSha256 = "sha256-l3IQDoopOt0n0+Ig+Ee3AOcFCGJXhbH1Q1nh1TEAHTE=";
+    settingsSha256 = "sha256-sI/ly6gNaUw0QZFWWkMbrkSstzf0hvcdSaogTUoTecI=";
     persistencedSha256 = "";
   });
+
+  nvidia-package = base-nvidia-package // {
+    open = base-nvidia-package.open.overrideAttrs (openAttrs: {
+      postPatch = (openAttrs.postPatch or "") + ''
+        substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
+          --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
+      '';
+    });
+  };
 in
 {
   nixpkgs.config.allowUnfree = true;

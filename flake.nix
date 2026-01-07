@@ -1,5 +1,5 @@
 {
-  description = "Personal NixOS Configuration - ESXi VM and MacBook T2 Support";
+  description = "Personal NixOS Configuration - ESXi Baremetal and MacBook T2 Support";
 
   # Input sources for the flake
   # This section defines all external dependencies and their versions
@@ -21,12 +21,15 @@
     anyrun.url = "github:Kirottu/anyrun";                          # Application launcher
     # anyrun.inputs.nixpkgs.follows = "nixpkgs";                   # Disabled due to compatibility issues
 
+    # Exo acceleration
+    exo.url = "github:celesrenata/exo/main";
+
     # AI and machine learning tools
     # ComfyUI now available in nixpkgs (PR #441841)
     nix-comfyui.url = "github:utensils/nix-comfyui";
     
     # OneTrainer for diffusion model training
-    onetrainer-flake.url = "github:celesrenata/OneTrainer-flake";
+    onetrainer-flake.url = "github:celesrenata/OneTrainer-flake/dev";
     onetrainer-flake.inputs.nixpkgs.follows = "nixpkgs";
 
     # Window managers and desktop environments
@@ -69,7 +72,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, exo, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -196,7 +199,7 @@
           (import ./overlays/latex.nix)                   # LaTeX document system
           # (import ./overlays/nmap.nix)                  # Network mapper (disabled)
           (import ./overlays/wofi-calc.nix)               # Calculator for Wofi
-          (import ./overlays/wivrn-fix.nix)               # Fix FFmpeg profile constants in wivrn
+          # (import ./overlays/wivrn-fix.nix)             # Fix FFmpeg profile constants in wivrn (disabled)
           # (import ./overlays/xivlauncher.nix)           # Final Fantasy XIV launcher (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
@@ -230,7 +233,7 @@
           allowBroken = true;
         };
         overlays = [
-          (import ./overlays/wivrn-fix.nix)  # Fix FFmpeg profile constants in wivrn
+          # (import ./overlays/wivrn-fix.nix)  # Fix FFmpeg profile constants in wivrn (disabled)
         ];
       };
       in 
@@ -251,17 +254,27 @@
           ./remote-build.nix                            # Remote build settings
           ./secrets.nix                                 # SOPS secrets management
           
+          # CA certificate configuration
+          {
+            security.pki.certificates = [
+              (builtins.readFile ./celestium-ca.crt)
+            ];
+          }
+          
           # Platform-specific ESXi configurations
           ./esnixi/boot.nix                             # Boot loader and kernel settings
+          ./esnixi/exo.nix
           ./esnixi/games.nix                            # Gaming optimizations
           ./esnixi/graphics.nix                         # GPU and graphics configuration
           ./esnixi/hyte-touch.nix                       # Hyte touch display configuration
           ./esnixi/monitoring.nix                       # System monitoring tools
           ./esnixi/networking.nix                       # Network configuration
+          ./esnixi/remote-desktop.nix                   # Remote desktop access
           ./esnixi/thunderbolt.nix                      # Thunderbolt support
           ./esnixi/virtualisation.nix                   # Virtualization settings
           
           # External modules
+          exo.nixosModules.default
           hyte-touch-infinite-flakes.nixosModules.hyte-touch
           # niri.nixosModules.niri                      # Niri compositor (disabled)
           protontweaks.nixosModules.protontweaks        # Steam Proton enhancements
@@ -368,7 +381,7 @@
             allowBroken = true;
           };
           overlays = [
-            (import ./overlays/wivrn-fix.nix)           # Fix FFmpeg profile constants in wivrn
+            # (import ./overlays/wivrn-fix.nix)         # Fix FFmpeg profile constants in wivrn (disabled)
           ];
         };
         in
@@ -397,6 +410,13 @@
             ./configuration.nix                         # Main system configuration
             ./remote-build.nix                          # Remote build settings
             ./secrets.nix                               # SOPS secrets management
+            
+            # CA certificate configuration
+            {
+              security.pki.certificates = [
+                (builtins.readFile ./celestium-ca.crt)
+              ];
+            }
             
             # Hardware-specific modules
             nixos-hardware.nixosModules.apple-t2        # Apple T2 security chip support

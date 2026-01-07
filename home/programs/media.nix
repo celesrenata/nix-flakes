@@ -56,9 +56,9 @@
     spotify
     discord
     signal-desktop
+    tidal-hifi
   ] ++ (with pkgs-unstable; [
     # Unstable media packages
-    tidal-hifi
     lan-mouse
   ]);
 }

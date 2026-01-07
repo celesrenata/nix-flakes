@@ -26,11 +26,13 @@
     #  enable = true;
     #  lfs.enable = true;
     #};
+    programs.gamemode.enable = true;
     programs.steam = {
       enable = true;
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
       gamescopeSession.enable = true;
+      protontricks.enable = true;
       extraPackages = with pkgs; [
         bumblebee
         primus
@@ -39,6 +41,7 @@
         #steam-tui
         qt6.qtwayland
         nss
+        protontricks
         xorg.libxkbfile
         kdePackages.qtwayland
         libsForQt5.qt5.qtwayland
@@ -47,7 +50,6 @@
         proton-ge-bin
       ];
     };
-    programs.gamemode.enable = true;
     programs.alvr = {
       enable = true;
       package = pkgs.alvr; 

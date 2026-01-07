@@ -95,7 +95,7 @@
       six
       pycairo
     ])))
-  ] ++ (with pkgs-unstable; [
+  ] ++ (with pkgs; [
     # Unstable development packages
     fastfetch
     vesktop
