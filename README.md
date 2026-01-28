@@ -1,230 +1,287 @@
-# Professional NixOS Configuration - Multi-Platform Support
+# NixOS Flake Configuration
 
-A comprehensive, modular NixOS configuration supporting baremetal x86_64 systems and Apple MacBook T2 hardware. Features enterprise-grade architecture, extensive customization, and a modern Wayland desktop environment.
+A modular NixOS configuration with support for multiple platforms, featuring Hyprland desktop environment, AI/ML tools, and extensive hardware support.
 
-## Supported Platforms
+## Platforms
 
-### Baremetal x86_64 (`esnixi`)
-- **Target**: Physical x86_64 hardware with NVIDIA GPU support
-- **Graphics**: NVIDIA drivers with CUDA acceleration for AI/ML workloads
-- **Features**: Gaming (Steam, VR), development environment, virtualization (Docker, QEMU)
-- **Optimizations**: Hardware-specific drivers, performance tuning, multi-monitor support
+### esnixi (Baremetal x86_64)
+Primary workstation configuration with NVIDIA GPU support, gaming capabilities, and AI/ML acceleration.
 
-### MacBook T2 (`macland`) 
-- **Target**: Apple MacBook with T2 security chip
-- **Graphics**: AMD integrated graphics with ROCm support
-- **Features**: Touch Bar support, T2-specific drivers, Mac-style keybindings, power management
-- **Hardware**: Broadcom WiFi/Bluetooth firmware, audio pipeline, thermal management
-
-### Raspberry Pi 5 (`rpi5`)
-- **Status**: Available on separate RPI5 branch for ARM64 architecture
-- **Note**: Switch to RPI5 branch for ARM-specific configuration
+### macland (MacBook T2)
+Apple MacBook configuration with T2 chip support, AMD graphics, Touch Bar integration, and power management.
 
 ## Features
 
-### Desktop Environment
-- **Hyprland (Wayland)** - Modern tiling window manager
-- **Customized End-4's Dots** - Beautiful, functional desktop configuration
-- **Mac-style Keybindings** - Familiar shortcuts for Mac users
-- **Professional Theming** - Consistent visual design
+- **Hyprland Wayland Compositor** - Modern tiling window manager with custom End-4 dots configuration
+- **AI/ML Stack** - ComfyUI, OneTrainer, Ollama, vLLM, Exo distributed inference
+- **Development Environment** - VSCode, JetBrains Toolbox, Git, Python, Node.js
+- **Gaming** - Steam, ALVR VR streaming, hardware acceleration
+- **Virtualization** - Docker, QEMU/KVM support
+- **Custom Hardware** - Hyte Y70 Touch-Infinite display support
+- **Secrets Management** - SOPS-nix for encrypted configuration
 
-### Development Tools
-- **VSCode with Nix backend** - Fully integrated development environment
-- **JetBrains Toolbox (Wayland)** - Complete IDE suite
-- **Git with advanced configuration** - Professional version control
-- **Python, Node.js, CMake** - Complete development stack
-- **Ollama built-in** - Local AI/ML capabilities (T2 supported!)
+## Structure
 
-### Gaming & Media
-- **Steam with optimizations** - Gaming platform with performance tweaks
-- **ALVR** - VR streaming support
-- **Hardware acceleration** - GPU-optimized media playback
-
-### Enterprise Features
-- **SOPS-nix secrets management** - Encrypted secrets with age/SSH keys
-- **Modular architecture** - Clean, maintainable configuration structure
-- **Professional documentation** - Comprehensive inline comments
-- **Remote build support** - Distributed compilation capabilities
-
-### Productivity
-- **Customized Winapps with M365** - Windows applications via RDP (**Bring your own licenses!**)
-- **Suspend/Resume for T2** - Power management that actually works
-- **Multi-monitor support** - Professional workspace setup
-
-## Screenshots
-
-### Theming
-![Desktop Theme 1](http://www.celestium.life/wp-content/uploads/2024/06/image.png)
-![Desktop Theme 2](http://www.celestium.life/wp-content/uploads/2024/06/theme2.png)
-
-### Development Environment
-![Development Setup](http://www.celestium.life/wp-content/uploads/2024/07/productivity.png)
-
-### Gaming
-![Gaming Configuration](http://www.celestium.life/wp-content/uploads/2024/07/gaming.png)
+```
+.
+├── flake.nix              # Main flake configuration with inputs/outputs
+├── configuration.nix      # Core system configuration
+├── flake.lock            # Locked dependency versions
+│
+├── esnixi/               # Baremetal x86_64 platform
+│   ├── boot.nix         # GRUB bootloader configuration
+│   ├── graphics.nix     # NVIDIA 580 drivers with CUDA
+│   ├── networking.nix   # Network configuration
+│   ├── virtualisation.nix # Docker and QEMU
+│   ├── games.nix        # Steam and gaming setup
+│   ├── vllm.nix         # vLLM inference server
+│   ├── lvra.nix         # LVRA AI assistant
+│   ├── exo.nix          # Exo distributed inference
+│   ├── hyte-touch.nix   # Hyte display integration
+│   └── hyprland.nix     # Platform-specific Hyprland config
+│
+├── macland/             # MacBook T2 platform
+│   ├── boot.nix        # T2-compatible bootloader
+│   ├── graphics.nix    # AMD graphics with ROCm
+│   ├── sound.nix       # T2 audio pipeline
+│   ├── cpu.nix         # Intel CPU and power management
+│   ├── firmware/       # T2 firmware files (Broadcom WiFi/BT)
+│   └── hyprland.nix    # Platform-specific Hyprland config
+│
+├── home/               # Home Manager user configuration
+│   ├── default.nix    # Main home-manager entry point
+│   ├── desktop/       # Desktop environment
+│   │   ├── hyprland.nix    # Hyprland configuration
+│   │   ├── quickshell.nix  # Quickshell desktop shell
+│   │   ├── hypridle.nix    # Idle management
+│   │   └── theming.nix     # Themes and cursors
+│   ├── programs/      # Application configurations
+│   │   ├── development.nix  # Dev tools (VSCode, Git)
+│   │   ├── comfyui.nix     # ComfyUI AI image generation
+│   │   ├── lvra.nix        # LVRA configuration
+│   │   ├── media.nix       # Media apps (OBS, players)
+│   │   ├── productivity.nix # Browsers, file managers
+│   │   └── terminal.nix    # Terminal emulators
+│   ├── shell/         # Shell configurations
+│   │   ├── fish.nix
+│   │   ├── bash.nix
+│   │   └── starship.nix
+│   └── system/        # System integration
+│       ├── packages.nix    # System packages
+│       ├── files.nix       # Dotfiles management
+│       ├── variables.nix   # Environment variables
+│       └── hyte-touch.nix  # User service
+│
+├── overlays/          # Package overlays and modifications
+│   ├── comfyui.nix
+│   ├── jetbrains-toolbox.nix
+│   ├── nvidia-*.nix
+│   ├── ollama.nix
+│   ├── toshy.nix
+│   └── ... (40+ overlays)
+│
+├── modules/           # Custom NixOS modules
+│   ├── background-removal.nix
+│   ├── graphics-nvidia.nix
+│   └── vr/
+│
+├── patches/           # Source code patches
+│   ├── hypr.*.patch
+│   ├── ags.*.patch
+│   ├── nvidia-*.patch
+│   └── keyd.*.patch
+│
+├── scripts/           # Helper scripts
+│   └── install-*.ps1  # Windows application installers
+│
+├── secrets/           # SOPS encrypted secrets
+│   └── secrets.yaml
+│
+└── docs/             # Documentation
+    └── comfyui-dynamic-dependencies.md
+```
 
 ## Installation
 
-**For detailed step-by-step instructions, see `CONTEXT_INSTALLATION.md`**
+### Prerequisites
 
-### Quick Start - Baremetal x86_64
+- NixOS installer ISO
+- For T2 MacBooks: Follow [T2 Linux guide](https://wiki.t2linux.org/distributions/nixos/home/)
+- For T2: Copy firmware files to `macland/firmware/`
 
-1. **Boot NixOS installer** and prepare system
-2. **Clone configuration**:
-   ```bash
-   nix-shell -p git
-   sudo mkdir -p /mnt/sources && sudo chown 1000:100 /mnt/sources
-   cd /mnt/sources && git clone https://github.com/celesrenata/nix-flakes
-   cp -r nix-flakes/* /mnt/etc/nixos/
-   ```
-3. **Install system**:
-   ```bash
-   sudo nixos-install --root /mnt --flake /mnt/etc/nixos#esnixi
-   sudo nixos-enter && sudo passwd celes && sudo poweroff
-   ```
+### Basic Installation
 
-### Quick Start - MacBook T2
-
-1. **Complete T2 Linux preparation** ([T2 Linux guide](https://wiki.t2linux.org/distributions/nixos/home/))
-2. **Copy T2 firmware** to `/mnt/etc/nixos/macland/firmware/`
-3. **Install system**:
-   ```bash
-   sudo nixos-install --root /mnt --flake /mnt/etc/nixos#macland
-   ```
-
-### Post-Installation
-- Login through GDM, system will initialize automatically
-- Press `Command + Option + /` for keybinding cheatsheet
-- Run `~/winapps/runmefirst.sh` for Office 365 setup (optional)
-
-## Winapps Configuration
-
-Winapps allows you to run Windows applications seamlessly integrated into your Linux desktop. This configuration includes a customized setup for Microsoft Office 365 and other Windows applications.
-
-### How It Works
-- **RDP Integration**: Uses FreeRDP to connect to a Windows VM or remote Windows machine
-- **Seamless Experience**: Windows applications appear as native Linux applications
-- **Office 365 Support**: Pre-configured for Microsoft Office suite
-- **Custom Icons**: Applications appear in your application menu with proper icons
-
-### Setup Requirements
-- **Windows VM or Remote Machine**: You need access to a Windows system
-- **RDP Enabled**: Windows machine must have RDP enabled
-- **Valid Licenses**: Bring your own Windows and Office 365 licenses
-- **Network Access**: Reliable network connection to Windows machine
-
-### Platform Support
-- **Baremetal (esnixi)**: Full support - configure your own Windows VM
-- **MacBook T2 (macland)**: Full support - built-in Windows VM configuration
-- **Raspberry Pi 5**: Limited support due to performance constraints
-
-See installation instructions above for platform-specific setup steps.
-
-## Configuration Structure
-
-This configuration uses a modular architecture for maintainability:
-
+1. Boot NixOS installer and partition disks
+2. Mount root to `/mnt`
+3. Clone repository:
+```bash
+nix-shell -p git
+sudo mkdir -p /mnt/sources && sudo chown 1000:100 /mnt/sources
+cd /mnt/sources
+git clone <repository-url> nixos
+cd nixos
 ```
-nixos/
-├── flake.nix                    # Main flake with comprehensive documentation
-├── configuration.nix           # Core system configuration
-├── secrets.nix                 # SOPS secrets management (currently disabled)
-├── hardware-configuration.nix  # Auto-generated hardware detection
-├── remote-build.nix            # Distributed build configuration
-├── setup-certificate.sh       # Certificate setup script
-│
-├── esnixi/                     # Baremetal x86_64 configurations
-│   ├── boot.nix               # GRUB EFI bootloader
-│   ├── graphics.nix           # NVIDIA drivers and CUDA
-│   ├── networking.nix         # Advanced network configuration
-│   ├── virtualisation.nix     # Docker, QEMU, KVM support
-│   ├── games.nix              # Steam and gaming optimizations
-│   └── *.nix                  # Additional platform modules
-│
-├── macland/                    # MacBook T2 configurations
-│   ├── boot.nix               # T2-compatible bootloader
-│   ├── graphics.nix           # AMD graphics and ROCm
-│   ├── sound.nix              # Complex T2 audio system
-│   ├── cpu.nix                # Intel CPU and power management
-│   ├── firmware/              # T2 firmware files
-│   └── *.nix                  # Additional T2 modules
-│
-├── home/                       # Modular home-manager configuration
-│   ├── desktop/               # Hyprland, theming, desktop environment
-│   ├── programs/              # Development, media, productivity apps
-│   ├── shell/                 # Fish, bash, starship configurations
-│   └── system/                # System integration and packages
-│
-├── overlays/                   # Custom package modifications
-├── patches/                    # Source code patches
-├── modules/                    # Custom NixOS modules
-├── scripts/                    # Windows installation scripts
-├── secrets/                    # Encrypted secrets storage
-└── user/                       # User-specific configurations
+
+4. Install system:
+```bash
+# For baremetal x86_64
+sudo nixos-install --root /mnt --flake .#esnixi
+
+# For MacBook T2
+sudo nixos-install --root /mnt --flake .#macland
+```
+
+5. Set user password:
+```bash
+sudo nixos-enter
+passwd celes
+exit
+```
+
+6. Reboot and login through GDM
+
+## Key Technologies
+
+### Desktop Environment
+- **Hyprland** - Wayland compositor with tiling
+- **Quickshell** - Desktop shell and widgets
+- **End-4 Dots** - Custom desktop configuration
+- **GDM** - Display manager
+
+### AI/ML Tools
+- **ComfyUI** - Node-based AI image generation
+- **OneTrainer** - Diffusion model training
+- **Ollama** - Local LLM inference
+- **vLLM** - High-performance LLM serving
+- **Exo** - Distributed inference across devices
+- **LVRA** - AI assistant integration
+
+### Graphics
+- **NVIDIA 580 drivers** (esnixi) - Latest drivers with CUDA support
+- **AMD ROCm** (macland) - AMD GPU compute
+- **Hardware acceleration** - VA-API, NVENC/NVDEC
+
+### Development
+- **VSCode** - With Nix backend and extensions
+- **JetBrains Toolbox** - Full IDE suite
+- **Git** - Version control with advanced config
+- **Python, Node.js, CMake** - Development runtimes
+
+### Virtualization
+- **Docker** - Container runtime
+- **QEMU/KVM** - Virtual machines
+- **Libvirt** - VM management
+
+## Flake Inputs
+
+- `nixpkgs` - NixOS 25.11 stable
+- `nixpkgs-unstable` - Latest packages
+- `home-manager` - User environment management
+- `dots-hyprland` - End-4's Hyprland configuration
+- `nix-comfyui` - ComfyUI flake
+- `onetrainer-flake` - OneTrainer integration
+- `exo` - Distributed inference
+- `hyte-touch-infinite-flakes` - Hyte display support
+- `tiny-dfr` - MacBook Touch Bar
+- `nixos-hardware` - Hardware configurations
+- `sops-nix` - Secrets management
+- `ags` - Desktop shell (gorsbart fork)
+- `cline-cli` - AI coding assistant
+
+## Configuration Management
+
+### Rebuilding System
+```bash
+# Rebuild and switch
+sudo nixos-rebuild switch --flake .#esnixi
+
+# Test without switching
+sudo nixos-rebuild test --flake .#esnixi
+
+# Build only
+sudo nixos-rebuild build --flake .#esnixi
+```
+
+### Updating Flake
+```bash
+# Update all inputs
+nix flake update
+
+# Update specific input
+nix flake lock --update-input nixpkgs
+```
+
+### Home Manager
+```bash
+# Rebuild home environment
+home-manager switch --flake .#celes@esnixi
 ```
 
 ## Customization
 
-### Creating Your Own Configuration
-1. Fork this repository
-2. Create a new branch: `git checkout -b my-config`
-3. Modify configurations in the appropriate modules
-4. Update `flake.nix` with your system name
-5. Test with `nixos-rebuild dry-run --flake .#yoursystem`
+### Adding Packages
+- System packages: Edit `configuration.nix` or platform-specific files
+- User packages: Edit `home/system/packages.nix`
+- Overlays: Add to `overlays/` directory
 
-### Key Customization Points
-- **Username**: Update in `home/default.nix` and system configurations
-- **Hardware**: Modify platform-specific files in `esnixi/` or `macland/`
-- **Applications**: Add/remove packages in `home/programs/` modules
-- **Secrets**: Configure SOPS keys and add secrets as needed
+### Platform-Specific Configuration
+- Baremetal: Modify files in `esnixi/`
+- MacBook: Modify files in `macland/`
+
+### Desktop Customization
+- Hyprland: Edit `home/desktop/hyprland.nix`
+- Quickshell: Edit `home/desktop/quickshell.nix`
+- Theming: Edit `home/desktop/theming.nix`
+
+## Hardware Support
+
+### esnixi
+- NVIDIA RTX GPUs (580 drivers)
+- CUDA acceleration
+- Multi-monitor support
+- Hyte Y70 Touch-Infinite display
+- Gaming peripherals
+
+### macland
+- Apple T2 security chip
+- Touch Bar (tiny-dfr)
+- Broadcom WiFi/Bluetooth
+- AMD integrated graphics
+- Power management and suspend/resume
 
 ## Secrets Management
 
-This configuration includes enterprise-grade secrets management using SOPS-nix:
+Uses SOPS-nix for encrypted secrets:
+- Secrets stored in `secrets/secrets.yaml`
+- Encrypted with age/SSH keys
+- Configuration in `.sops.yaml`
+- Decrypted at runtime to `/run/secrets/`
 
-- **Encrypted storage**: Secrets encrypted with age/SSH keys
-- **Version control safe**: Encrypted files can be committed to git
-- **Automatic decryption**: Secrets available at `/run/secrets/` during runtime
-- **Key backup**: SSH host keys automatically backed up
+## Remote Build Support
 
-See `CONFIGURATION.md` for detailed secrets management instructions.
+Configuration includes remote build capabilities:
+- Distributed compilation
+- Build offloading to remote machines
+- See `remote-build.nix` for configuration
 
-## Known Limitations
+## License
 
-### Current Issues
-- **SOPS symlink conflict**: Minor issue with certificate deployment (system fully functional)
-- **Winapps setup**: Requires manual configuration for Windows VM connection
-  - Baremetal: Full support with proper Windows VM setup
-  - T2 MacBooks: Full support with built-in configuration
-  - RPi5: Performance limitations prevent reliable operation
-- **Tiny-DFR keycode**: Touch Bar function keys need keycode adjustment
+MIT License - See LICENSE file for details
 
-### Platform-Specific Notes
-- **T2 MacBooks**: Suspend/resume works, but initial setup may take time
-- **NVIDIA GPUs**: Requires proprietary drivers (automatically handled)
-- **JetBrains IDEs**: Requires restart of AGS or logout for Wayland support
-
-## Support & Documentation
-
-- **Context Files**: Comprehensive documentation in `CONTEXT_*.md` files
-  - `CONTEXT_MAIN.md`: Repository overview and architecture
-  - `CONTEXT_INSTALLATION.md`: Step-by-step installation guide
-  - `CONTEXT_PLATFORMS.md`: Platform-specific configurations
-  - `CONTEXT_HOME.md`: Home Manager user environment
-  - `CONTEXT_SUMMARY.md`: Overview of all context files
-- **Architecture Guide**: See `CONFIGURATION.md` for detailed documentation
-- **T2 MacBook Issues**: Refer to [T2 Linux Wiki](https://wiki.t2linux.org/)
-- **NixOS Help**: Consult [NixOS Manual](https://nixos.org/manual/nixos/stable/)
-- **Home Manager**: See [Home Manager Manual](https://nix-community.github.io/home-manager/)
+Copyright (c) 2024 Celes Renata
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Follow the existing documentation standards
-4. Test your changes thoroughly
-5. Submit a pull request with detailed description
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## License
+## Resources
 
-This configuration is provided as-is for educational and personal use. Please respect software licenses for included applications and bring your own licenses where required (e.g., Microsoft Office 365).
+- [NixOS Manual](https://nixos.org/manual/nixos/stable/)
+- [Home Manager Manual](https://nix-community.github.io/home-manager/)
+- [Hyprland Wiki](https://wiki.hyprland.org/)
+- [T2 Linux Wiki](https://wiki.t2linux.org/)
+- [Nix Flakes](https://nixos.wiki/wiki/Flakes)

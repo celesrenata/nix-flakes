@@ -161,6 +161,10 @@
                     (deny process-fork (with no-log))
                   '';
                 });
+                # Temporarily disabled - testing if CUDA 12.8 works
+                # bitsandbytes = python-super.bitsandbytes.override {
+                #   cudaPackages = pkgs.cudaPackages_12_9;
+                # };
               };
             };
           };
@@ -176,7 +180,11 @@
         
         # Package overlays for custom and modified packages
         overlays = [
-          nixgl.overlay                                    # OpenGL support
+          # Global CUDA 12.9 override for glibc 2.42 compatibility
+          # (self: super: {
+          #   cudaPackages = super.cudaPackages_12_9;
+          # })
+          nixgl.overlay                                   # OpenGL support
           # inputs.niri.overlays.niri                     # Niri compositor (disabled)
           # toshy.overlays.default                        # Toshy keybindings (disabled)
           dots-hyprland.overlays.default                  # Hyprland desktop environment
@@ -186,6 +194,9 @@
           (import ./overlays/dots-hyprland-dp3-filter.nix inputs)  # Filter DP-3 from dots-hyprland
           # (import ./overlays/cider.nix)                 # Cider music player (disabled)
           (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
+          (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
+          (import ./overlays/xrizer.nix)                  # Update xrizer to 0.4 for VR
+          (import ./overlays/vllm.nix)                    # Update vllm to v0.14.1
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
           (import ./overlays/debugpy.nix)                 # Python debugger
@@ -241,7 +252,7 @@
         # Special arguments passed to all modules
         specialArgs = {
           # inherit niri;                               # Niri compositor (disabled)
-          inherit pkgs;                                 # Main package set
+          # pkgs is now provided by the module system with overlays
           inherit pkgs-unstable;                        # Unstable packages
           inherit pkgs-old;				# Old packages
           inherit inputs;                               # All flake inputs
@@ -249,6 +260,8 @@
         
         # System modules and configuration files
         modules = [
+          # Set nixpkgs to use our pre-configured pkgs
+          { nixpkgs.pkgs = pkgs; }
           # Core system configuration
           ./configuration.nix                           # Main system configuration
           ./remote-build.nix                            # Remote build settings
@@ -272,6 +285,7 @@
           ./esnixi/remote-desktop.nix                   # Remote desktop access
           ./esnixi/thunderbolt.nix                      # Thunderbolt support
           ./esnixi/virtualisation.nix                   # Virtualization settings
+          ./esnixi/lvra.nix                             # VR Settings (WiVRn)
           
           # External modules
           exo.nixosModules.default

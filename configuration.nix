@@ -5,8 +5,8 @@
 { niri, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
 {
   # Licences.
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.hostPlatform = "x86-64-v3";
+  # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
+  nixpkgs.hostPlatform = "x86_64-linux";
 
   imports =
     [ # Include the results of the hardware scan.
@@ -38,7 +38,7 @@
   ];
   # Udev rules.
   # hardware.uinput.enable = true;
-
+  services.gvfs.enable = true;
   # Set your time zone.
 
   #services.automatic-timezoned.enable = true;
@@ -448,6 +448,9 @@
     # AI Tools
     inputs.cline-cli.packages.x86_64-linux.default
     
+    # Secrets Management
+    sops
+    
     # Networking Tools.
     wget
     curl
@@ -480,6 +483,7 @@
     keymapp
     android-tools
     postgresql
+    gvfs
 
     # Shells.
     fish
@@ -591,6 +595,7 @@
     #sunshine 
     moonlight-qt
     xfce.thunar
+    xfce.thunar-volman
     wayland-scanner
     waypipe
 

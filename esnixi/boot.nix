@@ -20,7 +20,7 @@ let
 in
 {
   config = {
-    nixpkgs.config.allowUnsupportedSystem = true;
+    # nixpkgs.config.allowUnsupportedSystem = true;
     boot = {
       binfmt.emulatedSystems = [ "aarch64-linux" ];
       loader = {
