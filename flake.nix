@@ -14,7 +14,7 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";  # Use same nixpkgs version
 
     # Hyte Y70 Touch-Infinite Display
-    hyte-touch-infinite-flakes.url = "github:celesrenata/hyte-touch-infinite-flakes";
+    hyte-touch-infinite-flakes.url = "path:/home/celes/sources/celesrenata/hyte-touch-infinite-flakes";
     hyte-touch-infinite-flakes.inputs.nixpkgs.follows = "nixpkgs";
 
     # Application launchers and desktop utilities
@@ -23,6 +23,10 @@
 
     # Exo acceleration
     exo.url = "github:celesrenata/exo/main";
+
+    # Kiro CLI
+    kiro-cli.url = "github:celesrenata/kiro-cli-flake";
+    kiro-cli.inputs.nixpkgs.follows = "nixpkgs";
 
     # AI and machine learning tools
     # ComfyUI now available in nixpkgs (PR #441841)
@@ -72,7 +76,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, exo, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, exo, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -172,7 +176,7 @@
           # Legacy packages with known security issues (use with caution)
           permittedInsecurePackages = [
             "python-2.7.18.7"    # Required for some legacy tools
-            "openssl-1.1.1w"      # Required for some application
+            # "openssl-1.1.1w"      # Required for some application (broken in 25.11)
             "qtwebengine-5.15.19"    # required for some application
             "mbedtls-2.28.10"     # Required for OpenRGB
           ];
@@ -188,14 +192,14 @@
           # inputs.niri.overlays.niri                     # Niri compositor (disabled)
           # toshy.overlays.default                        # Toshy keybindings (disabled)
           dots-hyprland.overlays.default                  # Hyprland desktop environment
-          (import ./overlays/quickshell-override.nix inputs)     # Override quickshell with nixpkgs version
+          # (import ./overlays/quickshell-override.nix inputs)     # Override quickshell with nixpkgs version (disabled - breaks Qt5Compat)
           
           # Custom overlays for modified or additional packages
           (import ./overlays/dots-hyprland-dp3-filter.nix inputs)  # Filter DP-3 from dots-hyprland
           # (import ./overlays/cider.nix)                 # Cider music player (disabled)
           (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
           (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
-          (import ./overlays/xrizer.nix)                  # Update xrizer to 0.4 for VR
+          # (import ./overlays/xrizer.nix)                  # Update xrizer to 0.4 for VR (now in upstream)
           (import ./overlays/vllm.nix)                    # Update vllm to v0.14.1
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
@@ -256,6 +260,7 @@
           inherit pkgs-unstable;                        # Unstable packages
           inherit pkgs-old;				# Old packages
           inherit inputs;                               # All flake inputs
+          quickshell = inputs.hyte-touch-infinite-flakes.inputs.quickshell.packages.${system}.default;
         };
         
         # System modules and configuration files
@@ -345,7 +350,7 @@
             # Legacy packages for compatibility
             permittedInsecurePackages = [
               "python-2.7.18.7"                        # Legacy Python for compatibility
-              "openssl-1.1.1w"                         # Legacy OpenSSL
+              # "openssl-1.1.1w"                         # Legacy OpenSSL (broken in 25.11)
             ];
           };
           
@@ -355,7 +360,7 @@
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
             inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
             dots-hyprland.overlays.default              # Hyprland desktop environment
-            (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version
+            # (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version (disabled - breaks Qt5Compat)
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
             (import ./overlays/debugpy.nix)             # Python debugger
             #(import ./overlays/freerdp.nix)             # Remote desktop client

@@ -83,8 +83,8 @@
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
-    package = pkgs-unstable.hyprland;
-    portalPackage = pkgs-unstable.xdg-desktop-portal-hyprland;
+    package = pkgs.hyprland;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
     xwayland.enable = true;
   };
 
@@ -447,6 +447,7 @@
     
     # AI Tools
     inputs.cline-cli.packages.x86_64-linux.default
+    inputs.kiro-cli.packages.x86_64-linux.default
     
     # Secrets Management
     sops
@@ -504,7 +505,7 @@
     pkgs-unstable.helmfile
     pkgs-unstable.kustomize
     pkgs-unstable.kompose
-    pkgs-unstable.kubevirt
+    pkgs.kubevirt
     pkgs-unstable.krew
 
     # Steam Tools.
@@ -543,7 +544,7 @@
     #nixStatic.dev
     node2nix
     nil
-    sublime4
+    # sublime4  # Temporarily disabled - requires broken openssl-1.1.1w
     #(pkgs.comfyuiPackages.comfyui.override {
     #  extensions = [
     #    pkgs.comfyuiPackages.extensions.acly-inpaint
