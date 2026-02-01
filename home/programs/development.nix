@@ -46,7 +46,6 @@
     ninja
     node2nix
     nil
-    sublime4
 
     # AWS Tools
     nodePackages.aws-cdk
