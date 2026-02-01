@@ -1,8 +1,26 @@
 { config, lib, pkgs, inputs, ... }:
 
 {
-  # Enable Hyte Touch Display system service
-  services.hyte-touch.enable = false;
+  # Sops secret for Grafana API token
+  sops.secrets.grafana_api_token = {
+    sopsFile = ../secrets/secrets.yaml;
+    owner = "celes";
+    group = "users";
+  };
+
+  # Enable Hyte Touch Display isolated Cage session
+  services.hyte-touch.enable = true;
+  
+  # Enable seatd for multi-session support
+  services.seatd = {
+    enable = true;
+    user = "celes";
+    group = "seat";
+  };
+  
+  # Add celes to seat group
+  users.groups.seat = {};
+  users.users.celes.extraGroups = [ "seat" ];
 
   # Enable autologin for celes during testing
   services.displayManager.autoLogin = {
@@ -10,21 +28,9 @@
     user = "celes";
   };
 
-  # Enable seatd for seat management
-  services.seatd = {
-    enable = true;
-    user = "celes";
-    group = "seat";
-  };
-
-  # Create seat group and add users
-  users.groups.seat = {};
-  users.users.celes.extraGroups = [ "seat" ];
-
   # Required packages for touch interface
   environment.systemPackages = with pkgs; [
-    weston
-    gamescope
-    inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.touch-widgets
+    cage
+    inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.start-hyte-touch
   ];
 }

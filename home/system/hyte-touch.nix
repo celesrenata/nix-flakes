@@ -2,11 +2,6 @@
 { inputs, lib, pkgs, pkgs-old, pkgs-unstable, config, ... }:
 
 {
-  # Sops secret for Grafana API token
-  sops.secrets.grafana_api_token = {
-    sopsFile = ../../secrets/secrets.yaml;
-  };
-
   # Install Qt WebEngine for embedded browser
   home.packages = with pkgs; [
     qt6.qtwebengine
@@ -27,7 +22,7 @@
         export QML2_IMPORT_PATH=${pkgs.qt6.qtwebengine}/lib/qt-6/qml
         export QTWEBENGINE_DISABLE_SANDBOX=1
         export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --disable-gpu"
-        export GRAFANA_API_TOKEN=$(cat ${config.sops.secrets.grafana_api_token.path})
+        export GRAFANA_API_TOKEN=$(cat /run/secrets/grafana_api_token)
         exec ${pkgs.quickshell}/bin/quickshell -p /home/celes/.config/quickshell/touch "$@"
       ''}";
       Restart = "always";
