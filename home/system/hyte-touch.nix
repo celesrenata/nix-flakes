@@ -8,13 +8,15 @@ in
   # Install Qt WebEngine for embedded browser
   home.packages = with pkgs; [
     qt6.qtwebengine
+    projectm-sdl-cpp  # Standalone music visualizer
   ];
 
   # Direct QuickShell on DP-3
   systemd.user.services.hyte-touch-display = {
     Unit = {
       Description = "Hyte Touch Display QuickShell";
-      After = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" "projectm-visualizer.service" ];
+      Requires = [ "projectm-visualizer.service" ];
       PartOf = [ "graphical-session.target" ];
     };
     
@@ -28,6 +30,30 @@ in
         export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --disable-gpu"
         export GRAFANA_API_TOKEN=$(cat /run/secrets/grafana_api_token)
         exec ${pkgs.quickshell}/bin/quickshell -p /home/celes/.config/quickshell/touch "$@"
+      ''}";
+      Restart = "always";
+      RestartSec = "3s";
+    };
+    
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
+  
+  # ProjectM visualizer running behind QuickShell
+  systemd.user.services.projectm-visualizer = {
+    Unit = {
+      Description = "ProjectM Music Visualizer";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.writeShellScript "projectm-wrapper" ''
+        export WAYLAND_DISPLAY=wayland-1
+        export SDL_VIDEODRIVER=wayland
+        exec ${pkgs.projectm-sdl-cpp}/bin/projectMSDL --fullscreen 1 --monitor 2
       ''}";
       Restart = "always";
       RestartSec = "3s";

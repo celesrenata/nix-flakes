@@ -120,7 +120,7 @@ in {
       owner = "vllm-project";
       repo = "vllm";
       rev = "main";
-      hash = "sha256-rBbaLd8eb3lW4nM1PPl/lTVQrJHYIsj+bibwnlo/x44=";
+      hash = "sha256-s4otgh6lKKZy5t9fBi3VJKzI5tCLeNq2AE7148yVBCk=";
     };
     
     patches = [];

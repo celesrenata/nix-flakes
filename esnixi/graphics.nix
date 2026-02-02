@@ -181,7 +181,6 @@ in
     description = "vLLM OpenAI-compatible API server with NVFP4 support";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
 
     environment = {
       HF_HOME = "/opt/vllm/models";

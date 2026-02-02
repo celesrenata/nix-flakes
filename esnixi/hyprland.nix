@@ -53,6 +53,11 @@
       windowrulev2 = monitor DP-3, title:^(hyte-touch-interface)$
       windowrulev2 = fullscreen, title:^(hyte-touch-interface)$
       
+      # ProjectM visualizer - behind QuickShell
+      windowrulev2 = workspace name:touch, class:^(projectMSDL)$
+      windowrulev2 = monitor DP-3, class:^(projectMSDL)$
+      windowrulev2 = fullscreen, class:^(projectMSDL)$
+      
       # OneTrainer window rules - force decorations on Xwayland
       windowrulev2 = tile, class:^(Tk)$
       windowrulev2 = decorate, class:^(Tk)$
