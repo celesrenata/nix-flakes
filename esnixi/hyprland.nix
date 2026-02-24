@@ -284,8 +284,8 @@
       bindr = $Primary$Secondary, R, exec, systemctl --user reload quickshell.service
       
       # Wallpaper selection
-      bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh --choose
-      bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh
+      bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh --choose
+      bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh
       
       # Desktop environment controls (converted from AGS to Quickshell)
       bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
