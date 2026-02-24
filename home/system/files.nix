@@ -42,18 +42,6 @@ in
   };
   
   # Staging directory for mutable configs (used by initialSetup.sh)
-  # This allows Quickshell configs to be mutable after first copy
-  home.file.".configstaging/quickshell" = {
-    source = inputs.dots-hyprland-source + "/.config/quickshell";
-    recursive = true;
-  };
-  
-  home.file.".configstaging/hypr/hyprland" = {
-    source = inputs.dots-hyprland-source + "/.config/hypr/hyprland";
-    recursive = true;
-  };
-
-  # Staging directory for mutable configs (used by initialSetup.sh)
   home.file.".configstaging/quickshell" = {
     source = inputs.dots-hyprland-source + "/.config/quickshell";
     recursive = true;
