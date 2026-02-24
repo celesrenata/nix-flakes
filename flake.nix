@@ -14,7 +14,7 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";  # Use same nixpkgs version
 
     # Hyte Y70 Touch-Infinite Display
-    hyte-touch-infinite-flakes.url = "path:/home/celes/sources/celesrenata/hyte-touch-infinite-flakes";
+    hyte-touch-infinite-flakes.url = "github:celesrenata/hyte-touch-infinite-flakes";
     hyte-touch-infinite-flakes.inputs.nixpkgs.follows = "nixpkgs";
 
     # Application launchers and desktop utilities
@@ -22,7 +22,7 @@
     # anyrun.inputs.nixpkgs.follows = "nixpkgs";                   # Disabled due to compatibility issues
 
     # Exo acceleration
-    exo.url = "github:celesrenata/exo/main";
+    #exo.url = "github:celesrenata/exo/main";
 
     # Kiro CLI
     kiro-cli.url = "github:celesrenata/kiro-cli-flake";
@@ -76,7 +76,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, exo, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -200,7 +200,7 @@
           (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
           (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
           # (import ./overlays/xrizer.nix)                  # Update xrizer to 0.4 for VR (now in upstream)
-          (import ./overlays/vllm.nix)                    # Update vllm to v0.14.1
+          #(import ./overlays/vllm.nix)                    # Update vllm to v0.14.1
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
           (import ./overlays/debugpy.nix)                 # Python debugger
@@ -215,7 +215,6 @@
           # (import ./overlays/nmap.nix)                  # Network mapper (disabled)
           (import ./overlays/wofi-calc.nix)               # Calculator for Wofi
           # (import ./overlays/wivrn-fix.nix)             # Fix FFmpeg profile constants in wivrn (disabled)
-          # (import ./overlays/xivlauncher.nix)           # Final Fantasy XIV launcher (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
           (import ./overlays/ollama.nix)                  # Ollama with GCC 13 for CUDA compatibility
@@ -281,7 +280,7 @@
           
           # Platform-specific ESXi configurations
           ./esnixi/boot.nix                             # Boot loader and kernel settings
-          ./esnixi/exo.nix
+          #./esnixi/exo.nix
           ./esnixi/games.nix                            # Gaming optimizations
           ./esnixi/graphics.nix                         # GPU and graphics configuration
           ./esnixi/hyte-touch.nix                       # Hyte touch display configuration
@@ -293,7 +292,7 @@
           ./esnixi/lvra.nix                             # VR Settings (WiVRn)
           
           # External modules
-          exo.nixosModules.default
+          #exo.nixosModules.default
           hyte-touch-infinite-flakes.nixosModules.hyte-touch
           # niri.nixosModules.niri                      # Niri compositor (disabled)
           protontweaks.nixosModules.protontweaks        # Steam Proton enhancements
@@ -371,7 +370,6 @@
             (import ./overlays/fuzzel-emoji.nix)        # Emoji picker for Fuzzel
             (import ./overlays/latex.nix)               # LaTeX document system
             (import ./overlays/wofi-calc.nix)           # Calculator widget
-            (import ./overlays/xivlauncher.nix)         # Final Fantasy XIV launcher
             (import ./overlays/helmfile.nix)            # Kubernetes Helm management
             (import ./overlays/xformers-bin-0_0_28_post3.nix) # xformers 0.0.28.post3 binary wheel
             (import ./overlays/t2fanrd.nix)             # T2 fan control daemon

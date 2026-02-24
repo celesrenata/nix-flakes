@@ -5,8 +5,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "a24961dd618ca10cfa50851aedff2a7e1affdeb0";
-    sha256 = "sha256-QQVeINXRjRmU9eOX1OUTzHu0amz4ZFCJK8n8jYo+YPM=";
+    rev = "5cf2cc051bb45211ca1af34c9f69733eeb8d1fb3";
+    sha256 = "sha256-0ZbbTwJkS3RBiqaD0ajf93maBajjahE4lcBRa9E5X8Q=";
   };
   
   wofi-calc = pkgs.fetchFromGitHub {
@@ -41,6 +41,29 @@ in
     source = winapps + "/runmefirst.sh";
   };
   
+  # Staging directory for mutable configs (used by initialSetup.sh)
+  # This allows Quickshell configs to be mutable after first copy
+  home.file.".configstaging/quickshell" = {
+    source = inputs.dots-hyprland-source + "/.config/quickshell";
+    recursive = true;
+  };
+  
+  home.file.".configstaging/hypr/hyprland" = {
+    source = inputs.dots-hyprland-source + "/.config/hypr/hyprland";
+    recursive = true;
+  };
+
+  # Staging directory for mutable configs (used by initialSetup.sh)
+  home.file.".configstaging/quickshell" = {
+    source = inputs.dots-hyprland-source + "/.config/quickshell";
+    recursive = true;
+  };
+  
+  home.file.".configstaging/hypr/hyprland" = {
+    source = inputs.dots-hyprland-source + "/.config/hypr/hyprland";
+    recursive = true;
+  };
+
   # Local bin scripts
   home.file.".local/bin/initialSetup.sh" = {
     source = celes-dots + "/.local/bin/initialSetup.sh";

@@ -37,11 +37,8 @@
         bumblebee
         primus
         mesa-demos
-        #steamcmd
-        #steam-tui
         qt6.qtwayland
         nss
-        protontricks
         xorg.libxkbfile
         kdePackages.qtwayland
         libsForQt5.qt5.qtwayland

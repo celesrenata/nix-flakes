@@ -44,7 +44,7 @@ in
   systemd.user.services.projectm-visualizer = {
     Unit = {
       Description = "ProjectM Music Visualizer";
-      After = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" "hyprland-session.target" ];
       PartOf = [ "graphical-session.target" ];
     };
     

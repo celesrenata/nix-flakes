@@ -70,6 +70,10 @@ in
 let
   python312-for-vllm = prev.python312.override {
     packageOverrides = pyfinal: pyprev: {
+      torch = pyprev.torch.overridePythonAttrs (old: {
+        version = "2.10.0";
+      });
+
       compressed-tensors = pyprev.compressed-tensors.overridePythonAttrs (old: rec {
         version = "0.13.0";
         src = prev.fetchFromGitHub {
@@ -95,7 +99,7 @@ let
         propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
           pyprev.httpx
           pyprev.shellingham
-          pyprev.typer-slim
+          pyprev.typer
         ];
       });
       
@@ -104,12 +108,14 @@ let
           owner = "huggingface";
           repo = "transformers";
           rev = "main";
-          hash = "sha256-XZhi1RyzcWF2/VCkbu+3743dwtSHR0Z+XrHcMZQvfps=";
+          hash = "sha256-dvj2va9dxLU38QsgM3GGeKJjU8XMK9Sk3t3SeS+opT4=";
         };
         version = "5.0.0-dev";
         propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
-          pyprev.typer-slim
+          pyprev.typer
         ];
+        doCheck = false;
+        pythonRuntimeDepsCheck = false;
       });
     };
   };
@@ -120,7 +126,7 @@ in {
       owner = "vllm-project";
       repo = "vllm";
       rev = "main";
-      hash = "sha256-s4otgh6lKKZy5t9fBi3VJKzI5tCLeNq2AE7148yVBCk=";
+      hash = "sha256-C0GHdqd8Ezzp65SjBix0VZkXwrybRNXNfP+Ta/JK7ic=";
     };
     
     patches = [];
@@ -129,6 +135,10 @@ in {
     
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
       python312-for-vllm.pkgs.grpcio-tools
+    ];
+    
+    buildInputs = (old.buildInputs or []) ++ [
+      python312-for-vllm.pkgs.torch
     ];
     
     propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [

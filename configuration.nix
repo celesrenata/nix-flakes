@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ niri, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
+{ config, niri, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
 {
   # Licences.
   # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
@@ -20,6 +20,18 @@
     experimental-features = [ "nix-command" "flakes" ];
     download-buffer-size = 8589934592; # 8gb
   };
+  
+  systemd.services.set-github-token = {
+    description = "Set GitHub Token for Nix";
+    after = [ "network.target" ];
+    before = [ "nix-daemon.service" ];
+    serviceConfig.ExecStart = ''
+      /bin/sh -c 'echo "access-tokens = github.com=$(cat ${config.sops.secrets.github_token.path})" > /etc/nix/access-tokens'
+    '';
+    wantedBy = [ "multi-user.target" ];
+  };
+  
+  systemd.services.nix-daemon.after = [ "set-github-token.service" ];
   
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;

@@ -6,6 +6,7 @@
     sopsFile = ../secrets/secrets.yaml;
     owner = "celes";
     group = "users";
+    mode = "0400";
   };
 
   # Enable Hyte Touch Display isolated Cage session
