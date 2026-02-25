@@ -8,6 +8,9 @@ inputs: final: prev: {
     cp -r ${inputs.dots-hyprland-source}/* $out/
     chmod -R +w $out
     
+    # Remove matugen from config (managed via staging directory)
+    rm -rf $out/.config/matugen
+    
     # Filter DP-3 from all quickshell modules that use Quickshell.screens
     find $out -name "*.qml" -type f | while read file; do
       # Handle simple model assignments
