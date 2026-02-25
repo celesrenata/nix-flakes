@@ -5,8 +5,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "d951a99584f810c5628444cd52c87ee21ee784af";
-    sha256 = "sha256-pXCWbpXHu7iDtBfijLm5q/9niQrP8ObsSTm7YOqUTOw=";
+    rev = "22e0782ad0c2f5be27dc3a46f16f0059988e225f";
+    sha256 = "sha256-xVq4qgeXHdFMpNiF2sEWORSpHhSVkdqIASx+hAMqgJA=";
   };
   
   wofi-calc = pkgs.fetchFromGitHub {
@@ -47,13 +47,14 @@ in
     recursive = true;
   };
   
-  home.file.".configstaging/matugen" = {
-    source = inputs.dots-hyprland-source + "/.config/matugen";
+  home.file.".configstaging/hypr/hyprland" = {
+    source = inputs.dots-hyprland-source + "/.config/hypr/hyprland";
     recursive = true;
   };
   
-  home.file.".configstaging/hypr/hyprland" = {
-    source = inputs.dots-hyprland-source + "/.config/hypr/hyprland";
+  # Matugen templates (mutable, copied not symlinked)
+  home.file.".config/matugen" = {
+    source = inputs.dots-hyprland-source + "/.config/matugen";
     recursive = true;
   };
 
