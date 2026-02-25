@@ -5,8 +5,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "71382a9c2d698210c36ef67234fb77f9c7a98810";
-    sha256 = "sha256-yelKoni+PN5god3zrbXEzz8VAls0LAVx2sODXnzMH2w=";
+    rev = "c2b1cceebec79ff7bd5ec1bf1773d0a15bccad48";
+    sha256 = "sha256-QolwEqBtUkPZcetfVbNnn3MVXM8ynqymXQRIJYmXvsQ=";
   };
   
   wofi-calc = pkgs.fetchFromGitHub {
