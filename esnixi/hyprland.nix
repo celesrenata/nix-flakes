@@ -378,7 +378,7 @@
       # Quickshell integration and desktop environment
       exec-once = ~/.local/bin/initialSetup.sh
       exec-once = hyprctl setcursor Bibata-Modern-Classic 24
-      exec-once = quickshell -c ii
+      exec-once = systemctl --user start quickshell.service
       exec-once = [workspace name:touch silent] hyte-touch-interface
       exec-once = wl-paste --watch cliphist store
       exec-once = ~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh
