@@ -5,8 +5,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "359f8f16900c0f234501c30a1e254af3954e2b44";
-    sha256 = "sha256-BmnbLXG2rgUNr2AKTCmBSqBAW1H10EVf7Hmg+Nfpisw=";
+    rev = "71382a9c2d698210c36ef67234fb77f9c7a98810";
+    sha256 = "sha256-yelKoni+PN5god3zrbXEzz8VAls0LAVx2sODXnzMH2w=";
   };
   
   wofi-calc = pkgs.fetchFromGitHub {
@@ -44,6 +44,11 @@ in
   # Staging directory for mutable configs (used by initialSetup.sh)
   home.file.".configstaging/quickshell" = {
     source = inputs.dots-hyprland-source + "/.config/quickshell";
+    recursive = true;
+  };
+  
+  home.file.".configstaging/matugen" = {
+    source = inputs.dots-hyprland-source + "/.config/matugen";
     recursive = true;
   };
   
