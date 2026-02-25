@@ -141,11 +141,11 @@
     "dots-hyprland-source": {
       "flake": false,
       "locked": {
-        "lastModified": 1764579417,
-        "narHash": "sha256-lWqG03pbI79wmVGXoC571C+CWzskCHp59ScwPjWIn2Q=",
+        "lastModified": 1771980035,
+        "narHash": "sha256-3uQl8vfN9oRENCGeX96+DDKsm7+4GBMBJ38Kqq91qzc=",
         "owner": "celesrenata",
         "repo": "dots-hyprland",
-        "rev": "5700ac4c2cb8721378c0d7e39cdf42cff178be55",
+        "rev": "acd0daaddb093c7e2678963c5f44ef6ff517cdba",
         "type": "github"
       },
       "original": {
