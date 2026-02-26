@@ -24,10 +24,10 @@
   users.users.celes.extraGroups = [ "seat" ];
 
   # Enable autologin for celes during testing
-  services.displayManager.autoLogin = {
-    enable = true;
-    user = "celes";
-  };
+  # services.displayManager.autoLogin = {
+  #   enable = true;
+  #   user = "celes";
+  # };
 
   # Required packages for touch interface
   environment.systemPackages = with pkgs; [

@@ -11,6 +11,12 @@ in
     projectm-sdl-cpp  # Standalone music visualizer
   ];
 
+  # Deploy touch quickshell config
+  home.file.".config/quickshell/touch" = {
+    source = inputs.hyte-touch-infinite-flakes + "/config/quickshell";
+    recursive = true;
+  };
+
   # Direct QuickShell on DP-3
   systemd.user.services.hyte-touch-display = {
     Unit = {
