@@ -10,7 +10,7 @@
   # dots-hyprland configuration - HYBRID MODE! 🎯
   programs.dots-hyprland = {
     enable = true;
-    source = inputs.dots-hyprland-source;  # Use the actual dots-hyprland source for copying
+    source = pkgs.dots-hyprland-source-filtered;  # Use filtered source (no matugen, no DP-3)
     packageSet = "essential";
     mode = "hybrid";  # Hyprland declarative + Quickshell copied (should work now!)
     
