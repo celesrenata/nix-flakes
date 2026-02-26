@@ -30,7 +30,7 @@ let
     if [ ! -f ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete ]; then
       echo 'Installing ComfyUI dependencies...'
       $VENV_DIR/bin/pip install -r ${config.home.homeDirectory}/.config/comfy-ui/app/requirements.txt
-      $VENV_DIR/bin/pip install segment-anything dill facexlib piexif insightface deepdiff webcolors ultralytics 'huggingface-hub<0.25' py-cpuinfo gguf llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
+      $VENV_DIR/bin/pip install segment-anything dill facexlib piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
       touch ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete
     fi
     
