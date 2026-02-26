@@ -10,11 +10,11 @@
   # dots-hyprland configuration - HYBRID MODE! 🎯
   programs.dots-hyprland = {
     enable = true;
-    source = inputs.dots-hyprland-source;  # Use the actual dots-hyprland source for copying
+    source = pkgs.dots-hyprland-source-filtered;  # Use filtered source (no matugen, no DP-3)
     packageSet = "essential";
     mode = "hybrid";  # Hyprland declarative + Quickshell copied (should work now!)
     
-    # Enable Python virtual environment for color generation
+    # Enable Python venv for wayland-idle-inhibitor
     python.enable = true;
     
     # Force disable touchegg component (we handle it system-wide)
@@ -35,21 +35,6 @@
     overrides.hyprlandConf = ''
       # Complete Hyprland configuration (NixOS-managed, fully declarative)
       # No external file dependencies - everything inline
-      
-      # MacBook T2 Platform Configuration
-      # This header prevents dots-hyprland from reordering content
-      
-      # T2-specific window rules
-      windowrulev2 = suppressevent maximize, class:.*
-      
-      # Source external custom configuration if it exists
-      source = ~/.config/hypr/custom.conf
-      
-      # KEYBIND VARIABLES - Must be defined before any bindings
-      $Primary = Super
-      $Secondary = Control
-      $Tertiary = Shift
-      $Alternate = Alt
       
       $qsConfig = ii
 

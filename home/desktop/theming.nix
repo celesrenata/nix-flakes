@@ -30,5 +30,6 @@
     
     # Color theming
     matugen  # Material You color generation
+    kde-material-you-colors  # KDE Material You theming (patched for non-Plasma)
   ];
 }

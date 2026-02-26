@@ -53,6 +53,11 @@
       windowrulev2 = monitor DP-3, title:^(hyte-touch-interface)$
       windowrulev2 = fullscreen, title:^(hyte-touch-interface)$
       
+      # ProjectM visualizer - behind QuickShell
+      windowrulev2 = workspace name:touch, class:^(projectMSDL)$
+      windowrulev2 = monitor DP-3, class:^(projectMSDL)$
+      windowrulev2 = fullscreen, class:^(projectMSDL)$
+      
       # OneTrainer window rules - force decorations on Xwayland
       windowrulev2 = tile, class:^(Tk)$
       windowrulev2 = decorate, class:^(Tk)$
@@ -279,8 +284,8 @@
       bindr = $Primary$Secondary, R, exec, systemctl --user reload quickshell.service
       
       # Wallpaper selection
-      bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh --choose
-      bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall-wrapper.sh
+      bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh --choose
+      bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh
       
       # Desktop environment controls (converted from AGS to Quickshell)
       bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
@@ -371,8 +376,9 @@
       bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480
 
       # Quickshell integration and desktop environment
+      exec-once = ~/.local/bin/initialSetup.sh
       exec-once = hyprctl setcursor Bibata-Modern-Classic 24
-      exec-once = quickshell -c ii
+      exec-once = systemctl --user start quickshell.service
       exec-once = [workspace name:touch silent] hyte-touch-interface
       exec-once = wl-paste --watch cliphist store
       exec-once = ~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh

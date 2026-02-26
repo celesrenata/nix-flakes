@@ -8,21 +8,15 @@
 { config, lib, pkgs, ... }:
 
 {
-  # SOPS configuration temporarily disabled to avoid symlink conflicts
-  # The core system works perfectly without this
-  # TODO: Fix the "cannot rename ... file exists" error
-  
-  # sops = {
-  #   defaultSopsFile = ./secrets/secrets.yaml;
-  #   validateSopsFiles = false;
-  #   age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-  #   secrets = {
-  #     "home_certificate" = {
-  #       path = "/run/secrets/home.crt";
-  #       owner = "root";
-  #       group = "root";
-  #       mode = "0400";
-  #     };
-  #   };
-  # };
+  sops = {
+    defaultSopsFile = ./secrets/secrets.yaml;
+    validateSopsFiles = false;
+    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+    secrets = {
+      github_token = {
+        mode = "0440";
+        group = "wheel";
+      };
+    };
+  };
 }

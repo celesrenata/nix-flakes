@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   config = {
     # Networking.
@@ -11,6 +11,9 @@
 
     # Enable NetworkManager.
     networking.networkmanager.enable = true;
+    networking.networkmanager.plugins = with pkgs; [
+      networkmanager-openvpn
+    ];
 
     # Enable Bluetooth
     hardware.bluetooth.enable = true;

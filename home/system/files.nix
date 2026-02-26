@@ -5,8 +5,8 @@ let
   celes-dots = pkgs.fetchFromGitHub {
     owner = "celesrenata";
     repo = "dotfiles";
-    rev = "a24961dd618ca10cfa50851aedff2a7e1affdeb0";
-    sha256 = "sha256-QQVeINXRjRmU9eOX1OUTzHu0amz4ZFCJK8n8jYo+YPM=";
+    rev = "84ffef9c6f9c0fb204cf7e3561d6dd05434b115c";
+    sha256 = "sha256-RwK8A7kBCrNlU+Y7Nfc0P0jK8WO6d3fo49T65CZo+F8=";
   };
   
   wofi-calc = pkgs.fetchFromGitHub {
@@ -41,6 +41,22 @@ in
     source = winapps + "/runmefirst.sh";
   };
   
+  # Staging directory for mutable configs (used by initialSetup.sh)
+  home.file.".configstaging/quickshell" = {
+    source = inputs.dots-hyprland-source + "/.config/quickshell";
+    recursive = true;
+  };
+  
+  home.file.".configstaging/matugen" = {
+    source = inputs.dots-hyprland-source + "/.config/matugen";
+    recursive = true;
+  };
+  
+  home.file.".configstaging/hypr/hyprland" = {
+    source = inputs.dots-hyprland-source + "/.config/hypr/hyprland";
+    recursive = true;
+  };
+
   # Local bin scripts
   home.file.".local/bin/initialSetup.sh" = {
     source = celes-dots + "/.local/bin/initialSetup.sh";

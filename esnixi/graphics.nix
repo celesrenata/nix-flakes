@@ -1,25 +1,35 @@
 { config, lib, pkgs, pkgs-unstable, ... }:
 let
   # 6.16 compatibility patch for vm_flags
-  gpl_symbols_linux_615_patch = pkgs.fetchpatch {
-    url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
-    hash = "sha256-YOTAvONchPPSVDP9eJ9236pAPtxYK5nAePNtm2dlvb4=";
-    stripLen = 1;
-    extraPrefix = "kernel/";
-  };
+  #gpl_symbols_linux_615_patch = pkgs.fetchpatch {
+  #  url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
+  #  hash = "sha256-YOTAvONchPPSVDP9eJ9236pAPtxYK5nAePNtm2dlvb4=";
+  #  stripLen = 1;
+  #  extraPrefix = "kernel/";
+  #};
   
   # Custom NVIDIA package with 580 drivers and 6.16 patches
+  #base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
   nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.105.08";
-    sha256_64bit = "sha256-2cboGIZy8+t03QTPpp3VhHn6HQFiyMKMjRdiV2MpNHU=";
+    version = "580.126.18";
+    sha256_64bit = "sha256-p3gbLhwtZcZYCRTHbnntRU0ClF34RxHAMwcKCSqatJ0=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-FGmMt3ShQrw4q6wsk8DSvm96ie5yELoDFYinSlGZcwQ=";
-    settingsSha256 = "sha256-YvzWO1U3am4Nt5cQ+b5IJ23yeWx5ud1HCu1U0KoojLY=";
+    openSha256 = "sha256-1Q2wuDdZ6KiA/2L3IDN4WXF8t63V/4+JfrFeADI1Cjg=";
+    settingsSha256 = "sha256-QMx4rUPEGp/8Mc+Bd8UmIet/Qr0GY8bnT/oDN8GAoEI=";
     persistencedSha256 = "";
   });
+
+  #nvidia-package = base-nvidia-package // {
+  #  open = base-nvidia-package.open.overrideAttrs (openAttrs: {
+  #    postPatch = (openAttrs.postPatch or "") + ''
+  #      substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
+  #        --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
+  #    '';
+  #  });
+  #};
 in
 {
-  nixpkgs.config.allowUnfree = true;
+  # nixpkgs.config.allowUnfree = true;
   
   services.avahi.publish.enable = true;
   services.avahi.publish.userServices = true;
@@ -48,6 +58,9 @@ in
     "d /opt/ollama                0755 ollama ollama -"
     # actual model store (group-writable okay; adjust to 0750 if you prefer)
     "d /opt/ollama/models         0775 ollama ollama -"
+    # vLLM directories
+    "d /opt/vllm                  0755 vllm vllm -"
+    "d /opt/vllm/models           0775 vllm vllm -"
   ];
 
   # One-time guard: fix pre-existing ownership/permissions on switch
@@ -140,11 +153,87 @@ in
 #    loadModels = [ "qwen3:30b" ];
 #  };
 
+  # vLLM service with NVFP4 support
+  users.groups.vllm = { };
+  users.users.vllm = {
+    isSystemUser = true;
+    group = "vllm";
+    extraGroups = [ "video" "render" ];
+  };
+
+  sops.secrets.huggingface_token = {
+    sopsFile = ../secrets/secrets.yaml;
+    owner = "vllm";
+    group = "vllm";
+  };
+
+  systemd.services.vllm = 
+  let
+    vllmPython = pkgs.python312.withPackages (ps: [ pkgs.vllm ]);
+    vllmWrapper = pkgs.writeShellScript "vllm-wrapper" ''
+      exec ${vllmPython}/bin/python -m vllm.entrypoints.cli.main "$@"
+    '';
+    # Create a wrapper that provides c++ command
+    cxxWrapper = pkgs.writeShellScriptBin "c++" ''
+      exec ${pkgs.gcc}/bin/g++ "$@"
+    '';
+  in {
+    description = "vLLM OpenAI-compatible API server with NVFP4 support";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+
+    environment = {
+      HF_HOME = "/opt/vllm/models";
+      HOME = "/opt/vllm";
+      VLLM_WORKER_MULTIPROC_METHOD = "spawn";
+      HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";
+      CUDA_HOME = "${pkgs.cudaPackages.cudatoolkit}";
+      LD_LIBRARY_PATH = "${pkgs.cudaPackages.cudatoolkit}/lib:${pkgs.cudaPackages.cudnn}/lib:${config.hardware.nvidia.package}/lib";
+      PYTHONPATH = "${pkgs.vllm}/${pkgs.python312.sitePackages}";
+      VLLM_LOGGING_LEVEL = "DEBUG";
+      CUDACXX = "${pkgs.cudaPackages.cudatoolkit}/bin/nvcc";
+      CXX = "${pkgs.gcc}/bin/g++";
+      CC = "${pkgs.gcc}/bin/gcc";
+      LIBRARY_PATH = "${pkgs.cudaPackages.cudatoolkit}/lib:${pkgs.cudaPackages.cudatoolkit}/lib/stubs:${config.hardware.nvidia.package}/lib";
+    };
+    
+    path = [ 
+      pkgs.bash
+      pkgs.coreutils
+      pkgs.gcc 
+      pkgs.binutils 
+      pkgs.cudaPackages.cudatoolkit 
+      pkgs.ninja 
+      pkgs.gnumake
+      pkgs.cmake
+      cxxWrapper
+    ];
+
+    serviceConfig = {
+      Type = "simple";
+      User = "vllm";
+      Group = "vllm";
+      ExecStart = ''
+        ${vllmWrapper} serve GadflyII/GLM-4.7-Flash-NVFP4 \
+          --host 0.0.0.0 \
+          --port 8000 \
+          --max-model-len 32768 \
+          --gpu-memory-utilization 0.85 \
+          --dtype auto
+      '';
+      Restart = "on-failure";
+      RestartSec = "10s";
+    };
+  };
+
+  networking.firewall.allowedTCPPorts = [ 8000 ];
+
   environment.systemPackages = with pkgs; [
     libGL
     nvtopPackages.full
     kdePackages.kdenlive
     cudaPackages.cudatoolkit
+    pkgs.vllm
 
     (python312.withPackages(ps: with ps; [
       torchvision

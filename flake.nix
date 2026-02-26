@@ -1,5 +1,5 @@
 {
-  description = "Personal NixOS Configuration - ESXi VM and MacBook T2 Support";
+  description = "Personal NixOS Configuration - ESXi Baremetal and MacBook T2 Support";
 
   # Input sources for the flake
   # This section defines all external dependencies and their versions
@@ -21,12 +21,19 @@
     anyrun.url = "github:Kirottu/anyrun";                          # Application launcher
     # anyrun.inputs.nixpkgs.follows = "nixpkgs";                   # Disabled due to compatibility issues
 
+    # Exo acceleration
+    #exo.url = "github:celesrenata/exo/main";
+
+    # Kiro CLI
+    kiro-cli.url = "github:celesrenata/kiro-cli-flake";
+    kiro-cli.inputs.nixpkgs.follows = "nixpkgs";
+
     # AI and machine learning tools
     # ComfyUI now available in nixpkgs (PR #441841)
     nix-comfyui.url = "github:utensils/nix-comfyui";
     
     # OneTrainer for diffusion model training
-    onetrainer-flake.url = "github:celesrenata/OneTrainer-flake";
+    onetrainer-flake.url = "github:celesrenata/OneTrainer-flake/dev";
     onetrainer-flake.inputs.nixpkgs.follows = "nixpkgs";
 
     # Window managers and desktop environments
@@ -69,7 +76,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -158,6 +165,10 @@
                     (deny process-fork (with no-log))
                   '';
                 });
+                # Temporarily disabled - testing if CUDA 12.8 works
+                # bitsandbytes = python-super.bitsandbytes.override {
+                #   cudaPackages = pkgs.cudaPackages_12_9;
+                # };
               };
             };
           };
@@ -165,7 +176,7 @@
           # Legacy packages with known security issues (use with caution)
           permittedInsecurePackages = [
             "python-2.7.18.7"    # Required for some legacy tools
-            "openssl-1.1.1w"      # Required for some application
+            # "openssl-1.1.1w"      # Required for some application (broken in 25.11)
             "qtwebengine-5.15.19"    # required for some application
             "mbedtls-2.28.10"     # Required for OpenRGB
           ];
@@ -173,16 +184,23 @@
         
         # Package overlays for custom and modified packages
         overlays = [
-          nixgl.overlay                                    # OpenGL support
+          # Global CUDA 12.9 override for glibc 2.42 compatibility
+          # (self: super: {
+          #   cudaPackages = super.cudaPackages_12_9;
+          # })
+          nixgl.overlay                                   # OpenGL support
           # inputs.niri.overlays.niri                     # Niri compositor (disabled)
           # toshy.overlays.default                        # Toshy keybindings (disabled)
           dots-hyprland.overlays.default                  # Hyprland desktop environment
-          (import ./overlays/quickshell-override.nix inputs)     # Override quickshell with nixpkgs version
+          # (import ./overlays/quickshell-override.nix inputs)     # Override quickshell with nixpkgs version (disabled - breaks Qt5Compat)
           
           # Custom overlays for modified or additional packages
           (import ./overlays/dots-hyprland-dp3-filter.nix inputs)  # Filter DP-3 from dots-hyprland
           # (import ./overlays/cider.nix)                 # Cider music player (disabled)
-          #(import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
+          (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
+          (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
+          # (import ./overlays/xrizer.nix)                  # Update xrizer to 0.4 for VR (now in upstream)
+          #(import ./overlays/vllm.nix)                    # Update vllm to v0.14.1
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
           (import ./overlays/debugpy.nix)                 # Python debugger
@@ -196,12 +214,22 @@
           (import ./overlays/latex.nix)                   # LaTeX document system
           # (import ./overlays/nmap.nix)                  # Network mapper (disabled)
           (import ./overlays/wofi-calc.nix)               # Calculator for Wofi
-          (import ./overlays/wivrn-fix.nix)               # Fix FFmpeg profile constants in wivrn
-          # (import ./overlays/xivlauncher.nix)           # Final Fantasy XIV launcher (disabled)
+          # (import ./overlays/wivrn-fix.nix)             # Fix FFmpeg profile constants in wivrn (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
-          (import ./overlays/clblast.nix)                 # CLBlast OpenCL BLAS library
-          (import ./overlays/kernel-t2-fix.nix)               # T2 kernel nouveau driver fix
+          (import ./overlays/ollama.nix)                  # Ollama with GCC 13 for CUDA compatibility
+          (import ./overlays/xformers-bin-0_0_28_post3.nix)  # xformers 0.0.28.post3 binary wheel
+          # OneTrainer dependency fix
+          (self: super: {
+            python3Packages = super.python3Packages // {
+              huggingface-hub = super.python3Packages.huggingface-hub.overridePythonAttrs (old: {
+                pythonRuntimeDepsCheck = false;
+              });
+              diffusers = super.python3Packages.diffusers.overridePythonAttrs (old: {
+                pythonRuntimeDepsCheck = false;
+              });
+            };
+          })
           # (import ./overlays/nvidia-6.16-patch.nix)       # NVIDIA 6.16 kernel compatibility (disabled)
           # (import ./overlays/nvidia-open-full.nix)        # NVIDIA open-source drivers (disabled)
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)
@@ -219,9 +247,7 @@
           allowBroken = true;
         };
         overlays = [
-          (import ./overlays/wivrn-fix.nix)  # Fix FFmpeg profile constants in wivrn
-          (import ./overlays/clblast.nix)                 # CLBlast OpenCL BLAS library fix
-          (import ./overlays/rocm-hash-fix.nix)           # ROCm hash mismatch fix
+          # (import ./overlays/wivrn-fix.nix)  # Fix FFmpeg profile constants in wivrn (disabled)
         ];
       };
       in 
@@ -229,31 +255,44 @@
         # Special arguments passed to all modules
         specialArgs = {
           # inherit niri;                               # Niri compositor (disabled)
-          inherit pkgs;                                 # Main package set
+          # pkgs is now provided by the module system with overlays
           inherit pkgs-unstable;                        # Unstable packages
           inherit pkgs-old;				# Old packages
           inherit inputs;                               # All flake inputs
+          quickshell = inputs.hyte-touch-infinite-flakes.inputs.quickshell.packages.${system}.default;
         };
         
         # System modules and configuration files
         modules = [
+          # Set nixpkgs to use our pre-configured pkgs
+          { nixpkgs.pkgs = pkgs; }
           # Core system configuration
           ./configuration.nix                           # Main system configuration
           ./remote-build.nix                            # Remote build settings
           ./secrets.nix                                 # SOPS secrets management
           
+          # CA certificate configuration
+          {
+            security.pki.certificates = [
+              (builtins.readFile ./celestium-ca.crt)
+            ];
+          }
+          
           # Platform-specific ESXi configurations
-          ./esnixi/hardware-configuration.nix           # Hardware detection results
           ./esnixi/boot.nix                             # Boot loader and kernel settings
+          #./esnixi/exo.nix
           ./esnixi/games.nix                            # Gaming optimizations
           ./esnixi/graphics.nix                         # GPU and graphics configuration
           ./esnixi/hyte-touch.nix                       # Hyte touch display configuration
           ./esnixi/monitoring.nix                       # System monitoring tools
           ./esnixi/networking.nix                       # Network configuration
+          ./esnixi/remote-desktop.nix                   # Remote desktop access
           ./esnixi/thunderbolt.nix                      # Thunderbolt support
           ./esnixi/virtualisation.nix                   # Virtualization settings
+          ./esnixi/lvra.nix                             # VR Settings (WiVRn)
           
           # External modules
+          #exo.nixosModules.default
           hyte-touch-infinite-flakes.nixosModules.hyte-touch
           # niri.nixosModules.niri                      # Niri compositor (disabled)
           protontweaks.nixosModules.protontweaks        # Steam Proton enhancements
@@ -310,8 +349,7 @@
             # Legacy packages for compatibility
             permittedInsecurePackages = [
               "python-2.7.18.7"                        # Legacy Python for compatibility
-              "openssl-1.1.1w"                         # Legacy OpenSSL
-              "qtwebengine-5.15.19"                    # Required by some packages
+              # "openssl-1.1.1w"                         # Legacy OpenSSL (broken in 25.11)
             ];
           };
           
@@ -319,9 +357,9 @@
           overlays = [
             nixgl.overlay                               # OpenGL support
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
+            inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
             dots-hyprland.overlays.default              # Hyprland desktop environment
-            (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version
-            (import ./overlays/onetbb-no-tests.nix)     # Disable onetbb tests
+            # (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version (disabled - breaks Qt5Compat)
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
             (import ./overlays/debugpy.nix)             # Python debugger
             #(import ./overlays/freerdp.nix)             # Remote desktop client
@@ -332,10 +370,8 @@
             (import ./overlays/fuzzel-emoji.nix)        # Emoji picker for Fuzzel
             (import ./overlays/latex.nix)               # LaTeX document system
             (import ./overlays/wofi-calc.nix)           # Calculator widget
-            (import ./overlays/xivlauncher.nix)         # Final Fantasy XIV launcher
             (import ./overlays/helmfile.nix)            # Kubernetes Helm management
-            (import ./overlays/clblast.nix)             # CLBlast OpenCL BLAS library
-            (import ./overlays/kernel-t2-fix.nix)       # T2 kernel nouveau driver fix
+            (import ./overlays/xformers-bin-0_0_28_post3.nix) # xformers 0.0.28.post3 binary wheel
             (import ./overlays/t2fanrd.nix)             # T2 fan control daemon
             (import ./overlays/tinydfr.nix)             # Touch Bar support
             (import ./overlays/pipewire.nix)            # PipeWire customizations
@@ -362,9 +398,7 @@
             allowBroken = true;
           };
           overlays = [
-            (import ./overlays/wivrn-fix.nix)           # Fix FFmpeg profile constants in wivrn
-            (import ./overlays/clblast.nix)             # CLBlast OpenCL BLAS library fix
-            (import ./overlays/rocm-hash-fix.nix)       # ROCm hash mismatch fix
+            # (import ./overlays/wivrn-fix.nix)         # Fix FFmpeg profile constants in wivrn (disabled)
           ];
         };
         in
@@ -394,9 +428,16 @@
             ./remote-build.nix                          # Remote build settings
             ./secrets.nix                               # SOPS secrets management
             
+            # CA certificate configuration
+            {
+              security.pki.certificates = [
+                (builtins.readFile ./celestium-ca.crt)
+              ];
+            }
+            
             # Hardware-specific modules
             nixos-hardware.nixosModules.apple-t2        # Apple T2 security chip support
-            ./macland/hardware-configuration.nix        # Hardware detection results
+            ./esnixi/hardware-configuration.nix        # Hardware detection results
             sops-nix.nixosModules.sops                  # Secrets management
             
             # USB device access rules

@@ -2,11 +2,11 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ niri, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
+{ config, niri, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
 {
   # Licences.
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.hostPlatform = "x86-64-v3";
+  # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
+  nixpkgs.hostPlatform = "x86_64-linux";
 
   imports =
     [ # Include the results of the hardware scan.
@@ -17,7 +17,22 @@
 
   environment.localBinInPath = true;
   # Enable Flakes.
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    download-buffer-size = 8589934592; # 8gb
+  };
+  
+  systemd.services.set-github-token = {
+    description = "Set GitHub Token for Nix";
+    after = [ "network.target" ];
+    before = [ "nix-daemon.service" ];
+    serviceConfig.ExecStart = ''
+      /bin/sh -c 'echo "access-tokens = github.com=$(cat ${config.sops.secrets.github_token.path})" > /etc/nix/access-tokens'
+    '';
+    wantedBy = [ "multi-user.target" ];
+  };
+  
+  systemd.services.nix-daemon.after = [ "set-github-token.service" ];
   
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;
@@ -36,7 +51,7 @@
   ];
   # Udev rules.
   # hardware.uinput.enable = true;
-
+  services.gvfs.enable = true;
   # Set your time zone.
 
   #services.automatic-timezoned.enable = true;
@@ -81,8 +96,8 @@
   programs.hyprland = {
     # Install the packages from nixpkgs
     enable = true;
-    package = pkgs-unstable.hyprland;
-    portalPackage = pkgs-unstable.xdg-desktop-portal-hyprland;
+    package = pkgs.hyprland;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
     xwayland.enable = true;
   };
 
@@ -100,7 +115,7 @@
   services.wivrn = {
     enable = true;
     openFirewall = true;
-    package = pkgs-unstable.wivrn;  
+    package = pkgs.wivrn;  
     # Write information to /etc/xdg/openxr/1/active_runtime.json, VR applications
     # will automatically read this and work with WiVRn (Note: This does not currently
     # apply for games run in Valve's Proton)
@@ -397,6 +412,7 @@
   programs.gamemode.enable = true;
   programs.steam = {
     enable = true;
+    protontricks.enable = true;
     extraPackages = with pkgs; [
       mesa-demos
       qt6.qtwayland
@@ -444,6 +460,10 @@
     
     # AI Tools
     inputs.cline-cli.packages.x86_64-linux.default
+    inputs.kiro-cli.packages.x86_64-linux.default
+    
+    # Secrets Management
+    sops
     
     # Networking Tools.
     wget
@@ -482,6 +502,8 @@
     mako
     keymapp
     android-tools
+    postgresql
+    gvfs
 
     # Shells.
     fish
@@ -502,7 +524,7 @@
     pkgs-unstable.helmfile
     pkgs-unstable.kustomize
     pkgs-unstable.kompose
-    pkgs-unstable.kubevirt
+    pkgs.kubevirt
     pkgs-unstable.krew
 
     # Steam Tools.
@@ -518,6 +540,7 @@
     # Development Tools.
     #android-studio-full
     amazon-q-cli
+    kiro
     jetbrains-toolbox
     nodejs_20
     meson
@@ -540,7 +563,7 @@
     #nixStatic.dev
     node2nix
     nil
-    sublime4
+    # sublime4  # Temporarily disabled - requires broken openssl-1.1.1w
     #(pkgs.comfyuiPackages.comfyui.override {
     #  extensions = [
     #    pkgs.comfyuiPackages.extensions.acly-inpaint
@@ -592,6 +615,7 @@
     #sunshine 
     moonlight-qt
     xfce.thunar
+    xfce.thunar-volman
     wayland-scanner
     waypipe
 

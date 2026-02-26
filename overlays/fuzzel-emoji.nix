@@ -6,8 +6,8 @@ final: prev: {
     src = prev.fetchFromGitHub {
       owner = "end-4";
       repo = "fuzzel-emoji";
-      rev = "b52d556a1a41598ccedac127586841ae565d701a";
-      sha256 = "sha256-W8KCh/ui694Qb8KpH3oWPnFMCnUc6xKFdgDOdMV7e/k=";
+      rev = "c1914cf9bb06300bc8be35c1829296afbe452241";
+      sha256 = "sha256-QeXRKSNlT4m7CX5qoZw/EH3Z6B3DSg+gc2SK89hBeek=";
     };
     
     nativeBuildInputs = with prev; [ makeWrapper ];

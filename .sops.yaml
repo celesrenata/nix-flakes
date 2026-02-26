@@ -1,11 +1,14 @@
 # SOPS configuration file
 keys:
-  # SSH host key converted to age (from system)
-  - &ssh_host_key age10f5p9pzkm8579v8gdwgpe04uy7hj83hml9fxu93tedu9xd78fg3qmkuju7
+  # User SSH key converted to age
+  - &user_key age1mpdp73dg6ndc8vq55qmnsfzu7qz6dkaft6awg475pgr6lr7kevyqj9hlgc
+  # System SSH host key converted to age
+  - &system_key age1tfrgyvdz927tyh8gd9sm60agfk580teu3q3yqn62ttcys4zmd4mq35w06s
 
 creation_rules:
-  # Default rule for all secrets using SSH host key
+  # Default rule for all secrets using both keys
   - path_regex: .*\.yaml$
     key_groups:
       - age:
-          - *ssh_host_key
+          - *user_key
+          - *system_key

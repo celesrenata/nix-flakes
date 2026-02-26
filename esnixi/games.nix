@@ -26,17 +26,17 @@
     #  enable = true;
     #  lfs.enable = true;
     #};
+    programs.gamemode.enable = true;
     programs.steam = {
       enable = true;
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
       gamescopeSession.enable = true;
+      protontricks.enable = true;
       extraPackages = with pkgs; [
         bumblebee
         primus
         mesa-demos
-        #steamcmd
-        #steam-tui
         qt6.qtwayland
         nss
         xorg.libxkbfile
@@ -47,7 +47,6 @@
         proton-ge-bin
       ];
     };
-    programs.gamemode.enable = true;
     programs.alvr = {
       enable = true;
       package = pkgs.alvr; 
