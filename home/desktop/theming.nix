@@ -30,6 +30,6 @@
     
     # Color theming
     matugen  # Material You color generation
-    python312Packages.kde-material-you-colors  # KDE Material You theming
+    kde-material-you-colors  # KDE Material You theming (patched for non-Plasma)
   ];
 }

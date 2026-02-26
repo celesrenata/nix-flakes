@@ -8,6 +8,13 @@ let
     export VENV_DIR=${config.home.homeDirectory}/.config/comfy-ui/venv
     export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:${pkgs.libGL}/lib:${pkgs.libGLU}/lib:${pkgs.glib}/lib:/run/opengl-driver/lib:$LD_LIBRARY_PATH
     
+    # Copy ComfyUI source if it doesn't exist
+    if [ ! -d ${config.home.homeDirectory}/.config/comfy-ui/app ]; then
+      echo 'Copying ComfyUI source files...'
+      mkdir -p ${config.home.homeDirectory}/.config/comfy-ui/app
+      cp -r ${comfyui}/opt/comfyui/* ${config.home.homeDirectory}/.config/comfy-ui/app/
+    fi
+    
     # Create venv if it doesn't exist
     if [ ! -d $VENV_DIR ]; then
       echo 'Creating ComfyUI virtual environment...'
@@ -19,7 +26,7 @@ let
     # Install all dependencies declaratively
     if [ ! -f ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete ]; then
       echo 'Installing ComfyUI dependencies...'
-      $VENV_DIR/bin/pip install -r ${config.home.homeDirectory}/.config/comfy-ui/app/requirements.txt segment-anything dill facexlib piexif insightface deepdiff webcolors ultralytics 'huggingface-hub<0.25' py-cpuinfo gguf llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
+      $VENV_DIR/bin/pip install -r ${config.home.homeDirectory}/.config/comfy-ui/app/requirements.txt segment-anything dill facexlib piexif insightface deepdiff webcolors ultralytics 'huggingface-hub<0.25' py-cpuinfo gguf llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm pyyaml
       touch ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete
     fi
     
