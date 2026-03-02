@@ -247,13 +247,19 @@ in
   
   hardware.graphics = {
     enable = true;
+    enable32Bit = true;
     extraPackages = with pkgs; [
       libva-vdpau-driver
       libvdpau-va-gl
       libGL
       vulkan-headers
+      vulkan-loader
+      vulkan-validation-layers
     ];
-    extraPackages32 = with pkgs.pkgsi686Linux; [ libva ];
+    extraPackages32 = with pkgs.pkgsi686Linux; [ 
+      libva 
+      vulkan-loader
+    ];
   };
 
   services.xserver.videoDrivers = [ "nvidia" ];

@@ -1,13 +1,13 @@
 { config, lib, pkgs, pkgs-unstable, ... }:
 let
   myKernelPackages = let
-    base = pkgs.linuxKernel.packages.linux_6_18;
+    base = pkgs.linuxKernel.packages.linux_6_19;
   in base // {
     nvidia-open = base.nvidia-open.overrideAttrs (old: {
       nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.pkg-config ];
       buildInputs = (old.buildInputs or []) ++ [ pkgs.gtk3 pkgs.gtk2 ];
     });
-    xpadneo = pkgs.linuxKernel.packages.linux_6_18.xpadneo.overrideAttrs(old: {
+    xpadneo = pkgs.linuxKernel.packages.linux_6_19.xpadneo.overrideAttrs(old: {
       patches = (old.patches or []) ++ [
         (pkgs.fetchpatch {
           url = "https://github.com/orderedstereographic/xpadneo/commit/233e1768fff838b70b9e942c4a5eee60e57c54d4.patch";
@@ -46,7 +46,7 @@ in
       kernelModules = [ "uinput" "nvidia" "v4l2loopback" ];
 
       # Disable DP-3 at boot to prevent GDM from claiming it
-      kernelParams = [ ];
+      kernelParams = [ "nvme_core.default_ps_max_latency_us=0" "pcie_aspm=off" ];
 
       # Use whatever v4l2loopback package you want, or comment if handled via kernelPackages
       extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback xpadneo ];

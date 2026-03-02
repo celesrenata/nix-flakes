@@ -111,6 +111,12 @@
       env = XDG_MENU_PREFIX, plasma-
       env = TERMINAL,foot
       
+      # NVIDIA + Wayland fixes for XWayland games
+      env = LIBVA_DRIVER_NAME,nvidia
+      env = GBM_BACKEND,nvidia-drm
+      env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+      env = WLR_NO_HARDWARE_CURSORS,1
+      
       # Input configuration
       input {
           kb_layout = us
@@ -389,6 +395,7 @@
       exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP # Some fix idk
       exec-once = hyprpm reload
       exec-once = easyeffects --gapplication-service
+      exec-once = touchegg
     '';
   };  
 }

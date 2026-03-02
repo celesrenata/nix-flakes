@@ -200,7 +200,7 @@
           (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
           (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
           # (import ./overlays/xrizer.nix)                  # Update xrizer to 0.4 for VR (now in upstream)
-          #(import ./overlays/vllm.nix)                    # Update vllm to v0.14.1
+          (import ./overlays/vllm.nix)                    # Update vllm to v0.16.0
           (import ./overlays/tensorrt.nix)                # NVIDIA TensorRT
           (import ./overlays/keyboard-visualizer.nix)     # Audio visualizer
           (import ./overlays/debugpy.nix)                 # Python debugger

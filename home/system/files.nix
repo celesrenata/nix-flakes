@@ -1,5 +1,5 @@
 # Home directory file management and dotfiles
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ config, inputs, lib, pkgs, pkgs-unstable, ... }:
 
 let
   celes-dots = pkgs.fetchFromGitHub {
@@ -40,6 +40,9 @@ in
   home.file."winapps/runmefirst.sh" = {
     source = winapps + "/runmefirst.sh";
   };
+
+  # Touchegg config symlink to system config
+  home.file.".config/touchegg/touchegg.conf".source = config.lib.file.mkOutOfStoreSymlink "/etc/touchegg/touchegg.conf";
   
   # Staging directory for mutable configs (used by initialSetup.sh)
   home.file.".configstaging/quickshell" = {

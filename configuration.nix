@@ -505,18 +505,10 @@
 
     # Kubernetes Tools.
     k3s
-    (wrapHelm pkgs-unstable.kubernetes-helm {
-      plugins = with pkgs-unstable.kubernetes-helmPlugins; [
-        helm-secrets
-        helm-diff
-        helm-s3
-        helm-git
-      ];
-    }) 
-    pkgs-unstable.kubernetes-helm
-    pkgs-unstable.helmfile
-    pkgs-unstable.kustomize
-    pkgs-unstable.kompose
+    kubernetes-helm-wrapped
+    helmfile-wrapped
+    pkgs.kustomize
+    pkgs.kompose
     pkgs.kubevirt
     pkgs-unstable.krew
 

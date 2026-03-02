@@ -17,6 +17,10 @@
         mode = "0440";
         group = "wheel";
       };
+      openai_api_token = {
+        mode = "0440";
+        group = "wheel";
+      };
     };
   };
 }

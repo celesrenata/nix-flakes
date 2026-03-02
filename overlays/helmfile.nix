@@ -1,9 +1,12 @@
-final: prev: rec {
+final: prev: {
   kubernetes-helm-wrapped = prev.wrapHelm prev.kubernetes-helm {
     plugins = with prev.kubernetes-helmPlugins; [
       helm-diff
       helm-secrets
       helm-s3
+      helm-git
     ];
   };
+  
+  helmfile-wrapped = prev.helmfile;
 }
