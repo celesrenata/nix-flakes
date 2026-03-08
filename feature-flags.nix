@@ -300,8 +300,8 @@ in
     # ============================================================================
     
     # NVIDIA support (esnixi platform)
-    hardware.nvidia.enable = lib.mkDefault enableNVIDIA;
-    services.xserver.videoDrivers = lib.mkIf enableNVIDIA [ "nvidia" ];
+    # Note: hardware.nvidia.enable is set in esnixi/gpu-kernel-flags.nix
+    # services.xserver.videoDrivers = lib.mkIf enableNVIDIA [ "nvidia" ];
     
     # AMD/ROCm support (macland platform)
     nixpkgs.config.rocmSupport = lib.mkDefault enableAMDGPU;

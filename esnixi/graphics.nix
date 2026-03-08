@@ -166,12 +166,9 @@ in
   };
 
   services.xserver.videoDrivers = [ "nvidia" ];
-  hardware.nvidia = {
-    package = nvidia-package;
-    modesetting.enable = true;
-    powerManagement.enable = true;
-    forceFullCompositionPipeline = true;
-    open = true;
-    nvidiaSettings = true;
-  };
+  # Note: hardware.nvidia configuration is handled by esnixi/gpu-kernel-flags.nix
+  # Keep only package override here (custom NVIDIA driver version)
+  hardware.nvidia.package = nvidia-package;
+  # Explicitly set open=false to avoid assertion error for drivers >= 560
+  hardware.nvidia.open = false;
 }

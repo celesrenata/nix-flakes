@@ -26,11 +26,18 @@ in {
     # Set display driver to NVIDIA when enabled
     services.xserver.videoDrivers = [ "nvidia" ];
     
+    # Enable hardware.nvidia module (required for kernel modules)
+    hardware.nvidia.enable = true;
+    hardware.nvidia.modesetting.enable = false;  # Use proprietary driver instead of modesetting
+    hardware.nvidia.open = false;  # Closed-source NVIDIA drivers (better performance/compatibility)
+    hardware.nvidia.nvidiaSettings = true;
+    hardware.nvidia.powerManagement.enable = true;
+    hardware.nvidia.forceFullCompositionPipeline = true;
   } // mkIf cfg.enableROCM {
     
     # Set display driver to AMD GPU when ROCm enabled (for macland)
     services.xserver.videoDrivers = [ "amdgpu" ];
-    
+    nixpkgs.config.rocmSupport = true;
   };
 
 }
