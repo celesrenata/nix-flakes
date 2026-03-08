@@ -1,8 +1,8 @@
 { config, pkgs, pkgs-unstable, inputs, ... }:
 
 let
-  # Use ComfyUI from the nix-comfyui flake input
-  comfyui = inputs.nix-comfyui.packages.${pkgs.system}.default;
+  # Use ComfyUI from our local overlay (avoids external flake with broken video dependencies)
+  comfyui = pkgs.comfyui;
   
   comfyui-wrapper = pkgs.writeShellScript "comfyui-wrapper" ''
     export NIXPKGS_ALLOW_UNFREE=1

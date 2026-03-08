@@ -29,9 +29,7 @@
     kiro-cli.inputs.nixpkgs.follows = "nixpkgs";
 
     # AI and machine learning tools
-    # ComfyUI now available in nixpkgs (PR #441841)
-    nix-comfyui.url = "github:utensils/nix-comfyui";
-    
+    # ComfyUI now available in nixpkgs (PR #441841)    
     # OneTrainer for diffusion model training
     # onetrainer-flake.url = "github:celesrenata/OneTrainer-flake/dev";
     # onetrainer-flake.inputs.nixpkgs.follows = "nixpkgs";
@@ -76,7 +74,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, cline-cli, kiro-cli, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, cline-cli, kiro-cli, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -198,6 +196,8 @@
           (import ./overlays/dots-hyprland-dp3-filter.nix inputs)  # Filter DP-3 from dots-hyprland
           # (import ./overlays/cider.nix)                 # Cider music player (disabled)
           (import ./overlays/comfyui.nix)                 # ComfyUI AI image generation
+          (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
+          # REMOVED DUPLICATE            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
           (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
           # (import ./overlays/xrizer.nix)                  # Update xrizer to 0.4 for VR (now in upstream)
           (import ./overlays/vllm.nix)                    # Update vllm to v0.16.0
@@ -360,7 +360,7 @@
           overlays = [
             nixgl.overlay                               # OpenGL support
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
-            inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
+          (import ./overlays/bitsandbytes.nix)            # Fix bitsandbytes CUDA 12.8 + glibc 2.42
             dots-hyprland.overlays.default              # Hyprland desktop environment
             # (import ./overlays/quickshell-override.nix inputs) # Override quickshell with nixpkgs version (disabled - breaks Qt5Compat)
             (import ./overlays/keyboard-visualizer.nix) # Audio visualizer
