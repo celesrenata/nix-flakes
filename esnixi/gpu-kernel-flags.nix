@@ -10,7 +10,7 @@ in {
   options.boot.gpu-selection = {
     enableNVIDIA = mkOption {
       type = types.bool;
-      default = true;  # Default to NVIDIA for esnixi platform
+      default = false;  # Force disabled - use modesetting only for now
       description = "Enable NVIDIA GPU support";
     };
     
@@ -23,21 +23,16 @@ in {
 
   config = mkIf cfg.enableNVIDIA {
     
-    # Set display driver to NVIDIA when enabled
     services.xserver.videoDrivers = [ "nvidia" ];
-    
-    # Enable hardware.nvidia module (required for kernel modules)
     hardware.nvidia.enable = true;
-    hardware.nvidia.modesetting.enable = false;  # Use proprietary driver instead of modesetting
-    hardware.nvidia.open = false;  # Closed-source NVIDIA drivers (better performance/compatibility)
-    hardware.nvidia.nvidiaSettings = true;
-    hardware.nvidia.powerManagement.enable = true;
-    hardware.nvidia.forceFullCompositionPipeline = true;
+    hardware.nvidia.open = false;
   } // mkIf cfg.enableROCM {
     
-    # Set display driver to AMD GPU when ROCm enabled (for macland)
     services.xserver.videoDrivers = [ "amdgpu" ];
     nixpkgs.config.rocmSupport = true;
   };
+
+  # Force disable NVIDIA to prevent auto-detection issues (must be outside conditional blocks)
+  hardware.nvidia.enable = lib.mkForce false;
 
 }
