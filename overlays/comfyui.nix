@@ -1,4 +1,4 @@
-# ComfyUI Overlay - Updated with working URLs
+# ComfyUI Overlay - Fixed: Removed problematic input file downloads
 
 final: prev: {
   # Main ComfyUI package (unchanged)
@@ -43,7 +43,7 @@ final: prev: {
     };
   };
 
-  # Valid workflow templates package (optional)
+  # Workflow templates package (templates only - no input files to avoid missing file errors)
   comfyui-workflow-templates = prev.python3Packages.buildPythonPackage rec {
     pname = "comfyui-workflow-templates";
     version = "2025-01-15";
@@ -65,15 +65,14 @@ final: prev: {
       runHook preInstall
       mkdir -p $out/workflows
       
-      # Copy valid workflow templates from the repository
+      # Copy valid workflow templates from the repository (templates only)
       cp -r ${src}/templates/*.json $out/workflows/ 2>/dev/null || true
-      cp -r ${src}/input/*.* $out/input/ 2>/dev/null || true
       
       runHook postInstall
     '';
 
     meta = with prev.lib; {
-      description = "Valid ComfyUI workflow templates and input files";
+      description = "Valid ComfyUI workflow templates";
       homepage = "https://github.com/Comfy-Org/workflow_templates";
       license = licenses.mit;
       platforms = platforms.all;
@@ -85,7 +84,7 @@ final: prev: {
     text_to_image = "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/main/templates/01_get_started_text_to_image.json";
     image_editing = "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/main/templates/image_qwen_Image_2512_with_2steps_lora.json";
     
-    # Valid input file URLs (from workflow_template_input_files.json)
+    # Valid input file URLs (from workflow_template_input_files.json) - only images, no videos
     valid_inputs = {
       test_image = "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/main/input/1950_new_york.png";
       character_front = "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/main/input/3d_character_front_view.png";
