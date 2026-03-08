@@ -73,8 +73,9 @@
       exec-once = [[ "$(hostname)" == "macland" ]] && hyprctl keyword monitor ",1920x1200@60,auto,1" || hyprctl keyword monitor ",preferred,auto,1"
       exec-once = [[ "$(hostname)" == "esnixi" ]] && hyprctl keyword monitor "DP-3,disable"
       
-      # T2 MacBook GPU environment variables for proper graphics switching
-      env = AQ_DRM_DEVICES,/dev/dri/card1:/dev/dri/card2
+      # T2 MacBook GPU environment variables - Radeon primary for Hyprland
+      env = AQ_DRM_DEVICES,/dev/dri/card2:/dev/dri/card1
+      env = WLR_DRM_DEVICES,/dev/dri/card2:/dev/dri/card1
 
       # Input configuration
       input {
@@ -338,7 +339,7 @@
       bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480
 
       # Quickshell integration and desktop environment
-      exec-once = quickshell -c ii
+      exec-once = systemctl --user restart quickshell
       exec-once = wl-paste --watch cliphist store
       exec-once = ~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh
       exec-once = gnome-keyring-daemon --start --components=secrets
@@ -348,6 +349,9 @@
       exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP # Some fix idk
       exec-once = hyprpm reload
       exec-once = easyeffects --gapplication-service
+  
+      # Source user's custom configuration
+      source = ~/.config/hypr/custom.conf
     '';
   };
 

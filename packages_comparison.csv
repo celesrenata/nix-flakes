@@ -1,0 +1,7 @@
+program-name,current-version,experimental-version,status
+kmod,31,31,SAME
+bash-interactive,5.3p3,5.3p3,SAME
+gnugrep,3.12,3.12,SAME
+shadow,4.18.0,4.18.0,SAME
+findutils,4.10.0,4.10.0,SAME
+perl-5.40.0,man,env,DIFFERENT

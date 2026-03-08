@@ -23,6 +23,7 @@
   home.packages = with pkgs; [
     # Development Tools
     amazon-q-cli
+    kiro
     jetbrains-toolbox
     git
     git-lfs
@@ -46,7 +47,6 @@
     ninja
     node2nix
     nil
-    sublime4
 
     # AWS Tools
     nodePackages.aws-cdk
@@ -95,7 +95,7 @@
       six
       pycairo
     ])))
-  ] ++ (with pkgs-unstable; [
+  ] ++ (with pkgs; [
     # Unstable development packages
     fastfetch
     vesktop

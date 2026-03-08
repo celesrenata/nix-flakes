@@ -14,6 +14,10 @@
     environment.variables.LIBVA_DRIVER_NAME = "amdgpu";
     environment.variables.VDPAU_DRIVER = "amdgpu";
     services.xserver.videoDrivers = ["amdgpu"];
+    
+    # Force Radeon Pro 5500M as primary GPU for compositing
+    environment.variables.DRI_PRIME = "1";
+    environment.variables.AMD_VULKAN_ICD = "RADV";
     hardware.nvidia.prime = { 
       sync.enable = true; 
     
@@ -24,24 +28,24 @@
       intelBusId = "PCI:0:2:0"; 
     };
     # ROCm symlink with fixed packages
-    # services.ollama = {
-    #   package = pkgs-unstable.ollama;
-    #   enable = true;
-    #   # Keep acceleration disabled until we fully resolve the CLR dependency issue
-    #   acceleration = "rocm";  # Temporarily disabled until we fix the CLR dependency issue
-    #   #listenAddress = "0:0:0:0:11434";
-    #   host = "0.0.0.0";
-    #   port = 11434;
-    #   environmentVariables = {
-    #     HSA_OVERRIDE_GFX_VERSION = "10.1.0";
-    #   };
-    # #      models = "/opt/ollama/models";
-    # };
+    services.ollama = {
+      package = pkgs-unstable.ollama;
+      enable = true;
+      # Keep acceleration disabled until we fully resolve the CLR dependency issue
+      acceleration = "rocm";  # Temporarily disabled until we fix the CLR dependency issue
+      #listenAddress = "0:0:0:0:11434";
+      host = "0.0.0.0";
+      port = 11434;
+      environmentVariables = {
+        HSA_OVERRIDE_GFX_VERSION = "10.1.0";
+      };
+         models = "/opt/ollama/models";
+    };
     security.wrappers.sunshine = {
         owner = "root";
         group = "root";
         capabilities = "cap_sys_admin+p";
-        source = "${pkgs-unstable.sunshine}/bin/sunshine";
+        source = "${pkgs.sunshine}/bin/sunshine";
     };
     # immersed build failure
     # security.wrappers.immersed = {

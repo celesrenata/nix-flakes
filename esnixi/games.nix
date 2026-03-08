@@ -48,10 +48,6 @@
       ];
     };
     programs.gamemode.enable = true;
-    programs.alvr = {
-      enable = true;
-      package = pkgs.alvr; 
-    };
     # services.protontweaks.enable = true;
   };
 }

@@ -3,6 +3,36 @@
   config = {
     # Power and Thermal.
     services.thermald.enable = true;
+    services.upower.enable = true;
+ 
+    # Let TLP manage CPU frequency scaling
+    powerManagement = {
+      enable = true;
+    };
+    
+    # Intel P-State driver configuration
+    boot.kernelParams = [
+      "intel_pstate=active"
+    ];
+    
+    # TLP for advanced power management
+    services.tlp = {
+      enable = true;
+      settings = {
+        # AC: responsive performance; BAT: conservative
+        CPU_SCALING_GOVERNOR_ON_AC = "schedutil";
+        CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+        
+        # AC: allow near-full performance; BAT: conservative
+        CPU_MAX_PERF_ON_AC = 90;
+        CPU_MAX_PERF_ON_BAT = 55;
+        
+        CPU_ENERGY_PERF_POLICY_ON_AC = "balance_performance";
+        CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+        CPU_BOOST_ON_AC = 1;
+        CPU_BOOST_ON_BAT = 0;
+      };
+    };
     systemd.services.t2fanrd = {
       enable = true;
       description = "T2 Mac Fan Controller";

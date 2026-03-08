@@ -1,17 +1,8 @@
-{ config, lib, pkgs, pkgs-unstable, ... }:
-let
-  myKernelPackages = let
-    base = pkgs.linuxKernel.packages.linux_6_17;
-  in base // {
-    nvidia-open = base.nvidia-open.overrideAttrs (old: {
-      nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.pkg-config ];
-      buildInputs = (old.buildInputs or []) ++ [ pkgs.gtk3 pkgs.gtk2 ];
-    });
-  };
-in
+# Boot Configuration for ESXi Baremetal System
+{ config, lib, pkgs, ... }:
+
 {
   config = {
-    nixpkgs.config.allowUnsupportedSystem = true;
     boot = {
       binfmt.emulatedSystems = [ "aarch64-linux" ];
       loader = {
@@ -21,10 +12,10 @@ in
       supportedFilesystems = [ "ntfs" "nfs" ];
       plymouth.enable = true;
 
-      # Use patched kernelPackages set
-      kernelPackages = myKernelPackages;
+      # Using default kernel (commented out custom linux_6.17 which reached EOL)
+      # kernelPackages = myKernelPackages;
 
-      kernelPatches = [
+      kernelPatches = lib.mkDefault [
         {
           name = "amdgpu-ignore-ctx-privileges";
           patch = pkgs.fetchpatch {
@@ -34,10 +25,11 @@ in
           };
         }
       ];
+      
       kernelModules = [ "uinput" "nvidia" "v4l2loopback" ];
 
       # Disable DP-3 at boot to prevent GDM from claiming it
-      kernelParams = [ ];
+      kernelParams = lib.mkDefault [];
 
       # Use whatever v4l2loopback package you want, or comment if handled via kernelPackages
       extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
@@ -56,7 +48,5 @@ in
     };
     hardware.graphics.enable = true;
     services.thermald.enable = true;
-    # virtualisation.spiceUSBRedirection.enable = true;
   };
 }
-

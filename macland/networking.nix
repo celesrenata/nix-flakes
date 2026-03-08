@@ -12,6 +12,9 @@
     # Enable NetworkManager.
     networking.networkmanager.enable = true;
     networking.networkmanager.wifi.backend = "iwd";
+    networking.networkmanager.plugins = with pkgs; [
+      networkmanager-openvpn
+    ];
 
     # Enable Bluetooth
     hardware.bluetooth.enable = true;

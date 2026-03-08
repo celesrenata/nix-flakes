@@ -1,7 +1,8 @@
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, pkgs-unstable, inputs, ... }:
 
 let
-  comfyui = pkgs.comfyui;
+  # Use ComfyUI from the nix-comfyui flake input
+  comfyui = inputs.nix-comfyui.packages.${pkgs.system}.default;
   
   comfyui-wrapper = pkgs.writeShellScript "comfyui-wrapper" ''
     export NIXPKGS_ALLOW_UNFREE=1

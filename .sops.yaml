@@ -1,7 +1,7 @@
 # SOPS configuration file
 keys:
   # SSH host key converted to age (from system)
-  - &ssh_host_key age10f5p9pzkm8579v8gdwgpe04uy7hj83hml9fxu93tedu9xd78fg3qmkuju7
+  - &ssh_host_key age1ajnd7nd5aejku95t284hl85r8z000cdr2jt20q74juw0jhqcxeas45y4u6
 
 creation_rules:
   # Default rule for all secrets using SSH host key

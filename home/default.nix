@@ -22,6 +22,7 @@
     # Application and Program Configuration
     ./programs/comfyui.nix          # ComfyUI AI image generation service
     ./programs/development.nix      # Development tools (VSCode, Git, Python, etc.)
+    ./programs/mcp.nix              # Model Context Protocol servers
     ./programs/media.nix            # Media applications (OBS, players, editors)
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools

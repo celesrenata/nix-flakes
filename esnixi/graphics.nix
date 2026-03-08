@@ -19,8 +19,6 @@ let
   });
 in
 {
-  nixpkgs.config.allowUnfree = true;
-  
   services.avahi.publish.enable = true;
   services.avahi.publish.userServices = true;
   systemd.services.home-assistant.serviceConfig.DeviceAllow = ["/dev/dri/card0" "/dev/dri/card1"];
