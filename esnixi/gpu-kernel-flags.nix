@@ -1,4 +1,4 @@
-# GPU & Kernel Selection Configuration Module
+# GPU & Kernel Selection Configuration Module for ESXi (NVIDIA-focused)
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -10,25 +10,27 @@ in {
   options.boot.gpu-selection = {
     enableNVIDIA = mkOption {
       type = types.bool;
-      default = false;
+      default = true;  # Default to NVIDIA for esnixi platform
       description = "Enable NVIDIA GPU support";
     };
     
     enableROCM = mkOption {
       type = types.bool;
-      default = true;
+      default = false;  # ROCm is for macland (MacBook T2)
       description = "Enable AMD ROCm support";
     };
   };
 
-  config = mkIf (cfg.enableNVIDIA || cfg.enableROCM) {
+  config = mkIf cfg.enableNVIDIA {
     
-    # Set display driver based on GPU type
-    services.xserver.videoDrivers = mkDefault (
-      if cfg.enableNVIDIA then [ "nvidia" ]
-      else if cfg.enableROCM then [ "amdgpu" ]
-      else []
-    );
+    # Set display driver to NVIDIA when enabled
+    services.xserver.videoDrivers = [ "nvidia" ];
+    
+  } // mkIf cfg.enableROCM {
+    
+    # Set display driver to AMD GPU when ROCm enabled (for macland)
+    services.xserver.videoDrivers = [ "amdgpu" ];
+    
   };
 
 }
