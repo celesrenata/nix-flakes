@@ -1,7 +1,11 @@
-# Boot Configuration for ESXi Baremetal System
+# Boot Configuration for ESXi Baremetal System (NVIDIA temporarily disabled)
 { config, lib, pkgs, ... }:
 
-{
+with lib;
+
+let
+  cfg = config.boot.gpu-selection;
+in {
   config = {
     boot = {
       binfmt.emulatedSystems = [ "aarch64-linux" ];
@@ -11,9 +15,6 @@
       };
       supportedFilesystems = [ "ntfs" "nfs" ];
       plymouth.enable = true;
-
-      # Using default kernel (commented out custom linux_6.17 which reached EOL)
-      # kernelPackages = myKernelPackages;
 
       kernelPatches = lib.mkDefault [
         {
@@ -26,26 +27,26 @@
         }
       ];
       
-      kernelModules = [ "uinput" "nvidia" "v4l2loopback" ];
+      # NVIDIA kernel modules (conditional based on gpu-selection)
+      kernelModules = [ "uinput" "v4l2loopback" ] ++ lib.optional cfg.enableNVIDIA "nvidia";
 
       # Disable DP-3 at boot to prevent GDM from claiming it
       kernelParams = lib.mkDefault [];
 
-      # Use whatever v4l2loopback package you want, or comment if handled via kernelPackages
       extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
 
-      extraModprobeConfig = ''
-        options nvidia_drm modeset=1 fbdev=1
-      '';
+      extraModprobeConfig = 
+        mkIf cfg.enableNVIDIA ''
+          options nvidia_drm modeset=1 fbdev=1
+        '';
 
-      # initrd kernel modules
-      initrd.kernelModules = [
-        "nvidia"
-        "nvidia_modeset"
-        "nvidia_uvm"
-        "nvidia_drm"
-      ];
+      # initrd kernel modules (conditional based on gpu-selection)
+      initrd.kernelModules = lib.optional cfg.enableNVIDIA "nvidia" ++ 
+                           lib.optional cfg.enableNVIDIA "nvidia_modeset" ++
+                           lib.optional cfg.enableNVIDIA "nvidia_uvm" ++
+                           lib.optional cfg.enableNVIDIA "nvidia_drm";
     };
+    # Re-enable hardware.graphics with modesetting (not nvidia)
     hardware.graphics.enable = true;
     services.thermald.enable = true;
   };
