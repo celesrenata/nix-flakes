@@ -1,4 +1,4 @@
-# GPU & Kernel Selection Configuration Module for ESXi (NVIDIA-focused)
+# GPU & Kernel Selection Configuration Module for ESXi (NVIDIA disabled)
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -10,7 +10,7 @@ in {
   options.boot.gpu-selection = {
     enableNVIDIA = mkOption {
       type = types.bool;
-      default = false;  # Force disabled - use modesetting only for now
+      default = false;  # Disabled for now - use modesetting only
       description = "Enable NVIDIA GPU support";
     };
     
@@ -21,18 +21,17 @@ in {
     };
   };
 
-  config = mkIf cfg.enableNVIDIA {
+  config = {
+    # Force disable NVIDIA to prevent auto-detection issues
+    hardware.nvidia.enable = lib.mkForce false;
     
+    services.xserver.videoDrivers = [ "modesetting" ];
+    
+    nixpkgs.config.rocmSupport = cfg.enableROCM;
+  } // mkIf cfg.enableNVIDIA {
+    # This won't be reached due to mkForce above, but kept for completeness
     services.xserver.videoDrivers = [ "nvidia" ];
     hardware.nvidia.enable = true;
-    hardware.nvidia.open = false;
-  } // mkIf cfg.enableROCM {
-    
-    services.xserver.videoDrivers = [ "amdgpu" ];
-    nixpkgs.config.rocmSupport = true;
   };
-
-  # Force disable NVIDIA to prevent auto-detection issues (must be outside conditional blocks)
-  hardware.nvidia.enable = lib.mkForce false;
 
 }
