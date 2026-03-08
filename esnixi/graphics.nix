@@ -1,22 +1,10 @@
 { config, lib, pkgs, pkgs-unstable, ... }:
 let
-  # 6.16 compatibility patch for vm_flags
-  gpl_symbols_linux_615_patch = pkgs.fetchpatch {
-    url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
-    hash = "sha256-YOTAvONchPPSVDP9eJ9236pAPtxYK5nAePNtm2dlvb4=";
-    stripLen = 1;
-    extraPrefix = "kernel/";
-  };
-  
-  # Custom NVIDIA package with 580 drivers and 6.16 patches
-  nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.105.08";
-    sha256_64bit = "sha256-2cboGIZy8+t03QTPpp3VhHn6HQFiyMKMjRdiV2MpNHU=";
-    sha256_aarch64 = "";
-    openSha256 = "sha256-FGmMt3ShQrw4q6wsk8DSvm96ie5yELoDFYinSlGZcwQ=";
-    settingsSha256 = "sha256-YvzWO1U3am4Nt5cQ+b5IJ23yeWx5ud1HCu1U0KoojLY=";
-    persistencedSha256 = "";
-  });
+  # Simple custom NVIDIA package (commented out for testing)
+  # nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
+  #   version = "580.105.08";
+  #   sha256_64bit = "sha256-2cboGIZy8+t03QTPpp3VhHn6HQFiyMKMjRdiV2MpNHU=";
+  # });
 in
 {
   services.avahi.publish.enable = true;
@@ -166,9 +154,6 @@ in
   };
 
   services.xserver.videoDrivers = [ "nvidia" ];
-  # Note: hardware.nvidia configuration is handled by esnixi/gpu-kernel-flags.nix
-  # Keep only package override here (custom NVIDIA driver version)
-  hardware.nvidia.package = nvidia-package;
   # Explicitly set open=false to avoid assertion error for drivers >= 560
   hardware.nvidia.open = false;
 }
