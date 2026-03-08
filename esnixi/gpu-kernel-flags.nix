@@ -22,16 +22,12 @@ in {
   };
 
   config = {
-    # Force disable NVIDIA to prevent auto-detection issues
-    hardware.nvidia.enable = lib.mkForce false;
-    
     services.xserver.videoDrivers = [ "modesetting" ];
     
     nixpkgs.config.rocmSupport = cfg.enableROCM;
   } // mkIf cfg.enableNVIDIA {
-    # This won't be reached due to mkForce above, but kept for completeness
+    # NVIDIA configuration (currently disabled by default)
     services.xserver.videoDrivers = [ "nvidia" ];
-    hardware.nvidia.enable = true;
   };
 
 }
