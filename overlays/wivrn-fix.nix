@@ -1,20 +1,23 @@
-final: prev: let
-  wivrn-patched = prev.wivrn.overrideAttrs (oldAttrs: {
-    postPatch = (oldAttrs.postPatch or "") + ''
-      sed -i 's/FF_PROFILE_H264_CONSTRAINED_BASELINE/AV_PROFILE_H264_CONSTRAINED_BASELINE/g' server/encoder/ffmpeg/video_encoder_va.cpp
-      sed -i 's/FF_PROFILE_HEVC_MAIN_10/AV_PROFILE_HEVC_MAIN_10/g' server/encoder/ffmpeg/video_encoder_va.cpp
-      sed -i 's/FF_PROFILE_HEVC_MAIN/AV_PROFILE_HEVC_MAIN/g' server/encoder/ffmpeg/video_encoder_va.cpp
-      sed -i 's/FF_PROFILE_AV1_MAIN/AV_PROFILE_AV1_MAIN/g' server/encoder/ffmpeg/video_encoder_va.cpp
-    '';
+final: prev: {
+  wivrn = prev.wivrn.overrideAttrs (oldAttrs: rec {
+    version = "26.2.3";
+    src = prev.fetchFromGitHub {
+      owner = "wivrn";
+      repo = "wivrn";
+      rev = "v26.2.3";
+      hash = "sha256-pU7FYPp5wa0MK0ut/BfFlnUai8yMcylpWC0CoAExAio=";
+    };
+    monado = prev.applyPatches {
+      src = prev.fetchFromGitLab {
+        domain = "gitlab.freedesktop.org";
+        owner = "monado";
+        repo = "monado";
+        rev = "723652b545a79609f9f04cb89fcbf807d9d6451a";
+        hash = "sha256-wGqvTI/X22apc8XCN3GCGQClHfBW5xk73mZnwWvHtyI=";
+      };
+      postPatch = ''
+        ${src}/patches/apply.sh ${src}/patches/monado/*
+      '';
+    };
   });
-in {
-  wivrn = prev.symlinkJoin {
-    name = "wivrn-wrapped";
-    paths = [ wivrn-patched ];
-    buildInputs = [ prev.makeWrapper ];
-    postBuild = ''
-      wrapProgram $out/bin/wivrn-server \
-        --prefix LD_LIBRARY_PATH : ${prev.gcc15Stdenv.cc.cc.lib}/lib
-    '';
-  };
 }

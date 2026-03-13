@@ -11,6 +11,7 @@
 
     # Enable NetworkManager.
     networking.networkmanager.enable = true;
+    networking.networkmanager.dhcp = "internal";
     networking.networkmanager.plugins = with pkgs; [
       networkmanager-openvpn
     ];
@@ -29,19 +30,16 @@
       };
     };
 
-    # Configure the bridge interface with DHCP
-    networking.interfaces.br0 = {
-      useDHCP = true;  # Use DHCP for the bridge interface
-    };
+    # Let NetworkManager handle bridge and interface configuration
+    networking.interfaces.br0.useDHCP = false;
+    networking.interfaces.enp5s0f0.useDHCP = false;
+    networking.interfaces.enp5s0f1.useDHCP = false;
 
-    # Configure main interface with DHCP
-    networking.interfaces.enp5s0f1.useDHCP = true;
-
-    # Make DHCP non-blocking
-    networking.dhcpcd.wait = "background";
-    networking.dhcpcd.extraConfig = ''
-      timeout 45
-    '';
+    # Remove dhcpcd config since we're using NetworkManager's internal DHCP
+    # networking.dhcpcd.wait = "background";
+    # networking.dhcpcd.extraConfig = ''
+    #   timeout 45
+    # '';
     systemd.network.wait-online.enable = false;
 
     # Enable IP forwarding for VM traffic

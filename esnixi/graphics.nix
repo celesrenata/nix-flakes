@@ -86,22 +86,26 @@ in
     PARAMETER num_ctx 262144
   '';
 
+  environment.etc."ollama/qwen3.5-9b-claude.Modelfile".text = ''
+    FROM qwen3.5-9b-claude
+    PARAMETER num_ctx 32768
+  '';
+
   services.ollama = {
     enable = true;
-    package = pkgs-unstable.ollama;
+    package = pkgs.ollama;
     host = "0.0.0.0";
     port = 11434;
     acceleration = "cuda";
     models = "/opt/ollama/models";
     environmentVariables = {
-      OLLAMA_NUM_PARALLEL = "1";
+      OLLAMA_NUM_PARALLEL = "8";
       OLLAMA_MAX_LOADED_MODELS = "1";
       OLLAMA_FLASH_ATTENTION = "1";
-      OLLAMA_KV_CACHE_TYPE = "q4_0";
+      OLLAMA_KV_CACHE_TYPE = "f16";
       OLLAMA_MAX_VRAM = "0.9";
     };
-    # leave loadModels commented so nothing pre-warms
-    # loadModels = [ "qwen3:30b" ];
+    loadModels = [ "qwen3.5-9b-claude" ];
   };
 
   # Keep your oneshot; no functional change needed
@@ -116,7 +120,7 @@ in
       Environment = [
         "OLLAMA_HOST=http://127.0.0.1:11434"
         "OLLAMA_MODELS=/opt/ollama/models"
-        "PATH=${lib.makeBinPath [ pkgs.coreutils pkgs.curl pkgs-unstable.ollama pkgs.bash ]}"
+        "PATH=${lib.makeBinPath [ pkgs.coreutils pkgs.curl pkgs.ollama pkgs.bash ]}"
       ];
       ExecStart = (pkgs.writeShellScript "create-qwen3-30b-tuned" ''
         set -euo pipefail
@@ -132,6 +136,11 @@ in
         fi
         if ! ollama show qwen3:30b-tuned >/dev/null 2>&1; then
           ollama create qwen3:30b-tuned -f /etc/ollama/qwen3-30b-tuned.Modelfile
+        fi
+        
+        if ! ollama show qwen3.5-9b-claude >/dev/null 2>&1; then
+          ollama pull jackrong/qwen3.5-9b-claude-4.6-opus-reasoning-distilled
+          ollama create qwen3.5-9b-claude -f /etc/ollama/qwen3.5-9b-claude.Modelfile
         fi
       '');
     };

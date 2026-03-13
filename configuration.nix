@@ -454,6 +454,7 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     bibata-cursors
+    xorg.xorgserver
     # Editors.
     vim
     
@@ -525,6 +526,7 @@
     # Development Tools.
     #android-studio-full
     amazon-q-cli
+    lmstudio
     kiro
     jetbrains-toolbox
     nodejs_20

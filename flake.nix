@@ -24,6 +24,9 @@
     # Exo acceleration
     #exo.url = "github:celesrenata/exo/main";
 
+    # Aira
+    airi.url = "github:moeru-ai/airi";
+
     # Kiro CLI
     kiro-cli.url = "github:celesrenata/kiro-cli-flake";
     kiro-cli.inputs.nixpkgs.follows = "nixpkgs";
@@ -76,7 +79,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, airi, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -214,10 +217,11 @@
           (import ./overlays/latex.nix)                   # LaTeX document system
           # (import ./overlays/nmap.nix)                  # Network mapper (disabled)
           (import ./overlays/wofi-calc.nix)               # Calculator for Wofi
-          # (import ./overlays/wivrn-fix.nix)             # Fix FFmpeg profile constants in wivrn (disabled)
+          (import ./overlays/wivrn-fix.nix)             # Fix FFmpeg profile constants in wivrn (disabled)
           # (import ./overlays/toshy.nix)                 # Toshy overlay (disabled)
           (import ./overlays/helmfile.nix)                # Kubernetes Helm management
-          (import ./overlays/ollama.nix)                  # Ollama with GCC 13 for CUDA compatibility
+          (import ./overlays/ollama-qwen35.nix)           # Ollama 0.17.7
+          (import ./overlays/lmstudio.nix)                # LM Studio 0.4.6-1
           (import ./overlays/xformers-bin-0_0_28_post3.nix)  # xformers 0.0.28.post3 binary wheel
           # OneTrainer dependency fix
           (self: super: {
@@ -418,6 +422,8 @@
             ./macland/cpu.nix                           # CPU optimizations for Apple silicon
             ./macland/games.nix                         # Gaming setup for macOS compatibility
             ./macland/graphics.nix                      # Graphics drivers for Apple hardware
+            ./macland/litellm.nix                       # LiteLLM proxy for LLM routing
+            ./macland/lmstudio.nix                      # LM Studio configuration
             ./macland/networking.nix                    # Network configuration including WiFi/Bluetooth
             ./macland/sound.nix                         # Audio system configuration
             ./macland/thunderbolt.nix                   # Thunderbolt support

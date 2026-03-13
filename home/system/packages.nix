@@ -87,5 +87,8 @@
     
     # Node.js (required for various desktop components)
     nodejs_20
+
+    # AI/ML Applications
+    inputs.airi.packages.${pkgs.system}.default
   ];
 }

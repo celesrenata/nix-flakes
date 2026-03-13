@@ -6,14 +6,18 @@
     hardware.graphics = {
       enable = true;
       enable32Bit = true;
-      extraPackages = [ pkgs.libva-vdpau-driver pkgs.libvdpau-va-gl pkgs.amdvlk ];
-      extraPackages32 = [ pkgs.driversi686Linux.amdvlk ];
+      extraPackages = [ pkgs.libva-vdpau-driver pkgs.libvdpau-va-gl ];
+      # amdvlk removed - RADV is enabled by default
     };
 
     # Load AMD driver for Xorg and Wayland
     environment.variables.LIBVA_DRIVER_NAME = "amdgpu";
     environment.variables.VDPAU_DRIVER = "amdgpu";
     services.xserver.videoDrivers = ["amdgpu"];
+    
+    # Force Radeon Pro 5500M as primary GPU for compositing
+    environment.variables.DRI_PRIME = "1";
+    environment.variables.AMD_VULKAN_ICD = "RADV";
     hardware.nvidia.prime = { 
       sync.enable = true; 
     
@@ -35,19 +39,20 @@
       environmentVariables = {
         HSA_OVERRIDE_GFX_VERSION = "10.1.0";
       };
-#      models = "/opt/ollama/models";
+         models = "/opt/ollama/models";
     };
     security.wrappers.sunshine = {
         owner = "root";
         group = "root";
         capabilities = "cap_sys_admin+p";
-        source = "${pkgs-unstable.sunshine}/bin/sunshine";
+        source = "${pkgs.sunshine}/bin/sunshine";
     };
-    security.wrappers.immersed = {
-        owner = "root";
-        group = "root";
-        capabilities = "cap_sys_admin+p";
-        source = "${pkgs.immersed}/bin/immersed";
-    };
+    # immersed build failure
+    # security.wrappers.immersed = {
+    #     owner = "root";
+    #     group = "root";
+    #     capabilities = "cap_sys_admin+p";
+    #     source = "${pkgs.immersed}/bin/immersed";
+    # };
   };
 }
