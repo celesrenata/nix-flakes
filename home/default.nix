@@ -25,6 +25,7 @@
     ./programs/mcp.nix              # Model Context Protocol servers for AI assistants
     ./programs/development.nix      # Development tools (VSCode, Git, Python, etc.)
     ./programs/media.nix            # Media applications (OBS, players, editors)
+    ./programs/openclaw.nix         # OpenClaw AI assistant (Discord bot)
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools
     

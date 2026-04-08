@@ -272,6 +272,12 @@
   # Gestures with custom configuration
   services.touchegg.enable = true;
   
+  # Triton (sageattention) hardcodes /sbin/ldconfig
+  system.activationScripts.ldconfig-symlink.text = ''
+    mkdir -p /sbin
+    ln -sf ${pkgs.glibc.bin}/bin/ldconfig /sbin/ldconfig
+  '';
+
   # System-wide touchegg configuration file
   environment.etc."touchegg/touchegg.conf".text = ''
     <touchégg>
@@ -459,6 +465,7 @@
     vim
     
     # AI Tools
+    #inputs.airi.packages.x86_64-linux.default
     inputs.cline-cli.packages.x86_64-linux.default
     inputs.kiro-cli.packages.x86_64-linux.default
     
@@ -516,6 +523,11 @@
     # Steam Tools.
     steam-tui
     steamcmd
+    steamtinkerlaunch
+    xdotool
+    xorg.xwininfo
+    cabextract
+    winetricks
     mangohud
     gamemode
     protonup-qt

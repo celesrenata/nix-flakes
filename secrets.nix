@@ -21,6 +21,14 @@
         mode = "0440";
         group = "wheel";
       };
+      discord_bot_token = {
+        mode = "0400";
+        owner = "celes";
+      };
+      openclaw_gateway_token = {
+        mode = "0400";
+        owner = "celes";
+      };
     };
   };
 }

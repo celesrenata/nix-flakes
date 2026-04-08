@@ -34,7 +34,7 @@
     # Image and video editing
     pkgs-old.gimp
     darktable
-    blender
+    #blender
     kdePackages.kdenlive
     
     # Image processing

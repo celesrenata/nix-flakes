@@ -3,20 +3,30 @@
 let
   comfyui = pkgs.comfyui;
   
+  comfyui-manager = pkgs.comfyui-manager;
+
   comfyui-wrapper = pkgs.writeShellScript "comfyui-wrapper" ''
     export NIXPKGS_ALLOW_UNFREE=1
     export VENV_DIR=${config.home.homeDirectory}/.config/comfy-ui/venv
     export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:${pkgs.libGL}/lib:${pkgs.libGLU}/lib:${pkgs.glib}/lib:/run/opengl-driver/lib:$LD_LIBRARY_PATH
+    export TRITON_NVIDIA_LIBCUDA_PATH=${pkgs.linuxPackages.nvidia_x11}/lib
+    export TRITON_PTXAS_BLACKWELL_PATH=${pkgs.cudaPackages.cuda_nvcc}/bin/ptxas
     
     # Copy ComfyUI source if it doesn't exist
     if [ ! -f ${config.home.homeDirectory}/.config/comfy-ui/app/main.py ]; then
       echo 'Copying ComfyUI source files...'
       mkdir -p ${config.home.homeDirectory}/.config/comfy-ui
       cp -r ${comfyui}/opt/comfyui ${config.home.homeDirectory}/.config/comfy-ui/app
+      chmod -R u+w ${config.home.homeDirectory}/.config/comfy-ui/app
     fi
     
     # Create required directory structure
     mkdir -p ${config.home.homeDirectory}/.config/comfy-ui/{custom_nodes,models,input,output,temp,user}
+
+    # Install ComfyUI-Manager from Nix overlay
+    rm -rf ${config.home.homeDirectory}/.config/comfy-ui/custom_nodes/comfyui-manager
+    cp -r ${comfyui-manager} ${config.home.homeDirectory}/.config/comfy-ui/custom_nodes/comfyui-manager
+    chmod -R u+w ${config.home.homeDirectory}/.config/comfy-ui/custom_nodes/comfyui-manager
     
     # Create venv if it doesn't exist
     if [ ! -d $VENV_DIR ]; then
@@ -25,17 +35,21 @@ let
       ${pkgs.python3}/bin/python3 -m venv $VENV_DIR
       $VENV_DIR/bin/pip install --upgrade pip
     fi
+
+    # Ensure uv is available in venv for ComfyUI-Manager
+    ln -sf ${pkgs.uv}/bin/uv $VENV_DIR/bin/uv
     
-    # Install all dependencies declaratively
-    if [ ! -f ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete ]; then
+    # Install all dependencies declaratively (version-stamped)
+    DEPS_VERSION="2"
+    if [ ! -f ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete ] || [ "$(cat ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete)" != "$DEPS_VERSION" ]; then
       echo 'Installing ComfyUI dependencies...'
       $VENV_DIR/bin/pip install -r ${config.home.homeDirectory}/.config/comfy-ui/app/requirements.txt
-      $VENV_DIR/bin/pip install segment-anything dill facexlib piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
-      touch ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete
+      $VENV_DIR/bin/pip install segment-anything dill facexlib piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm comfy-aimdo comfyui-frontend-package==1.43.1
+      echo "$DEPS_VERSION" > ${config.home.homeDirectory}/.config/comfy-ui/.deps_complete
     fi
     
     cd ${config.home.homeDirectory}/.config/comfy-ui/app
-    exec $VENV_DIR/bin/python main.py --base-dir ${config.home.homeDirectory}/.config/comfy-ui --listen 0.0.0.0 "$@"
+    exec $VENV_DIR/bin/python main.py --base-directory ${config.home.homeDirectory}/.config/comfy-ui --listen 0.0.0.0 "$@"
   '';
 in
 {

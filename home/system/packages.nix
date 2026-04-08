@@ -89,6 +89,8 @@
     nodejs_20
 
     # AI/ML Applications
-    inputs.airi.packages.${pkgs.system}.default
+    (inputs.airi.packages.${pkgs.system}.default.overrideAttrs (prev: {
+      assets = prev.assets.overrideAttrs { outputHash = "sha256-69tCpJaxRUnyR9CrHlmWJWEWLDpYzyzska7ui9++QoY="; };
+    }))
   ];
 }

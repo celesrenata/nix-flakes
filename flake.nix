@@ -26,7 +26,8 @@
 
     # Aira
     airi.url = "github:moeru-ai/airi";
-
+    #airi.url = "github:moeru-ai/airi/5535907aa8a6782c01c498d752b9dae8b4b08a8a";
+    #airi.url = "github:moeru-ai/airi/72925c1372f7c66e070d16e1d4a5ff3c8153204a";
     # Kiro CLI
     kiro-cli.url = "github:celesrenata/kiro-cli-flake";
     kiro-cli.inputs.nixpkgs.follows = "nixpkgs";
@@ -55,7 +56,7 @@
     tiny-dfr.url = "github:sharpenedblade/tiny-dfr";              # MacBook Touch Bar support
 
     # Gaming and Steam enhancements
-    protontweaks.url = "github:rain-cafe/protontweaks/main";       # Steam Proton tweaks
+    protontweaks.url = "git+https://codeberg.org/ribbon-studios/protontweaks";       # Steam Proton tweaks
 
     # Development tools and environments
     dream2nix.url = "github:nix-community/dream2nix";             # Language-specific package management
@@ -63,7 +64,7 @@
 
     # Desktop shell and widgets (currently using gorsbart fork)
     # ags.url = "github:Aylur/ags/main";                          # Original AGS (disabled)
-    ags.url = "github:gorsbart/ags";                              # Fork with additional features
+    # ags.url = "github:gorsbart/ags";                            # Fork with additional features (removed)
 
     # Secrets management with SOPS (Secrets OPerationS)
     sops-nix.url = "github:Mic92/sops-nix";                       # Encrypted secrets management
@@ -73,13 +74,16 @@
     cline-cli.url = "github:celesrenata/clinecli-flakes";          # Cline AI coding assistant CLI
     cline-cli.inputs.nixpkgs.follows = "nixpkgs";
 
+    # OpenClaw AI assistant gateway
+    nix-openclaw.url = "github:openclaw/nix-openclaw";
+
     # Keyboard remapping (currently disabled in favor of keyd)
     # toshy.url = "github:celesrenata/toshy/cline";               # Mac-style keybindings for Linux
     # toshy.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, airi, ... }:
+  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, airi, nix-openclaw, ... }:
   let
     # System architecture - currently only supporting x86_64 Linux
     system = "x86_64-linux";
@@ -192,6 +196,7 @@
           #   cudaPackages = super.cudaPackages_12_9;
           # })
           nixgl.overlay                                   # OpenGL support
+          nix-openclaw.overlays.default                      # OpenClaw AI assistant
           # inputs.niri.overlays.niri                     # Niri compositor (disabled)
           # toshy.overlays.default                        # Toshy keybindings (disabled)
           dots-hyprland.overlays.default                  # Hyprland desktop environment
@@ -239,6 +244,7 @@
           # (import ./overlays/nvidia-open-debug.nix)     # Debug version (disabled)
           # (import ./overlays/background-removal.nix)    # AI background removal (disabled)
           protontweaks.overlay                            # Steam Proton enhancements
+          (import ./overlays/steamtinkerlaunch.nix)       # Wrap STL with steam-run for NixOS FHS compat
         ];
       };
       
@@ -360,6 +366,7 @@
           # MacBook-specific overlays
           overlays = [
             nixgl.overlay                               # OpenGL support
+            nix-openclaw.overlays.default               # OpenClaw AI assistant
             (import ./overlays/comfyui.nix)             # ComfyUI AI image generation
             inputs.nix-comfyui.overlays.default         # ComfyUI AI tools
             dots-hyprland.overlays.default              # Hyprland desktop environment

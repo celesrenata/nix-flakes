@@ -3,7 +3,6 @@
 
 {
   imports = [ 
-    inputs.ags.homeManagerModules.default
     inputs.dots-hyprland.homeManagerModules.default
   ];
 

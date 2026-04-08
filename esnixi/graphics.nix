@@ -11,11 +11,11 @@ let
   # Custom NVIDIA package with 580 drivers and 6.16 patches
   #base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
   nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.126.18";
-    sha256_64bit = "sha256-p3gbLhwtZcZYCRTHbnntRU0ClF34RxHAMwcKCSqatJ0=";
+    version = "595.58.03";
+    sha256_64bit = "sha256-jA1Plnt5MsSrVxQnKu6BAzkrCnAskq+lVRdtNiBYKfk=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-1Q2wuDdZ6KiA/2L3IDN4WXF8t63V/4+JfrFeADI1Cjg=";
-    settingsSha256 = "sha256-QMx4rUPEGp/8Mc+Bd8UmIet/Qr0GY8bnT/oDN8GAoEI=";
+    openSha256 = "sha256-6LvJyT0cMXGS290Dh8hd9rc+nYZqBzDIlItOFk8S4n8=";
+    settingsSha256 = "sha256-2vLF5Evl2D6tRQJo0uUyY3tpWqjvJQ0/Rpxan3NOD3c=";
     persistencedSha256 = "";
   });
 
@@ -79,7 +79,7 @@ in
 
   # Your Modelfile as-is
   environment.etc."ollama/qwen3-30b-tuned.Modelfile".text = ''
-    FROM qwen3:30b
+    FROM qwen3.5:32b
     PARAMETER temperature 0.45
     PARAMETER top_p 0.9
     PARAMETER repeat_penalty 1.08
@@ -109,7 +109,7 @@ in
   };
 
   # Keep your oneshot; no functional change needed
-  systemd.services."ollama-create-qwen3-30b-tuned" = {
+  systemd.services."ollama-create-qwen3.5-32b-tuned" = {
     after = [ "network-online.target" "ollama.service" ];
     requires = [ "ollama.service" ];
     wantedBy = [ "multi-user.target" ];
@@ -131,11 +131,11 @@ in
           sleep 1
         done
 
-        if ! ollama show qwen3:30b >/dev/null 2>&1; then
-          ollama pull qwen3:30b
+        if ! ollama show qwen3.5:32b >/dev/null 2>&1; then
+          ollama pull qwen3.5:32b
         fi
-        if ! ollama show qwen3:30b-tuned >/dev/null 2>&1; then
-          ollama create qwen3:30b-tuned -f /etc/ollama/qwen3-30b-tuned.Modelfile
+        if ! ollama show qwen3.5:32b-tuned >/dev/null 2>&1; then
+          ollama create qwen3.5:32b-tuned -f /etc/ollama/qwen3-30b-tuned.Modelfile
         fi
         
         if ! ollama show qwen3.5-9b-claude >/dev/null 2>&1; then

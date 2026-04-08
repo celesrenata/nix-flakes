@@ -11,6 +11,7 @@
 
     # Enable NetworkManager.
     networking.networkmanager.enable = true;
+    networking.nameservers = [ "192.168.42.1" ];
     networking.networkmanager.dhcp = "internal";
     networking.networkmanager.plugins = with pkgs; [
       networkmanager-openvpn

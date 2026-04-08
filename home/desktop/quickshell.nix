@@ -24,6 +24,11 @@
     };
   };
 
+  # Remove nix store qmldir symlinks before generation so the script can write real files
+  home.activation.prepareQmldirFiles = lib.hm.dag.entryBefore ["generateQmldirFiles"] ''
+    find "$HOME/.config/quickshell/ii" -name "qmldir" -type l -delete 2>/dev/null || true
+  '';
+
   # Generate env.sh with dynamic library paths
   home.activation.generateQuickshellEnv = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p $HOME/.config/quickshell

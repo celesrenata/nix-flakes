@@ -69,10 +69,6 @@ in
     source = celes-dots + "/.local/bin/sunshineFixed";
   };
   
-  home.file.".local/bin/agsAction.sh" = {
-    source = celes-dots + "/.local/bin/agsAction.sh";
-  };
-  
   home.file.".local/bin/regexEscape.sh" = {
     source = celes-dots + "/.local/bin/regexEscape.sh";
   };

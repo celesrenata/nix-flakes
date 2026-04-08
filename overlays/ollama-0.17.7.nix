@@ -29,13 +29,13 @@ in
 {
   ollama = goBuild {
     pname = "ollama";
-    version = "0.17.7";
+    version = "0.18.2";
     
     src = fetchFromGitHub {
       owner = "ollama";
       repo = "ollama";
-      tag = "v0.17.7";
-      hash = "sha256-cAqc38NHvUo5gphq1csTyosTcpUjFcs0dzB0wreEGjs=";
+      tag = "v0.18.2";
+      hash = "sha256-BDCYczTZO6LKwD8+LY625pZwvJVMYUE0VwVG5pVYfGk=";
     };
     
     vendorHash = "sha256-Lc1Ktdqtv2VhJQssk8K1UOimeEjVNvDWePE9WkamCos=";
