@@ -1115,11 +1115,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1766418104,
-        "narHash": "sha256-AscD0mlOIYEYJv8NZVAqm9XRD6zwlmKj/0PSQup5uXo=",
+        "lastModified": 1777009023,
+        "narHash": "sha256-dMDzxyxRyfbLrozNzwkvDVT338x+wWFDd3dPs1wtcb4=",
         "owner": "celesrenata",
         "repo": "OneTrainer-flake",
-        "rev": "ca3f78120967fbdfd716145d32eeb8f4fafaf87a",
+        "rev": "84cfae7e72c003f0d536ad90d21665d118153bf1",
         "type": "github"
       },
       "original": {
