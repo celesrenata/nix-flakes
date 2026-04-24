@@ -42,7 +42,7 @@
 
   # AI/ML overlays: ComfyUI, vLLM, TensorRT, Ollama (GCC 13), xformers binary, bitsandbytes
   ai = [
-    (import ./vllm.nix)
+    #(import ./vllm.nix)
     (import ./tensorrt.nix)
     (import ./ollama.nix)
     (import ./xformers-bin-0_0_28_post3.nix)
