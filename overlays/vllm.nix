@@ -108,7 +108,7 @@ let
           owner = "huggingface";
           repo = "transformers";
           rev = "main";
-          hash = "sha256-dvj2va9dxLU38QsgM3GGeKJjU8XMK9Sk3t3SeS+opT4=";
+          hash = "sha256-tK4jd+dtV6BiV1vriQHuksmBSPJ1tHlqcdSwiBowtWw=";
         };
         version = "5.0.0-dev";
         propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
@@ -126,7 +126,7 @@ in {
       owner = "vllm-project";
       repo = "vllm";
       rev = "main";
-      hash = "sha256-C0GHdqd8Ezzp65SjBix0VZkXwrybRNXNfP+Ta/JK7ic=";
+      hash = "sha256-iYf3QRGhfeAIMh5NY81e0EXn17HhmxYuyYKu7GihvEU=";
     };
     
     patches = [];
