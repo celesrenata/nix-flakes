@@ -1,6 +1,6 @@
-{ pkgs, pkgs-unstable, pkgs-old, ... }:
+{ config, lib, pkgs, pkgs-unstable, pkgs-old, ... }:
 {
-  config = {
+  config = lib.mkIf config.my.profiles.games.enable {
     # Steam requirements
     boot.kernel.sysctl."vm.legacy_va_layout" = 0;
     security.pam.loginLimits = [

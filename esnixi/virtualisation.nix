@@ -1,25 +1,14 @@
-{ pkgs, pkgs-unstable, pkgs-old, ... }:
+{ config, lib, pkgs, pkgs-old, ... }:
 {
-  config = {
-    # Enable VMWare Tools.
-    # virtualisation.vmware.guest.enable = true;
-
+  config = lib.mkIf config.my.profiles.virtualization.enable {
     # Enable Docker with bridge networking support
     virtualisation.docker = {
       enable = true;
       enableOnBoot = true;
       storageDriver = "btrfs";
-      daemon.settings.data-root = "/home/docker";
+      daemon.settings.data-root = config.my.paths.dockerData;
       package = pkgs-old.docker;
     };
-    
-    #virtualisation.vmware.host.enable = true;
-    #virtualisation.vmware.host.package = pkgs.vmware-workstation.override { enableMacOSGuests = true; };
-
-#    virtualisation.virtualbox.host.enable = true;
-#    virtualisation.virtualbox.host.enableKvm = true;
-#    virtualisation.virtualbox.host.enableExtensionPack = true;
-#    users.extraGroups.vboxusers.members = [ "celes" ];
 
     # Enable QEMU/KVM with bridge networking support
     virtualisation.libvirtd = {
@@ -59,7 +48,7 @@
           image = "dockurr/windows";
           volumes = [
             "/mnt/shared:/shared"
-            "/home/docker/windows/data:/storage"
+            "${config.my.paths.dockerData}/windows/data:/storage"
             "/etc/nixos/scripts:/oem"
           ];
           ports = [

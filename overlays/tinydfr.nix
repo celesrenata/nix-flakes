@@ -1,8 +1,9 @@
 final: prev:
 rec {
   tiny-dfr = prev.tiny-dfr.overrideAttrs (old: {
-    patches = [
-      ../patches/tiny-dfr.config.toml.patch
-    ];
+    # Patch temporarily removed — file was never committed
+    # patches = [
+    #   ../patches/tiny-dfr.config.toml.patch
+    # ];
   });
 }

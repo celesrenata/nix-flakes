@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, pkgsAccel, ... }:
 
 {
   systemd.services.dcgm-exporter = {
@@ -8,7 +8,7 @@
     
     serviceConfig = {
       Type = "simple";
-      ExecStart = "${pkgs.dcgm-exporter}/bin/dcgm-exporter -a 0.0.0.0:9400";
+      ExecStart = "${pkgsAccel.dcgm-exporter}/bin/dcgm-exporter -a 0.0.0.0:9400";
       Restart = "always";
       RestartSec = "10s";
     };

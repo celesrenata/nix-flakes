@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, niri, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
+{ config, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
 {
   # Licences.
   # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
@@ -394,39 +394,6 @@
 
   # Garbage Collection.
   nix.optimise.automatic = true;
- 
-  # Enable Docker with NVIDIA support
-  virtualisation.docker.enable = true;
-  #programs.steam.package = pkgs.steam.override {
-  #  extraPkgs = pkgs: [
-  #    pkgs.steamcmd
-  #    pkgs.glxinfo
-  #    pkgs.steam-tui
-  #  ];
-  #};
-  programs.ccache.enable = true;
-  programs.nh.enable = true;
-  programs.java.enable = true;
-  programs.adb.enable = true;
-  programs.steam.gamescopeSession.enable = true;
-  programs.gamemode.enable = true;
-  programs.steam = {
-    enable = true;
-    protontricks.enable = true;
-    extraPackages = with pkgs; [
-      mesa-demos
-      qt6.qtwayland
-      nss
-      xorg.libxkbfile
-      kdePackages.qtwayland
-      libsForQt5.qt5.qtwayland
-      mangohud
-      gamemode
-    ];
-    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
-  };
-  hardware.steam-hardware.enable = true;
   
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
@@ -458,7 +425,7 @@
     # Editors.
     vim
     
-    # AI Tools
+    # CLI Tools
     inputs.cline-cli.packages.x86_64-linux.default
     inputs.kiro-cli.packages.x86_64-linux.default
     
@@ -510,72 +477,10 @@
     zsh
     bash
 
-    # Kubernetes Tools.
-    k3s
-    (wrapHelm pkgs-unstable.kubernetes-helm {
-      plugins = with pkgs-unstable.kubernetes-helmPlugins; [
-        helm-secrets
-        helm-diff
-        helm-s3
-        helm-git
-      ];
-    }) 
-    pkgs-unstable.kubernetes-helm
-    pkgs-unstable.helmfile
-    pkgs-unstable.kustomize
-    pkgs-unstable.kompose
-    pkgs.kubevirt
-    pkgs-unstable.krew
-
-    # Steam Tools.
-    steam-tui
-    steamcmd
-    mangohud
-    gamemode
-    protonup-qt
-    lutris
-    bottles
-    heroic
-
-    # Development Tools.
-    #android-studio-full
+    # Development Tools (not in profiles).
     amazon-q-cli
     kiro
     jetbrains-toolbox
-    nodejs_20
-    meson
-    gcc13
-    cmake
-    pkg-config
-    glib.dev
-    glib
-    glibc.dev
-    gobject-introspection.dev
-    openjdk
-    pango.dev
-    harfbuzz.dev
-    cairo.dev
-    gdk-pixbuf.dev
-    atk.dev
-    libpulseaudio.dev
-    typescript
-    ninja
-    #nixStatic.dev
-    node2nix
-    nil
-    # sublime4  # Temporarily disabled - requires broken openssl-1.1.1w
-    #(pkgs.comfyuiPackages.comfyui.override {
-    #  extensions = [
-    #    pkgs.comfyuiPackages.extensions.acly-inpaint
-    #    pkgs.comfyuiPackages.extensions.acly-tooling
-    #    pkgs.comfyuiPackages.extensions.cubiq-ipadapter-plus
-    #    pkgs.comfyuiPackages.extensions.fannovel16-controlnet-aux
-    #  ];
-    #  commandLineArgs = [
-    #    "--preview-method"
-    #    "auto"
-    #  ];
-    #})
 
     # Session.
     polkit
@@ -606,8 +511,6 @@
     xorg.xhost
     wev
     wf-recorder
-    ffmpeg-full
-    mkvtoolnix-cli
     vulkan-tools
     libva-utils
     wofi
