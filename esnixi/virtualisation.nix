@@ -1,4 +1,4 @@
-{ config, lib, pkgs, pkgs-old, ... }:
+{ config, lib, pkgs, ... }:
 {
   config = lib.mkIf config.my.profiles.virtualization.enable {
     # Enable Docker with bridge networking support
@@ -7,7 +7,7 @@
       enableOnBoot = true;
       storageDriver = "btrfs";
       daemon.settings.data-root = config.my.paths.dockerData;
-      package = pkgs-old.docker;
+      package = pkgs.docker;
     };
 
     # Enable QEMU/KVM with bridge networking support
@@ -74,6 +74,36 @@
 
     # Enable KVM kernel modules
     boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
+
+    # OEM scripts for Windows container post-install
+    environment.etc."nixos/scripts/install.bat".source = ./winapps-oem/install.bat;
+    environment.etc."nixos/scripts/m365config.xml".source = ./winapps-oem/m365config.xml;
+
+    # Watch for Windows OEM install completion and run winapps setup
+    systemd.services.winapps-setup = {
+      description = "WinApps setup after Windows OEM installation";
+      after = [ "docker.service" ];
+      path = [ pkgs.inotify-tools pkgs.freerdp pkgs.bash ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "celes";
+        ExecStart = pkgs.writeShellScript "winapps-setup" ''
+          echo "Waiting for Windows OEM installation to complete..."
+          while [ ! -f /mnt/shared/oem-complete ]; do
+            inotifywait -t 300 -e create /mnt/shared/ 2>/dev/null || true
+          done
+          echo "Windows OEM install complete, running winapps installer..."
+          cd /home/celes/winapps/pkg
+          ./installer.sh --user
+          touch /mnt/shared/winapps-complete
+          echo "WinApps installation finished!"
+        '';
+        TimeoutStartSec = "3h";
+      };
+    };
+    
+    # Ensure /mnt/shared exists
+    systemd.tmpfiles.rules = [ "d /mnt/shared 0755 celes users -" ];
     
     # Enable nested virtualization for better VM performance
     boot.extraModprobeConfig = ''

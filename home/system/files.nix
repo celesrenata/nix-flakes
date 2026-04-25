@@ -1,5 +1,5 @@
 # Home directory file management and dotfiles
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 let
   celes-dots = pkgs.fetchFromGitHub {
@@ -41,7 +41,33 @@ in
     source = winapps + "/runmefirst.sh";
   };
   
-  # Staging directory for mutable configs (used by initialSetup.sh)
+  # ── Systemd oneshot: initial wallpaper/colorgen (needs Hyprland) ─────
+  systemd.user.services.dots-initial-colorgen = {
+    Unit = {
+      Description = "Initial wallpaper and color scheme generation";
+      After = [ "graphical-session.target" ];
+      ConditionPathExists = "!%h/.local/share/initialSetup";
+    };
+    Service = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      Environment = [
+        "PATH=/etc/profiles/per-user/celes/bin:/run/current-system/sw/bin"
+        "LD_LIBRARY_PATH="
+      ];
+      ExecStart = toString (pkgs.writeShellScript "dots-initial-colorgen" ''
+        sleep 3  # let Hyprland settle
+        imgpath="$(readlink -f "$HOME/Pictures/Wallpapers/love-is-love.jpg")"
+        if [ -f "$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh" ]; then
+          "$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh" "$imgpath"
+        fi
+        touch "$HOME/.local/share/initialSetup"
+      '');
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
+  # Staging directory for mutable configs (used by dotsSetup activation)
   home.file.".configstaging/quickshell" = {
     source = inputs.dots-hyprland-source + "/.config/quickshell";
     recursive = true;
@@ -58,10 +84,50 @@ in
   };
 
   # Local bin scripts
-  home.file.".local/bin/initialSetup.sh" = {
-    source = celes-dots + "/.local/bin/initialSetup.sh";
-  };
+  # ── Home activation: replaces initialSetup.sh ──────────────────────────
+  home.activation.dotsSetup = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    # Icons: ensure real directory (Steam writes here)
+    if [ -L "$HOME/.local/share/icons" ]; then
+      rm "$HOME/.local/share/icons"
+    fi
+    mkdir -p "$HOME/.local/share/icons"
+    cp -n ${inputs.dots-hyprland-source}/.local/share/icons/* "$HOME/.local/share/icons/" 2>/dev/null || true
+
+    # Create mutable config directories
+    mkdir -p "$HOME/.config/foot"
+    mkdir -p "$HOME/.config/fuzzel"
+    mkdir -p "$HOME/.config/gtk-4.0"
+    mkdir -p "$HOME/.config/hypr/custom/scripts"
+    mkdir -p "$HOME/.local/state/quickshell/user/generated"/{foot,terminal,fuzzel,wallpaper}
+    mkdir -p "$HOME/Videos"
+
+    # Remove stale matugen symlink (managed via staging)
+    if [ -L "$HOME/.config/matugen" ]; then
+      rm "$HOME/.config/matugen"
+    fi
+
+    # Sync staging configs → mutable config (--update = don't clobber user edits)
+    chmod -R u+w "$HOME/.config/" "$HOME/.local/state/quickshell/" 2>/dev/null || true
+    ${pkgs.rsync}/bin/rsync -azL --update --no-perms "$HOME/.configstaging/" "$HOME/.config" 2>/dev/null || true
+    chmod -R u+w "$HOME/.local/state/quickshell/user/generated/" \
+      "$HOME/.config/fuzzel/" "$HOME/.config/foot/" "$HOME/.config/gtk-4.0/" \
+      "$HOME/.config/hypr/hyprland/" "$HOME/.config/matugen/" 2>/dev/null || true
+
+    # Default custom.conf if missing
+    if [ ! -f "$HOME/.config/hypr/custom.conf" ]; then
+      echo "monitor=,preferred,auto,1" > "$HOME/.config/hypr/custom.conf"
+    fi
+
+    # Sync system touchegg config to user config
+    mkdir -p "$HOME/.config/touchegg"
+    cp /etc/touchegg/touchegg.conf "$HOME/.config/touchegg/touchegg.conf" 2>/dev/null || true
+  '';
   
+  home.file.".local/bin/apply-idle-config.sh" = {
+    executable = true;
+    source = ./scripts/apply-idle-config.sh;
+  };
+
   home.file.".local/bin/sunshine" = {
     source = celes-dots + "/.local/bin/sunshineFixed";
   };

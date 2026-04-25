@@ -8,7 +8,7 @@
 # - shell/      : Shell configurations and command-line tools
 # - system/     : System integration, dotfiles, and environment variables
 
-{ inputs, lib, pkgs, pkgs-old, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # Import all configuration modules
@@ -44,9 +44,12 @@
   # These settings define the fundamental user environment
   home.username = "celes";                    # System username
   home.homeDirectory = "/home/celes";         # User home directory path
-  home.stateVersion = "25.11";                # Home Manager state version for compatibility
+  home.stateVersion = "26.05";                # Home Manager state version for compatibility
 
   # Enable Home Manager self-management
   # This allows Home Manager to manage its own installation and updates
   programs.home-manager.enable = true;
+
+  # Preserve pre-26.05 default behavior
+  xdg.userDirs.setSessionVariables = true;
 }

@@ -1,5 +1,5 @@
 # Media applications and multimedia tools
-{ inputs, lib, pkgs, pkgs-old, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # OBS Studio configuration
@@ -32,7 +32,7 @@
     libdbusmenu-gtk3
     
     # Image and video editing
-    pkgs-old.gimp
+    gimp
     darktable
     blender
     kdePackages.kdenlive
@@ -47,7 +47,7 @@
     slurp
     
     # Wallpaper management
-    swww
+    awww
     
     # Gaming and entertainment
     antimicrox
@@ -57,8 +57,8 @@
     discord
     signal-desktop
     tidal-hifi
-  ] ++ (with pkgs-unstable; [
-    # Unstable media packages
+  ] ++ (with pkgs; [
+    # Previously from unstable, now in main pkgs
     lan-mouse
   ]);
 }

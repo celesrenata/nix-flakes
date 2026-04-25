@@ -1,5 +1,5 @@
 # Starship prompt configuration
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # Starship - customizable prompt for any shell

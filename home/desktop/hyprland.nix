@@ -1,5 +1,5 @@
 # Hyprland window manager configuration
-{ inputs, lib, pkgs, pkgs-unstable, config, ... }:
+{ inputs, lib, pkgs, config, ... }:
 
 {
   imports = [ 

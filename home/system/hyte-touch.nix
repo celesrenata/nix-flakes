@@ -1,8 +1,8 @@
 # Hyte Touch Display User Service
-{ inputs, lib, pkgs, pkgs-old, pkgs-unstable, config, ... }:
+{ inputs, lib, pkgs, config, ... }:
 
 let
-  pythonWithAudio = pkgs.python312.withPackages (ps: with ps; [ numpy scipy ]);
+  pythonWithAudio = pkgs.python313.withPackages (ps: with ps; [ numpy scipy ]);
 in
 {
   # Install Qt WebEngine for embedded browser

@@ -1,6 +1,6 @@
 final: prev: {
-  python312Packages = prev.python312Packages // {
-    xformers_0_0_28_post3_bin = prev.python312Packages.buildPythonPackage rec {
+  python313Packages = prev.python313Packages // {
+    xformers_0_0_28_post3_bin = prev.python313Packages.buildPythonPackage rec {
       pname = "xformers-local";
       version = "0.0.28.post3";
       format = "wheel";
@@ -13,7 +13,7 @@ final: prev: {
       dontBuild = true;
       dontConfigure = true;
 
-      propagatedBuildInputs = with prev.python312Packages; [
+      propagatedBuildInputs = with prev.python313Packages; [
         torch
         numpy
       ];

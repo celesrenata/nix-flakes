@@ -1,13 +1,13 @@
 final: prev:
 rec {
-  python-xlib-init = prev.python312.override {
+  python-xlib-init = prev.python313.override {
     packageOverrides = final: prev: {
       python-xlib = prev.buildPythonPackage rec {
         pname = "python-xlib";
         version = "0.31";
         format = "pyproject";
         doCheck = false;
-        BuildInputs = with prev.pkgs.python312Packages; [
+        BuildInputs = with prev.pkgs.python313Packages; [
           setuptools
           setuptools-scm
           six
@@ -34,7 +34,7 @@ rec {
       sha256 = "sha256-dNg6CB9TK8B/bXr81kFuw4QD1o9oubncnh8o+/LXmek=";
     };
   };
-  dbus-python-init = prev.pkgs.python312Packages.dbus-python.overrideAttrs ( rec {
+  dbus-python-init = prev.pkgs.python313Packages.dbus-python.overrideAttrs ( rec {
     name = "dbus-python-${version}";
     pname = "dbus-python";
     version = "1.3.2";
@@ -52,14 +52,14 @@ rec {
       sha256 = "sha256-rWeBkwhhi1BpU3viN/jmjKHH/Mle5KEh/mhFsUGCSPg=";
     };
   });
-  python-xwaykeyz-init = prev.python312.override {
+  python-xwaykeyz-init = prev.python313.override {
     packageOverrides = final: prev: {
       python-xwaykeyz = prev.buildPythonPackage {
         pname = "python-xwaykeyz";
         version = "1.0.0";
         format = "pyproject";
         doCheck = false;
-        BuildInputs = with prev.pkgs.python312Packages; [
+        BuildInputs = with prev.pkgs.python313Packages; [
           python-xlib
           hatchling
           appdirs
@@ -111,14 +111,14 @@ rec {
     };
   };
 
-  python-hyprpy-init = prev.python312.override {
+  python-hyprpy-init = prev.python313.override {
     packageOverrides = final: prev: {
       python-hyprpy = prev.buildPythonPackage rec {
         pname = "hyprpy";
         version = "0.1.10";
         format = "pyproject";
         doCheck = false;
-        BuildInputs = with prev.pkgs.python312Packages; [
+        BuildInputs = with prev.pkgs.python313Packages; [
           setuptools
           pydantic
         ];
@@ -143,14 +143,14 @@ rec {
       sha256 = "sha256-OX8iOglHMFAwq0LT1cE4nhpP9BxgWFcgc3potqSNIAg=";
     };
   };
-  python-i3ipc-init = prev.python312.override {
+  python-i3ipc-init = prev.python313.override {
     packageOverrides = final: prev: {
       python-i3ipc = prev.buildPythonPackage rec {
         pname = "i3ipc";
         version = "2.2.1";
         format = "pyproject";
         doCheck = false;
-        BuildInputs = with prev.pkgs.python312Packages; [
+        BuildInputs = with prev.pkgs.python313Packages; [
           setuptools
           python-xlib
           pytest
@@ -187,7 +187,7 @@ rec {
       sha256 = "sha256-6IDX1xR5WerVyzR2Twi5e0E4WzbrglborxzhY9vMzOg=";
     };
   };
-  python-tk-init = prev.python312.override {
+  python-tk-init = prev.python313.override {
     packageOverrides = final: prev: {
       python-tk = prev.buildPythonPackage rec {
         pname = "tk";
@@ -195,7 +195,7 @@ rec {
         format = "pyproject";
         doCheck = false;
         BuildInputs = [
-          prev.pkgs.python312Packages.setuptools
+          prev.pkgs.python313Packages.setuptools
         ];
         src = prev.fetchPypi {
           inherit pname version;
@@ -217,7 +217,7 @@ rec {
       sha256 = "sha256-YLyJI9XTX2f1xr2T1PDEnSBIEU7Ad3aPlZrvNtTtl/g=";
     };
   };
-  python-toshy-init = prev.python312.override {
+  python-toshy-init = prev.python313.override {
     packageOverrides = final: prev: {
       xwaykeyz = with prev.pkgs.python3Packages; toPythonApplication final.python-xwaykeyz;
       toshy = prev.buildPythonPackages {
@@ -249,7 +249,7 @@ EOF
 
         buildInputs = [ prev.pkgs.gtk3 ];
 
-        propagatedBuildInputs = with prev.pkgs.python312Packages; [
+        propagatedBuildInputs = with prev.pkgs.python313Packages; [
           appdirs
           pycairo
           pip
@@ -285,8 +285,8 @@ EOF
         ];
         dependencies = with prev.pkgs; [
           gtk3
-          python312Packages.psutil
-          python312Packages.python-xwaykeyz
+          python313Packages.psutil
+          python313Packages.python-xwaykeyz
         ];
 
         src = prev.fetchFromGitHub {
@@ -311,7 +311,7 @@ EOF
   };
       
   xwaykeyz = with prev.pkgs.python3Packages; toPythonApplication final.python-xwaykeyz;
-  toshy = prev.pkgs.python312Packages.buildPythonApplication {
+  toshy = prev.pkgs.python313Packages.buildPythonApplication {
     preBuild = ''
 cat > setup.py << EOF
 from setuptools import setup
@@ -339,7 +339,7 @@ EOF
     ];
     buildInputs = [ prev.pkgs.gtk3 ];
 
-    propagatedBuildInputs = with prev.pkgs.python312Packages; [
+    propagatedBuildInputs = with prev.pkgs.python313Packages; [
       appdirs
       pycairo
       pip

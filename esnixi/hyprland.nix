@@ -1,5 +1,5 @@
 # Hyprland configuration for esnixi (desktop)
-{ inputs, lib, pkgs, pkgs-unstable, config, ... }:
+{ inputs, lib, pkgs, config, ... }:
 
 {
   imports = [ 
@@ -25,7 +25,7 @@
       # Hyprland configuration for esnixi (desktop)
       
       # Start cursor barrier script to prevent mouse from entering DP-3
-      # exec-once = ${inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.cursor-barrier}/bin/cursor-barrier
+      exec-once = ${inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.cursor-barrier}/bin/cursor-barrier
       
       # Hyte Touch Display Configuration - Isolate DP-3
       workspace = name:touch, monitor:DP-3, default:true
@@ -49,19 +49,30 @@
       }
       
       # Window rules to lock touch interface to DP-3
-      windowrulev2 = workspace name:touch, title:^(hyte-touch-interface)$
-      windowrulev2 = monitor DP-3, title:^(hyte-touch-interface)$
-      windowrulev2 = fullscreen, title:^(hyte-touch-interface)$
-      
+      windowrule {
+        name = hyte-touch
+        match:title = ^(hyte-touch-interface)$
+        monitor = DP-3
+        fullscreen = on
+      }
+
       # ProjectM visualizer - behind QuickShell
-      windowrulev2 = workspace name:touch, class:^(projectMSDL)$
-      windowrulev2 = monitor DP-3, class:^(projectMSDL)$
-      windowrulev2 = fullscreen, class:^(projectMSDL)$
-      
+      windowrule {
+        name = projectm
+        match:class = ^(projectMSDL)$
+        workspace = name:touch
+        monitor = DP-3
+        fullscreen = on
+      }
+
       # OneTrainer window rules - force decorations on Xwayland
-      windowrulev2 = tile, class:^(Tk)$
-      windowrulev2 = decorate, class:^(Tk)$
-      windowrulev2 = decorate, xwayland:1
+      windowrule {
+        name = onetrainer-tk
+        match:class = ^(Tk)$
+        tile = on
+        decorate = on
+      }
+      windowrule = decorate on, match:xwayland true
       
       # Source external custom configuration
       source = ~/.config/hypr/custom.conf
@@ -190,6 +201,8 @@
       # Gestures (Hyprland 0.51+ syntax)
       gestures {
           gesture = 3, horizontal, workspace
+          gesture = 4, pinchin, dispatcher, fullscreen 1
+          gesture = 4, pinchout, dispatcher, fullscreen 1
       }
 
       misc {
@@ -197,7 +210,7 @@
       }
 
       # Window rules
-      windowrulev2 = suppressevent maximize, class:.*
+      windowrule = suppress_event maximize, match:class .*
 
       # KEYBIND VARIABLES - Fixed with proper definitions
       $Primary = Super
@@ -208,12 +221,12 @@
       #+! System Controls
       # Volume
       bindl = ,XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
-      bindle=, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
-      bindle=, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+      bindle=, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 3%+
+      bindle=, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 3%-
 
-      # Brightness (updated for Quickshell)
-      bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
-      bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
+      # Brightness (disabled on desktop - no backlight)
+      # bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
+      # bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
 
       #+! Applications
       # Music
@@ -376,7 +389,6 @@
       bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480
 
       # Quickshell integration and desktop environment
-      exec-once = ~/.local/bin/initialSetup.sh
       exec-once = hyprctl setcursor Bibata-Modern-Classic 24
       exec-once = systemctl --user start quickshell.service
       exec-once = [workspace name:touch silent] hyte-touch-interface
@@ -385,10 +397,14 @@
       exec-once = gnome-keyring-daemon --start --components=secrets
       exec-once = /usr/lib/polkit-kde-authentication-agent-1 || /usr/libexec/polkit-kde-authentication-agent-1  || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 || /usr/libexec/polkit-gnome-authentication-agent-1
       exec-once = hypridle
+      exec-once = touchegg
       exec-once = dbus-update-activation-environment --all
       exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP # Some fix idk
-      exec-once = hyprpm reload
+      exec-once = hyprpm list &>/dev/null && hyprpm reload
       exec-once = easyeffects --gapplication-service
     '';
-  };  
+  };
+
+  # Prevent HM from managing icons dir — Steam needs to write here
+  home.file.".local/share/icons".enable = false;
 }

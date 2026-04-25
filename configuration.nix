@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, pkgs-old, pkgs-unstable, inputs, ... }:
+{ config, pkgs, pkgsAccel, inputs, ... }:
 {
   # Licences.
   # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
@@ -10,16 +10,21 @@
 
   imports =
     [ # Include the results of the hardware scan.
-      #"${pkgs-unstable}/nixos/modules/programs/alvr.nix"
+      #"${pkgs}/nixos/modules/programs/alvr.nix"
       # Hardware-configuration.nix is imported per-host in flake.nix
       inputs.dots-hyprland.nixosModules.default  # UPower and other system services
     ];
 
   environment.localBinInPath = true;
+
+  # Enable nix-ld for dynamically linked binaries (kiro-cli bun, etc.)
+  programs.nix-ld.enable = true;
   # Enable Flakes.
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     download-buffer-size = 8589934592; # 8gb
+    cores = 20;
+    max-jobs = 4;
   };
   
   systemd.services.set-github-token = {
@@ -74,9 +79,11 @@
   };
 
   # Enable the GDM Display Manager.
+  services.displayManager.gdm = {
+    enable = true;
+    autoSuspend = false;
+  };
   services.xserver.displayManager = {
-    gdm.enable = true;
-    gdm.autoSuspend = false;
     #setupCommands = "export WLR_BACKENDS=headless";
     #autoLogin.enable = true;
     #autoLogin.user = "celes";
@@ -313,40 +320,40 @@
           </action>
         </gesture>
         
-        <!-- 4-finger swipe left: Move window left -->
+        <!-- 4-finger swipe left: Open right sidebar -->
         <gesture type="SWIPE" fingers="4" direction="LEFT">
           <action type="RUN_COMMAND">
-            <command>hyprctl dispatch movewindow l</command>
+            <command>/home/celes/.local/bin/gesture-toggle.sh left</command>
             <repeat>false</repeat>
             <animation>NONE</animation>
             <on>begin</on>
           </action>
         </gesture>
         
-        <!-- 4-finger swipe right: Move window right -->
+        <!-- 4-finger swipe right: Open left sidebar -->
         <gesture type="SWIPE" fingers="4" direction="RIGHT">
           <action type="RUN_COMMAND">
-            <command>hyprctl dispatch movewindow r</command>
+            <command>/home/celes/.local/bin/gesture-toggle.sh right</command>
             <repeat>false</repeat>
             <animation>NONE</animation>
             <on>begin</on>
           </action>
         </gesture>
         
-        <!-- 4-finger swipe up: Move window up -->
+        <!-- 4-finger swipe up: Kando / close overview -->
         <gesture type="SWIPE" fingers="4" direction="UP">
           <action type="RUN_COMMAND">
-            <command>hyprctl dispatch movewindow u</command>
+            <command>/home/celes/.local/bin/gesture-toggle.sh up</command>
             <repeat>false</repeat>
             <animation>NONE</animation>
             <on>begin</on>
           </action>
         </gesture>
         
-        <!-- 4-finger swipe down: Move window down -->
+        <!-- 4-finger swipe down: Overview / close kando -->
         <gesture type="SWIPE" fingers="4" direction="DOWN">
           <action type="RUN_COMMAND">
-            <command>hyprctl dispatch movewindow d</command>
+            <command>/home/celes/.local/bin/gesture-toggle.sh down</command>
             <repeat>false</repeat>
             <animation>NONE</animation>
             <on>begin</on>
@@ -428,7 +435,6 @@
     openssl
     xsane
     simple-scan
-    btop
     screen
     freerdp
     mako
@@ -467,13 +473,13 @@
     xwayland
     brightnessctl
     ydotool
-    swww
+    awww
     hyprpaper
     fcitx5
     wlsunset
     wtype
     wl-clipboard
-    xorg.xhost
+    xhost
     wev
     wf-recorder
     vulkan-tools
@@ -482,8 +488,8 @@
     libqalculate
     #sunshine 
     moonlight-qt
-    xfce.thunar
-    xfce.thunar-volman
+    thunar
+    thunar-volman
     wayland-scanner
     waypipe
 
@@ -508,8 +514,8 @@
     tk
 
     # Latex
-    pkgs-old.texliveFull
-    pkgs-old.texlive.combined.scheme-full
+    texliveFull
+    texlive.combined.scheme-full
     latexRes-package
 
     # Terminals.
@@ -549,5 +555,5 @@
   # networking.firewall.enable = false;
 
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "25.11"; # Did you read the comment?
+  system.stateVersion = "26.05"; # Did you read the comment?
 }

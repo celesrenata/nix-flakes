@@ -1,5 +1,5 @@
 # Bash shell configuration
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   programs.bash = {

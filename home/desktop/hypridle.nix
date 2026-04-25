@@ -37,7 +37,7 @@
         {
           timeout = 600; # 10mins
           on-timeout = "hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
+          on-resume = "hyprctl dispatch dpms on; hyprctl setcursor Bibata-Modern-Classic 24";
         }
         
         # Suspend after 9 minutes (commented out)

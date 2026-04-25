@@ -1,6 +1,9 @@
-{ config, lib, pkgs, pkgs-unstable, pkgs-old, ... }:
+{ config, lib, pkgs, ... }:
 {
   config = lib.mkIf config.my.profiles.games.enable {
+    # Ensure /mnt/games is always owned by celes
+    systemd.tmpfiles.rules = [ "d /mnt/games 0755 celes users -" ];
+
     # Steam requirements
     boot.kernel.sysctl."vm.legacy_va_layout" = 0;
     security.pam.loginLimits = [
@@ -34,12 +37,10 @@
       gamescopeSession.enable = true;
       protontricks.enable = true;
       extraPackages = with pkgs; [
-        bumblebee
-        primus
         mesa-demos
         qt6.qtwayland
         nss
-        xorg.libxkbfile
+        libxkbfile
         kdePackages.qtwayland
         libsForQt5.qt5.qtwayland
       ];

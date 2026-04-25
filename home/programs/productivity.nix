@@ -1,16 +1,22 @@
 # Productivity applications and office tools
-{ inputs, lib, pkgs, pkgs-old, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # System monitoring
-  programs.btop.settings = {
-    package = pkgs-unstable.btop;
-    color_theme = "Default";
-    theme_background = false;
+  programs.btop = {
+    enable = true;
+    package = pkgs.btop.override { cudaSupport = true; };
+    settings = {
+      color_theme = "Default";
+      theme_background = false;
+      shown_boxes = "cpu mem net proc gpu0";
+      show_gpu_info = "On";
+    };
   };
 
   # Productivity packages
   home.packages = with pkgs; [
+    kando
     # Web browsers
     firefox-bin
     chromium
@@ -24,7 +30,6 @@
     glow  # markdown previewer in terminal
     
     # System utilities
-    btop
     iotop  # io monitoring
     iftop  # network monitoring
     
@@ -85,8 +90,6 @@
     
     # Nix related tools
     nix-output-monitor  # provides `nom` command with detailed logs
-  ] ++ (with pkgs-old; [
-    # Packages from older nixpkgs
-    gnome.gvfs
-  ]);
+    gvfs
+  ];
 }

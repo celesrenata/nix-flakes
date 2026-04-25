@@ -3,7 +3,7 @@ keys:
   # User SSH key converted to age
   - &user_key age1mpdp73dg6ndc8vq55qmnsfzu7qz6dkaft6awg475pgr6lr7kevyqj9hlgc
   # System SSH host key converted to age
-  - &system_key age1tfrgyvdz927tyh8gd9sm60agfk580teu3q3yqn62ttcys4zmd4mq35w06s
+  - &system_key age1dl2r8z2u62qaa49n48mj48gx4c7u4acrj7065e4nkaujuxwvgq6swr20dx
 
 creation_rules:
   # Default rule for all secrets using both keys

@@ -1,5 +1,5 @@
 # Terminal emulators and terminal-related programs
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # Alacritty terminal emulator

@@ -1,5 +1,5 @@
 # System-wide packages and desktop environment components
-{ inputs, lib, pkgs, pkgs-old, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # Desktop environment and Wayland packages
@@ -11,7 +11,7 @@
     wlsunset
     wayland-scanner
     waypipe
-    xorg.xhost
+    xhost
     wev
     
     # Desktop utilities
@@ -60,7 +60,7 @@
     gnome-bluetooth
     gnome-shell
     nautilus
-    blueberry
+    blueman
     networkmanager
     
     # AGS and Hyprland dependencies

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, pkgs-unstable, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   config = lib.mkIf config.my.profiles.development.enable {
@@ -6,8 +6,6 @@
     programs.ccache.enable = true;
     programs.nh.enable = true;
     programs.java.enable = true;
-    programs.adb.enable = true;
-
     environment.systemPackages = with pkgs; [
       # Compilers and build tools
       gcc13
@@ -20,7 +18,6 @@
       nodejs_20
       openjdk
       typescript
-      node2nix
 
       # Nix tooling
       nil
@@ -39,24 +36,24 @@
 
       # AWS tools
       awscli2
-      nodePackages.aws-cdk
+      aws-cdk-cli
 
       # Kubernetes tools
       k3s
-      (wrapHelm pkgs-unstable.kubernetes-helm {
-        plugins = with pkgs-unstable.kubernetes-helmPlugins; [
+      (wrapHelm pkgs.kubernetes-helm {
+        plugins = with pkgs.kubernetes-helmPlugins; [
           helm-secrets
           helm-diff
           helm-s3
           helm-git
         ];
       })
-      pkgs-unstable.kubernetes-helm
-      pkgs-unstable.helmfile
-      pkgs-unstable.kustomize
-      pkgs-unstable.kompose
+      pkgs.kubernetes-helm
+      pkgs.helmfile
+      pkgs.kustomize
+      pkgs.kompose
       kubevirt
-      pkgs-unstable.krew
+      pkgs.krew
     ];
   };
 }

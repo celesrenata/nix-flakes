@@ -130,7 +130,11 @@
   ];
 
   # ── Nix build directory ──────────────────────────────────────────────
-  nix.settings.build-dir = "/var/tmp/nix-build";
+  nix.settings.build-dir = "/mnt/fast/nix-build";
+  systemd.tmpfiles.rules = [
+    "d /mnt/fast 0755 celes users -"
+    "d /mnt/fast/nix-build 0755 root root -"
+  ];
 
   # ── Platform ─────────────────────────────────────────────────────────
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";

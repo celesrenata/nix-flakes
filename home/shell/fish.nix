@@ -1,5 +1,5 @@
 # Fish shell configuration
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # Fish shell configuration (manual, since we disabled copyFishConfig)

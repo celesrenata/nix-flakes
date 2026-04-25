@@ -4,15 +4,15 @@ let
     name = "cutlass-source";
     owner = "NVIDIA";
     repo = "cutlass";
-    tag = "v4.2.1";
-    hash = "sha256-iP560D5Vwuj6wX1otJhwbvqe/X4mYVeKTpK533Wr5gY=";
+    tag = "v4.4.2";
+    hash = "sha256-0q9Ad0Z6E/rO2PdM4uQc8H0E0qs9uKc3reHepiHhjEc=";
   };
   
   triton-kernels = prev.fetchFromGitHub {
     owner = "triton-lang";
     repo = "triton";
-    tag = "v3.5.0";
-    hash = "sha256-F6T0n37Lbs+B7UHNYzoIQHjNNv3TcMtoXjNrT8ZUlxY=";
+    tag = "v3.6.0";
+    hash = "sha256-JFSpQn+WsNnh7CAPlcpOcUp0nyKXNbJEANdXqmkt4Tc=";
   };
   
   qutlass = prev.fetchFromGitHub {
@@ -23,64 +23,61 @@ let
     hash = "sha256-aG4qd0vlwP+8gudfvHwhtXCFmBOJKQQTvcwahpEqC84=";
   };
   
-  cutlass-flashmla = prev.fetchFromGitHub {
-    owner = "NVIDIA";
-    repo = "cutlass";
-    tag = "v3.9.0";
-    hash = "sha256-Q6y/Z6vahASeSsfxvZDwbMFHGx8CnsF90IlveeVLO9g=";
-  };
-  
   flashmla = prev.stdenv.mkDerivation {
     pname = "flashmla";
-    version = "1.0.0";
+    version = "2025-04-18";
     src = prev.fetchFromGitHub {
       name = "FlashMLA-source";
       owner = "vllm-project";
       repo = "FlashMLA";
-      rev = "46d64a8ebef03fa50b4ae74937276a5c940e3f95";
-      hash = "sha256-jtMzWB5hKz8mJGsdK6q4YpQbGp9IrQxbwmB3a64DIl0=";
+      rev = "692917b1cda61b93ac9ee2d846ec54e75afe87b1";
+      hash = "sha256-2nSrEUqdhYT6kI+wQTz+LJGEerDIznJR8oOlrVSQceg=";
     };
     dontConfigure = true;
-    buildPhase = ''
-      rm -rf csrc/cutlass
-      ln -sf ${cutlass-flashmla} csrc/cutlass
-    '';
+    buildPhase = "true";
     installPhase = "cp -rva . $out";
   };
   
-  vllm-flash-attn = prev.stdenv.mkDerivation {
-    pname = "vllm-flash-attn";
-    version = "2.7.2.post1";
-    src = prev.fetchFromGitHub {
-      name = "vllm-flash-attn-source";
-      owner = "vllm-project";
-      repo = "flash-attention";
-      rev = "188be16520ceefdc625fdf71365585d2ee348fe2";
-      hash = "sha256-Osec+/IF3+UDtbIhDMBXzUeWJ7hDJNb5FpaVaziPSgM=";
-    };
-    patches = [ ../patches/flash-attn-cutlass-v4-compat.patch ];
-    dontConfigure = true;
-    buildPhase = ''
-      rm -rf csrc/cutlass
-      ln -sf ${cutlass} csrc/cutlass
-    '';
-    installPhase = "cp -rva . $out";
+  deepgemm = prev.fetchFromGitHub {
+    name = "deepgemm-source";
+    owner = "deepseek-ai";
+    repo = "DeepGEMM";
+    rev = "477618cd51baffca09c4b0b87e97c03fe827ef03";
+    hash = "sha256-7I1O9DDBGzij2NIjf8tQPFMCpTnyzMRdv1+bP3APOOc=";
+    fetchSubmodules = true;
+  };
+
+  vllm-flash-attn = prev.fetchFromGitHub {
+    name = "vllm-flash-attn-source";
+    owner = "vllm-project";
+    repo = "flash-attention";
+    rev = "f5bc33cfc02c744d24a2e9d50e6db656de40611c";
+    hash = "sha256-jEjn1DVqq2BcR1tsLUQ42G3EtomH6T33lkXUxAVD5uI=";
+    fetchSubmodules = true;
   };
 in 
 let
-  python312-for-vllm = prev.python312.override {
+  python313-for-vllm = prev.python313.override {
     packageOverrides = pyfinal: pyprev: {
-      torch = pyprev.torch.overridePythonAttrs (old: {
-        version = "2.10.0";
+      mistral-common = pyprev.mistral-common.overridePythonAttrs (old: rec {
+        version = "1.11.0";
+        src = prev.fetchFromGitHub {
+          owner = "mistralai";
+          repo = "mistral-common";
+          tag = "v${version}";
+          hash = "sha256-DejbLY2i6Hp1J+spxMut5RKugj7rDyrZmp6v+5wqyWY=";
+        };
+        doCheck = false;
+        pythonRuntimeDepsCheck = false;
       });
 
       compressed-tensors = pyprev.compressed-tensors.overridePythonAttrs (old: rec {
-        version = "0.13.0";
+        version = "0.15.0.1";
         src = prev.fetchFromGitHub {
           owner = "vllm-project";
           repo = "compressed-tensors";
           rev = version;
-          hash = "sha256-XsQRP186ISarMMES3P+ov4t/1KKJdl0tXBrfpjyM3XA=";
+          hash = "sha256-iiYo3Vne2CYlj+wMHxQFTTU7gb8oNwPtCe873nX5KgA=";
         };
         propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
           pyprev.loguru
@@ -88,63 +85,44 @@ let
         doCheck = false;
       });
       
-      huggingface-hub = pyprev.huggingface-hub.overridePythonAttrs (old: rec {
-        version = "1.3.0";
-        src = prev.fetchFromGitHub {
-          owner = "huggingface";
-          repo = "huggingface_hub";
-          rev = "v${version}";
-          hash = "sha256-JEvVWoOc1U1pX4q1cf0A5i32KGx7zWCBBOeoLbCiyVw=";
-        };
-        propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
-          pyprev.httpx
-          pyprev.shellingham
-          pyprev.typer
-        ];
-      });
-      
-      transformers = pyprev.transformers.overridePythonAttrs (old: {
-        src = prev.fetchFromGitHub {
-          owner = "huggingface";
-          repo = "transformers";
-          rev = "main";
-          hash = "sha256-tK4jd+dtV6BiV1vriQHuksmBSPJ1tHlqcdSwiBowtWw=";
-        };
-        version = "5.0.0-dev";
-        propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
-          pyprev.typer
-        ];
-        doCheck = false;
-        pythonRuntimeDepsCheck = false;
-      });
     };
   };
 in {
-  vllm = python312-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
-    version = "0.14.1-dev";
+  vllm = python313-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
+    version = "0.20.0";
     src = prev.fetchFromGitHub {
       owner = "vllm-project";
       repo = "vllm";
-      rev = "main";
-      hash = "sha256-iYf3QRGhfeAIMh5NY81e0EXn17HhmxYuyYKu7GihvEU=";
+      tag = "v0.20.0";
+      hash = "sha256-TUqkywqWQdnF+jzm3UYVAD5qe8jUK63f8nrZQaNnuZc=";
     };
     
     patches = [];
     postPatch = "";
     pythonCatchConflicts = false;
+    pythonRuntimeDepsCheck = false;
+    pythonRelaxDeps = true;
+    pythonRemoveDeps = [
+      "opentelemetry-semantic-conventions-ai"
+      "flashinfer-cubin"
+      "nvidia-cudnn-frontend"
+      "fastsafetensors"
+      "nvidia-cutlass-dsl"
+      "quack-kernels"
+    ];
     
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
-      python312-for-vllm.pkgs.grpcio-tools
+      python313-for-vllm.pkgs.grpcio-tools
     ];
     
     buildInputs = (old.buildInputs or []) ++ [
-      python312-for-vllm.pkgs.torch
+      python313-for-vllm.pkgs.torch
     ];
     
     propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
-      python312-for-vllm.pkgs.ijson
-      python312-for-vllm.pkgs.mcp
-      python312-for-vllm.pkgs.grpcio-reflection
+      python313-for-vllm.pkgs.ijson
+      python313-for-vllm.pkgs.mcp
+      python313-for-vllm.pkgs.grpcio-reflection
     ];
     
     preBuild = (old.preBuild or "") + ''
@@ -153,6 +131,7 @@ in {
       export FLASH_MLA_SRC_DIR="${flashmla}"
       export VLLM_FLASH_ATTN_SRC_DIR="${vllm-flash-attn}"
       export QUTLASS_SRC_DIR="${qutlass}"
+      export DEEPGEMM_SRC_DIR="${deepgemm}"
     '';
     
     env = (old.env or {}) // {

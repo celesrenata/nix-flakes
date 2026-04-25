@@ -16,7 +16,6 @@
       package = pkgsAccel.ollama;
       host = "0.0.0.0";
       port = 11434;
-      acceleration = config.my.acceleration.backend;
       models = config.my.paths.ollamaModels;
       environmentVariables = {
         OLLAMA_NUM_PARALLEL = "1";
@@ -36,16 +35,17 @@
     };
 
     # ── Ollama model creation oneshot ────────────────────────────────────
-    environment.etc."ollama/qwen3-30b-tuned.Modelfile".text = ''
-      FROM qwen3:30b
+    environment.etc."ollama/qwen3.6-tuned.Modelfile".text = ''
+      FROM qwen3.6
       PARAMETER temperature 0.45
       PARAMETER top_p 0.9
       PARAMETER repeat_penalty 1.08
       PARAMETER num_ctx 262144
     '';
 
-    systemd.services."ollama-create-qwen3-30b-tuned" = {
+    systemd.services."ollama-create-qwen3.6-tuned" = {
       after = [ "network-online.target" "ollama.service" ];
+      wants = [ "network-online.target" ];
       requires = [ "ollama.service" ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
@@ -57,7 +57,7 @@
           "OLLAMA_MODELS=${config.my.paths.ollamaModels}"
           "PATH=${lib.makeBinPath [ pkgs.coreutils pkgs.curl pkgsAccel.ollama pkgs.bash ]}"
         ];
-        ExecStart = (pkgs.writeShellScript "create-qwen3-30b-tuned" ''
+        ExecStart = (pkgs.writeShellScript "create-qwen3.6-tuned" ''
           set -euo pipefail
           for i in $(seq 1 30); do
             # treat non-200 as "not ready yet"
@@ -66,11 +66,11 @@
             sleep 1
           done
 
-          if ! ollama show qwen3:30b >/dev/null 2>&1; then
-            ollama pull qwen3:30b
+          if ! ollama show qwen3.6 >/dev/null 2>&1; then
+            ollama pull qwen3.6
           fi
-          if ! ollama show qwen3:30b-tuned >/dev/null 2>&1; then
-            ollama create qwen3:30b-tuned -f /etc/ollama/qwen3-30b-tuned.Modelfile
+          if ! ollama show qwen3.6-tuned >/dev/null 2>&1; then
+            ollama create qwen3.6-tuned -f /etc/ollama/qwen3.6-tuned.Modelfile
           fi
         '');
       };
@@ -94,7 +94,7 @@
     # ── vLLM service (CUDA-only) ─────────────────────────────────────────
     systemd.services.vllm = lib.mkIf (config.my.acceleration.backend == "cuda")
     (let
-      vllmPython = pkgsAccel.python312.withPackages (ps: [ pkgsAccel.vllm ]);
+      vllmPython = pkgsAccel.python313.withPackages (ps: [ pkgsAccel.vllm ]);
       vllmWrapper = pkgs.writeShellScript "vllm-wrapper" ''
         exec ${vllmPython}/bin/python -m vllm.entrypoints.cli.main "$@"
       '';
@@ -113,7 +113,7 @@
         HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";
         CUDA_HOME = "${pkgsAccel.cudaPackages.cudatoolkit}";
         LD_LIBRARY_PATH = "${pkgsAccel.cudaPackages.cudatoolkit}/lib:${pkgsAccel.cudaPackages.cudnn}/lib:${config.hardware.nvidia.package}/lib";
-        PYTHONPATH = "${pkgsAccel.vllm}/${pkgsAccel.python312.sitePackages}";
+        PYTHONPATH = "${pkgsAccel.vllm}/${pkgsAccel.python313.sitePackages}";
         VLLM_LOGGING_LEVEL = "DEBUG";
         CUDACXX = "${pkgsAccel.cudaPackages.cudatoolkit}/bin/nvcc";
         CXX = "${pkgs.gcc}/bin/g++";
@@ -184,7 +184,7 @@
       pkgsAccel.vllm
       pkgsAccel.cudaPackages.cudatoolkit
 
-      (pkgsAccel.python312.withPackages (ps: with ps; [
+      (pkgsAccel.python313.withPackages (ps: with ps; [
         torchvision
         torchaudio
         torch

@@ -4,13 +4,11 @@
   # Input sources for the flake
   # This section defines all external dependencies and their versions
   inputs = {
-    # Core NixOS packages - using stable, old, and unstable channels
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";              # Main stable channel
-    nixpkgs-old.url = "github:nixos/nixpkgs/nixos-25.05";          # Previous stable for compatibility
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";  # Latest packages
+    # Core NixOS packages - unstable as main, old stable for compatibility
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";           # Main channel (unstable)
 
     # Home Manager for user environment management
-    home-manager.url = "github:nix-community/home-manager/release-25.11";
+    home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";  # Use same nixpkgs version
 
     # Hyte Y70 Touch-Infinite Display
@@ -47,10 +45,6 @@
     nix-gl-host.url = "github:numtide/nix-gl-host";               # OpenGL support for non-NixOS
     nixgl.url = "github:nix-community/nixGL";                     # OpenGL wrapper
 
-    # Hardware support
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";    # Hardware-specific configurations
-    tiny-dfr.url = "github:sharpenedblade/tiny-dfr";              # MacBook Touch Bar support
-
     # Gaming and Steam enhancements
     protontweaks.url = "git+https://codeberg.org/ribbon-studios/protontweaks";       # Steam Proton tweaks
 
@@ -76,7 +70,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, nixpkgs-old, nixpkgs-unstable, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, nixos-hardware, tiny-dfr, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
   let
     lib = nixpkgs.lib;
 
@@ -118,26 +112,14 @@
         pkgsAccel = mkPkgs {
           inherit system;
           inherit backend;
+          #config = { allowUnfree = true; };
           groups = [ "common" "ai" ];
         };
 
-        # Legacy packages for compatibility
-        pkgsOld = import inputs.nixpkgs-old {
-          inherit system;
-          config = { allowUnfree = true; };
-        };
-
-        # Unstable packages for latest software versions
-        pkgsUnstable = import inputs.nixpkgs-unstable {
-          inherit system;
-          config = { allowUnfree = true; };
-        };
       in
       inputs.nixpkgs.lib.nixosSystem {
         specialArgs = {
           inherit inputs pkgsAccel;
-          pkgs-old = pkgsOld;
-          pkgs-unstable = pkgsUnstable;
           quickshell = inputs.hyte-touch-infinite-flakes.inputs.quickshell.packages.${system}.default;
         };
 
@@ -179,8 +161,6 @@
 
             home-manager.extraSpecialArgs = {
               inherit inputs;
-              pkgs-unstable = pkgsUnstable;
-              pkgs-old = pkgsOld;
             };
 
             home-manager.users.celes = {
@@ -240,71 +220,13 @@
           ./esnixi/hyprland.nix
         ];
       };
-
-      macland = {
-        system = "x86_64-linux";
-        backend = "rocm";
-        groups = {
-          games = true;
-          development = true;
-          videoEditing = false;
-          virtualization = true;
-          ai = false;
-        };
-        extraOverlays = [
-          (import ./overlays/keyd.nix)
-          (import ./overlays/t2fanrd.nix)
-          (import ./overlays/tinydfr.nix)
-          (import ./overlays/pipewire.nix)
-        ];
-        extraModules = [
-          # Platform-specific macland configurations
-          ./macland/boot.nix
-          ./macland/cpu.nix
-          ./macland/games.nix
-          ./macland/graphics.nix
-          ./macland/networking.nix
-          ./macland/sound.nix
-          ./macland/thunderbolt.nix
-          ./macland/virtualisation.nix
-
-          # Shared configuration modules
-          ./remote-build.nix
-          ./secrets.nix
-
-          # CA certificate configuration
-          {
-            security.pki.certificates = [
-              (builtins.readFile ./celestium-ca.crt)
-            ];
-          }
-
-          # Hardware-specific modules
-          nixos-hardware.nixosModules.apple-t2
-          ./macland/hardware-configuration.nix
-          sops-nix.nixosModules.sops
-
-          # USB device access rules
-          {
-            services.udev.extraRules = ''
-              # Thermaltake RGB devices
-              SUBSYSTEM=="usb", ATTR{idVendor}=="264a", MODE="0666"
-              SUBSYSTEM=="hidraw", ATTRS{idVendor}=="264a", MODE="0666"
-            '';
-          }
-        ];
-        homeImports = [
-          ./home/default.nix
-          ./macland/hyprland.nix
-        ];
-      };
     };
 
   in {
     # Development environments for various projects
     devShells.x86_64-linux.default =
       let
-        pkgs-devshell = import inputs.nixpkgs-unstable {
+        pkgs-devshell = import inputs.nixpkgs {
           system = "x86_64-linux";
           config = {
             cudaSupport = true;

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, pkgs-unstable, ... }:
+{ config, lib, pkgs, ... }:
 let
   myKernelPackages = let
     base = pkgs.linuxKernel.packages.linux_7_0;

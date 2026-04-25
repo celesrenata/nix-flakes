@@ -1,5 +1,5 @@
 # Quickshell desktop shell configuration
-{ inputs, lib, pkgs, pkgs-unstable, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   # Add environment variables to quickshell service
@@ -26,6 +26,10 @@
 
   # Generate env.sh and deploy quickshell fixes
   home.activation.generateQuickshellEnv = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    # Ensure dots-hyprland setup marker exists so quickshell-startup skips its broken setup check
+    mkdir -p $HOME/.cache/dots-hyprland
+    test -f $HOME/.cache/dots-hyprland/setup-complete || echo "$(date)" > $HOME/.cache/dots-hyprland/setup-complete
+
     mkdir -p $HOME/.config/quickshell
     cat > $HOME/.config/quickshell/env.sh << 'EOF'
 export LD_LIBRARY_PATH="${lib.makeLibraryPath [

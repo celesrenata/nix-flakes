@@ -1,0 +1,11 @@
+<Configuration>
+  <Add OfficeClientEdition="64" Channel="Current">
+    <Product ID="O365ProPlusRetail">
+      <Language ID="en-us" />
+      <ExcludeApp ID="Lync" />
+      <ExcludeApp ID="OneDrive" />
+    </Product>
+  </Add>
+  <Display Level="None" AcceptEULA="TRUE" />
+  <Updates Enabled="FALSE" />
+</Configuration>

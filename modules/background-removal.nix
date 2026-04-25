@@ -10,7 +10,6 @@
 , opencv
 , options
 , pkgs
-, pkgs-unstable
 , qt6
 , specialArgs
 , curl
