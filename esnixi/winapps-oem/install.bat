@@ -23,6 +23,8 @@ winget install Adobe.Lightroom --source winget --accept-source-agreements --acce
 echo [%date% %time%] Installing Adobe Lightroom Classic... >> %OEMDIR%install.log
 winget install Adobe.LightroomClassic --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
 echo [%date% %time%] Installing Adobe Camera Raw... >> %OEMDIR%install.log
+echo [%date% %time%] Installing Adobe Acrobat Reader... >> %OEMDIR%install.log
+winget install Adobe.Acrobat.Reader.64-bit --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
 winget install Adobe.CameraRaw --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
 echo [%date% %time%] Adobe apps install completed >> %OEMDIR%install.log
 
