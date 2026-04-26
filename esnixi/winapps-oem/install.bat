@@ -28,8 +28,8 @@ echo [%date% %time%] Downloading Adobe Creative Cloud... >> %OEMDIR%install.log
 powershell -Command "Invoke-WebRequest -Uri 'https://ccmdls.adobe.com/AdobeProducts/KCCC/1/win32/CreativeCloudSet-Up.exe' -OutFile '%OEMDIR%CreativeCloudSet-Up.exe'" >> %OEMDIR%install.log 2>&1
 if exist %OEMDIR%CreativeCloudSet-Up.exe (
     echo [%date% %time%] Installing Adobe Creative Cloud... >> %OEMDIR%install.log
-    start /wait %OEMDIR%CreativeCloudSet-Up.exe --silent
-    echo [%date% %time%] Adobe CC installation completed >> %OEMDIR%install.log
+    start /wait %OEMDIR%CreativeCloudSet-Up.exe
+    echo [%date% %time%] Adobe CC installer launched >> %OEMDIR%install.log
 ) else (
     echo [%date% %time%] Adobe CC download failed >> %OEMDIR%install.log
 )
