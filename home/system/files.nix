@@ -133,6 +133,11 @@ in
     source = ./scripts/sync-rgb.sh;
   };
 
+  home.file.".local/bin/winapps" = {
+    executable = true;
+    source = "${winapps}/bin/winapps";
+  };
+
   home.file.".local/bin/sunshine" = {
     source = celes-dots + "/.local/bin/sunshineFixed";
   };
