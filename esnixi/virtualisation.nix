@@ -78,6 +78,8 @@
     # OEM scripts for Windows container post-install
     system.activationScripts.winapps-oem = ''
       mkdir -p ${config.my.paths.dockerData}/windows/oem
+      mkdir -p ${config.my.paths.dockerData}/windows/data
+      chattr +C ${config.my.paths.dockerData}/windows/data 2>/dev/null || true
       cp -f ${./winapps-oem/install.bat} ${config.my.paths.dockerData}/windows/oem/install.bat
       cp -f ${./winapps-oem/m365config.xml} ${config.my.paths.dockerData}/windows/oem/m365config.xml
     '';
