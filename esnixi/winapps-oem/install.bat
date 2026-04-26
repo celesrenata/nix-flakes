@@ -15,17 +15,15 @@ echo [%date% %time%] Installing Adobe Creative Cloud... >> %OEMDIR%install.log
 winget install Adobe.CreativeCloud --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
 echo [%date% %time%] Adobe CC install completed >> %OEMDIR%install.log
 
-REM Wait for Creative Cloud to initialize
-echo [%date% %time%] Waiting for Creative Cloud to initialize... >> %OEMDIR%install.log
-timeout /t 30 /nobreak
-
-REM Install Adobe apps via Creative Cloud CLI
+REM Install individual Adobe apps via winget where available
 echo [%date% %time%] Installing Adobe Photoshop... >> %OEMDIR%install.log
-start /wait "" "%ProgramFiles%\Adobe\Adobe Creative Cloud\Utils\Creative Cloud Desktop App.exe" --install-app=PHSP >> %OEMDIR%install.log 2>&1
-echo [%date% %time%] Installing Adobe Lightroom Classic... >> %OEMDIR%install.log
-start /wait "" "%ProgramFiles%\Adobe\Adobe Creative Cloud\Utils\Creative Cloud Desktop App.exe" --install-app=LTRM >> %OEMDIR%install.log 2>&1
+winget install Adobe.Photoshop --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
 echo [%date% %time%] Installing Adobe Lightroom... >> %OEMDIR%install.log
-start /wait "" "%ProgramFiles%\Adobe\Adobe Creative Cloud\Utils\Creative Cloud Desktop App.exe" --install-app=LRCC >> %OEMDIR%install.log 2>&1
+winget install Adobe.Lightroom --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
+echo [%date% %time%] Installing Adobe Lightroom Classic... >> %OEMDIR%install.log
+winget install Adobe.LightroomClassic --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
+echo [%date% %time%] Installing Adobe Camera Raw... >> %OEMDIR%install.log
+winget install Adobe.CameraRaw --source winget --accept-source-agreements --accept-package-agreements >> %OEMDIR%install.log 2>&1
 echo [%date% %time%] Adobe apps install completed >> %OEMDIR%install.log
 
 REM Run Ninite installer (7zip, Notepad++, PuTTY, TeamViewer, VS Code, WinDirStat, Zoom)
