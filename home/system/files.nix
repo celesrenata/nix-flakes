@@ -138,6 +138,11 @@ in
     source = "${winapps}/bin/winapps";
   };
 
+  home.file.".local/bin/winapps-autoinstall.sh" = {
+    executable = true;
+    source = ./scripts/winapps-autoinstall.sh;
+  };
+
   home.file.".local/bin/sunshine" = {
     source = celes-dots + "/.local/bin/sunshineFixed";
   };
