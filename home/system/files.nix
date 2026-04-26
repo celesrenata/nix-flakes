@@ -128,6 +128,11 @@ in
     source = ./scripts/apply-idle-config.sh;
   };
 
+  home.file.".local/bin/sync-rgb.sh" = {
+    executable = true;
+    source = ./scripts/sync-rgb.sh;
+  };
+
   home.file.".local/bin/sunshine" = {
     source = celes-dots + "/.local/bin/sunshineFixed";
   };

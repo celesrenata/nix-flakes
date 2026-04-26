@@ -203,6 +203,10 @@
           gesture = 3, horizontal, workspace
           gesture = 4, pinchin, dispatcher, fullscreen 1
           gesture = 4, pinchout, dispatcher, fullscreen 1
+          gesture = 4, left, dispatcher, exec ~/.local/bin/gesture-toggle.sh left
+          gesture = 4, right, dispatcher, exec ~/.local/bin/gesture-toggle.sh right
+          gesture = 4, up, dispatcher, exec ~/.local/bin/gesture-toggle.sh up
+          gesture = 4, down, dispatcher, exec ~/.local/bin/gesture-toggle.sh down
       }
 
       misc {
@@ -390,6 +394,7 @@
 
       # Quickshell integration and desktop environment
       exec-once = hyprctl setcursor Bibata-Modern-Classic 24
+      exec-once = sleep 3 && openrgb -p default.orp
       exec-once = systemctl --user start quickshell.service
       exec-once = [workspace name:touch silent] hyte-touch-interface
       exec-once = wl-paste --watch cliphist store
