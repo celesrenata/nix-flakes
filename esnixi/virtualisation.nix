@@ -49,7 +49,7 @@
           volumes = [
             "/mnt/shared:/shared"
             "${config.my.paths.dockerData}/windows/data:/storage"
-            "/etc/nixos/scripts:/oem"
+            "${config.my.paths.dockerData}/windows/oem:/oem"
           ];
           ports = [
             "8006:8006"
@@ -76,8 +76,11 @@
     boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
 
     # OEM scripts for Windows container post-install
-    environment.etc."nixos/scripts/install.bat".source = ./winapps-oem/install.bat;
-    environment.etc."nixos/scripts/m365config.xml".source = ./winapps-oem/m365config.xml;
+    system.activationScripts.winapps-oem = ''
+      mkdir -p ${config.my.paths.dockerData}/windows/oem
+      cp -f ${./winapps-oem/install.bat} ${config.my.paths.dockerData}/windows/oem/install.bat
+      cp -f ${./winapps-oem/m365config.xml} ${config.my.paths.dockerData}/windows/oem/m365config.xml
+    '';
 
     # Watch for Windows OEM install completion and run winapps setup
     systemd.services.winapps-setup = {
