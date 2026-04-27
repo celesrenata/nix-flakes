@@ -67,6 +67,8 @@ let
           inherit version;
           hash = "sha256-aVyXxm01PwiOyMIObyqTCyKSuACAF53IJzhxs+Hy3xA=";
         };
+        pyproject = true;
+        build-system = [ pyprev.setuptools ];
         doCheck = false;
       };
 
