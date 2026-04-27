@@ -16,7 +16,7 @@
       Type = "simple";
       User = "vllm";
       Group = "vllm";
-      ExecStart = "${pkgs.vllm}/bin/vllm serve Qwen/Qwen2.5-7B-Instruct --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.7";
+      ExecStart = "${pkgs.vllm}/bin/vllm serve AxionML/Qwen3.5-9B-NVFP4 --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.7 --max-model-len 32768 --max-num-seqs 4";
       Restart = "on-failure";
       RestartSec = "10s";
       Environment = [
