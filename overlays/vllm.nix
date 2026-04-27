@@ -59,6 +59,17 @@ in
 let
   python313-for-vllm = prev.python313.override {
     packageOverrides = pyfinal: pyprev: {
+      tvm-ffi = pyprev.buildPythonPackage rec {
+        pname = "tvm-ffi";
+        version = "0.1";
+        src = prev.fetchPypi {
+          pname = "tvm-ffi";
+          inherit version;
+          hash = "sha256-aVyXxm01PwiOyMIObyqTCyKSuACAF53IJzhxs+Hy3xA=";
+        };
+        doCheck = false;
+      };
+
       mistral-common = pyprev.mistral-common.overridePythonAttrs (old: rec {
         version = "1.11.0";
         src = prev.fetchFromGitHub {
@@ -123,6 +134,7 @@ in {
       python313-for-vllm.pkgs.ijson
       python313-for-vllm.pkgs.mcp
       python313-for-vllm.pkgs.grpcio-reflection
+      python313-for-vllm.pkgs.tvm-ffi
     ];
     
     preBuild = (old.preBuild or "") + ''
