@@ -141,11 +141,11 @@
     "dots-hyprland-source": {
       "flake": false,
       "locked": {
-        "lastModified": 1777099870,
-        "narHash": "sha256-+BzgQ2I1Hy64PSX5UirV01r0b5HVEfgPU+7e35HNcJw=",
+        "lastModified": 1777702361,
+        "narHash": "sha256-NGGdhOVcFL4tAUOnE0LeNrrA3B8mRkFX34vrJlaEODo=",
         "owner": "celesrenata",
         "repo": "dots-hyprland",
-        "rev": "8bc863873c602fb77a3923d62e93834c3f28cedd",
+        "rev": "d3c09bf1088cdc964e29df03f58b75f0b037591b",
         "type": "github"
       },
       "original": {
@@ -267,6 +267,24 @@
     "flake-utils_2": {
       "inputs": {
         "systems": "systems_4"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "flake-utils_3": {
+      "inputs": {
+        "systems": "systems_5"
       },
       "locked": {
         "lastModified": 1731533236,
@@ -1188,7 +1206,8 @@
         "nixpkgs": "nixpkgs_11",
         "onetrainer-flake": "onetrainer-flake",
         "protontweaks": "protontweaks",
-        "sops-nix": "sops-nix"
+        "sops-nix": "sops-nix",
+        "toshy": "toshy"
       }
     },
     "slimlock": {
@@ -1290,6 +1309,43 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_5": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "toshy": {
+      "inputs": {
+        "flake-utils": "flake-utils_3",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1777625009,
+        "narHash": "sha256-yt/sfLnuEI7HSxvuBq2wY0x/sWljGrZVvFhxNr01FV0=",
+        "owner": "celesrenata",
+        "repo": "toshy",
+        "rev": "37625c3e6540308870f1758215f3a583e86c8d05",
+        "type": "github"
+      },
+      "original": {
+        "owner": "celesrenata",
+        "ref": "flake-rewrite",
+        "repo": "toshy",
         "type": "github"
       }
     },
