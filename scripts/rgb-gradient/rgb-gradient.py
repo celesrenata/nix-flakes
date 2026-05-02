@@ -10,27 +10,39 @@ def hex_to_rgb(h):
     return (int(h[0:2],16), int(h[2:4],16), int(h[4:6],16))
 
 def led_correct(rgb):
-    """Gamma + green suppression for ARGB LED strips."""
+    """Gamma correction with selective green suppression for ARGB LED strips."""
     gamma = 2.8
     r, g, b = [int(255 * (c / 255) ** gamma) for c in rgb]
-    g = int(g * 0.5)
+    # Only suppress green when blue dominates (purple/blue hues)
+    # This prevents greens from turning to mud
+    if b > g:
+        g = int(g * 0.5)
     return (r, g, b)
 
-colors_json = os.path.expanduser("~/.local/state/quickshell/user/generated/colors.json")
-with open(colors_json) as f:
-    palette = json.load(f)
+COLORS_JSON = os.path.expanduser("~/.local/state/quickshell/user/generated/colors.json")
 
-colors = [
-    led_correct(hex_to_rgb(palette["primary"])),
-    led_correct(hex_to_rgb(palette["secondary"])),
-    led_correct(hex_to_rgb(palette["tertiary"])),
-]
+def load_colors():
+    with open(COLORS_JSON) as f:
+        palette = json.load(f)
+    colors = [
+        led_correct(hex_to_rgb(palette["primary"])),
+        led_correct(hex_to_rgb(palette["secondary"])),
+        led_correct(hex_to_rgb(palette["tertiary"])),
+    ]
+    print(f"Gradient: {['#%02x%02x%02x' % c for c in colors]}", flush=True)
+    return colors
 
-print(f"Gradient: {['#%02x%02x%02x' % c for c in colors]}", flush=True)
+def get_mtime():
+    try:
+        return os.path.getmtime(COLORS_JSON)
+    except OSError:
+        return 0
+
+colors = load_colors()
+last_mtime = get_mtime()
 
 c = OpenRGBClient()
 
-# Rainbow reset to clear hardware state
 for d in c.devices:
     for m in d.modes:
         if m.name == "Rainbow":
@@ -51,6 +63,12 @@ while True:
     for i in range(len(colors)):
         c1, c2 = colors[i], colors[(i+1) % len(colors)]
         for s in range(STEPS):
+            # Check for color file changes every step
+            mtime = get_mtime()
+            if mtime != last_mtime:
+                last_mtime = mtime
+                colors = load_colors()
+                break
             r, g, b = lerp(c1, c2, s / STEPS)
             color = RGBColor(r, g, b)
             for d in c.devices:
