@@ -37,7 +37,7 @@
     ./system/packages.nix           # Desktop environment and system packages
     ./system/variables.nix          # Environment variables and system settings
     ./system/hyte-touch.nix         # Hyte Touch Display user service
-    ./system/hyte-touch.nix         # Hyte Touch Display user service
+    ./system/rgb-gradient.nix       # RGB LED gradient from wallpaper colors
   ];
 
   # Basic user configuration

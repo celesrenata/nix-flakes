@@ -99,7 +99,39 @@
         exec ${vllmPython}/bin/python -m vllm.entrypoints.cli.main "$@"
       '';
       cxxWrapper = pkgs.writeShellScriptBin "c++" ''
-        exec ${pkgs.gcc}/bin/g++ "$@"
+        exec ${pkgs.gcc14}/bin/g++ "$@"
+      '';
+
+      # tvm-ffi C++ headers needed by flashinfer JIT compilation
+      tvmFfiHeaders = pkgs.fetchFromGitHub {
+        owner = "mlc-ai";
+        repo = "tvm-ffi";
+        rev = "583e4b73c11aa3257e7be862834b98f33c39a6dd";
+        hash = "sha256-noVRm8ba5DEM1qAYP8FzHuGA+KFWlR9w2GBBRsj/zhA=";
+        fetchSubmodules = true;
+      };
+
+      # Python shim for tvm_ffi module (flashinfer 0.6.4+ requires it)
+      tvmFfiShim = pkgs.writeTextDir "tvm_ffi/__init__.py" ''
+        """tvm_ffi shim for flashinfer JIT compatibility."""
+
+        class _LibInfo:
+            @staticmethod
+            def find_include_path():
+                return "${tvmFfiHeaders}/include"
+
+            @staticmethod
+            def find_dlpack_include_path():
+                return "${tvmFfiHeaders}/3rdparty/dlpack/include"
+
+        libinfo = _LibInfo()
+
+        def register_func(name, func=None, override=False):
+            if func: return func
+            return lambda f: f
+
+        def get_global_func(name, allow_missing=False):
+            return None
       '';
     in {
       description = "vLLM OpenAI-compatible API server with NVFP4 support";
@@ -113,18 +145,18 @@
         HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";
         CUDA_HOME = "${pkgsAccel.cudaPackages.cudatoolkit}";
         LD_LIBRARY_PATH = "${pkgsAccel.cudaPackages.cudatoolkit}/lib:${pkgsAccel.cudaPackages.cudnn}/lib:${config.hardware.nvidia.package}/lib";
-        PYTHONPATH = "${pkgsAccel.vllm}/${pkgsAccel.python313.sitePackages}";
+        PYTHONPATH = "${tvmFfiShim}:${pkgsAccel.vllm}/${pkgsAccel.python313.sitePackages}";
         VLLM_LOGGING_LEVEL = "DEBUG";
         CUDACXX = "${pkgsAccel.cudaPackages.cudatoolkit}/bin/nvcc";
-        CXX = "${pkgs.gcc}/bin/g++";
-        CC = "${pkgs.gcc}/bin/gcc";
+        CXX = "${pkgs.gcc14}/bin/g++";
+        CC = "${pkgs.gcc14}/bin/gcc";
         LIBRARY_PATH = "${pkgsAccel.cudaPackages.cudatoolkit}/lib:${pkgsAccel.cudaPackages.cudatoolkit}/lib/stubs:${config.hardware.nvidia.package}/lib";
       };
 
       path = [
         pkgs.bash
         pkgs.coreutils
-        pkgs.gcc
+        pkgs.gcc14
         pkgs.binutils
         pkgsAccel.cudaPackages.cudatoolkit
         pkgs.ninja
@@ -138,7 +170,7 @@
         User = "vllm";
         Group = "vllm";
         ExecStart = ''
-          ${vllmWrapper} serve GadflyII/GLM-4.7-Flash-NVFP4 \
+          ${vllmWrapper} serve AxionML/Qwen3.5-9B-NVFP4 --served-model-name qwen3.5:9b-fast \
             --host 0.0.0.0 \
             --port 8000 \
             --max-model-len 32768 \
