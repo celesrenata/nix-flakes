@@ -6,6 +6,12 @@
 {
   # Licences.
   # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
+  nixpkgs.config.permittedInsecurePackages = [
+    "pypy2.7-setuptools-44.0.0"
+    "pypy2.7-pip-20.3.4"
+    "qtwebengine-5.15.19"
+    "mbedtls-2.28.10"
+  ];
   nixpkgs.hostPlatform = "x86_64-linux";
 
   imports =
@@ -223,24 +229,25 @@
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
-  services.keyd = {
-    enable = true;
-    keyboards.mac.settings = {
-      main = {
-        control = "layer(meta)";
-        meta = "layer(control)";
-        rightcontrol = "layer(meta)";
-      };
-      meta = {
-        left =  "control-left";
-        right = "control-right";
-        space = "control-space";
-      };
-    };
-    keyboards.mac.ids = [
-      "*"
-    ];
-  };
+  # Disabled — Toshy handles key remapping now
+  #   # services.keyd = {
+  #     enable = true;
+  #     keyboards.mac.settings = {
+  #       main = {
+  #         control = "layer(meta)";
+  #         meta = "layer(control)";
+  #         rightcontrol = "layer(meta)";
+  #       };
+  #       meta = {
+  #         left =  "control-left";
+  #         right = "control-right";
+  #         space = "control-space";
+  #       };
+  #     };
+  #     keyboards.mac.ids = [
+  #       "*"
+  #     ];
+  # };
 
   # Gestures with custom configuration
   services.touchegg.enable = true;
