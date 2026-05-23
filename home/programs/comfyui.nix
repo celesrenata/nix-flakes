@@ -33,9 +33,9 @@ let
       echo "Installing dependencies for ComfyUI ${comfyui.version}..."
       ${uv} pip install --python ${venvDir}/bin/python \
         -r ${comfyHome}/app/requirements.txt \
-        pip pyyaml segment-anything dill facexlib piexif insightface \
-        deepdiff webcolors ultralytics py-cpuinfo gguf llama-cpp-python \
-        onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
+        pip pyyaml pycryptodome pyOpenSSL segment-anything dill facexlib \
+        piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf \
+        llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
       rm -f ${comfyHome}/.deps-*
       touch ${comfyHome}/.deps-${comfyui.version}
     fi
