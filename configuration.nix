@@ -6,12 +6,6 @@
 {
   # Licences.
   # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
-  nixpkgs.config.permittedInsecurePackages = [
-    "pypy2.7-setuptools-44.0.0"
-    "pypy2.7-pip-20.3.4"
-    "qtwebengine-5.15.19"
-    "mbedtls-2.28.10"
-  ];
   nixpkgs.hostPlatform = "x86_64-linux";
 
   imports =

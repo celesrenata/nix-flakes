@@ -64,13 +64,13 @@
     cline-cli.url = "github:celesrenata/clinecli-flakes";          # Cline AI coding assistant CLI
     cline-cli.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Keyboard remapping (currently disabled in favor of keyd)
-    # toshy.url = "github:celesrenata/toshy/cline";               # Mac-style keybindings for Linux
-    # toshy.inputs.nixpkgs.follows = "nixpkgs";
+    # Keyboard remapping - Mac-style keybindings
+    toshy.url = "github:celesrenata/toshy/flake-rewrite";
+    toshy.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, toshy, ... }:
   let
     lib = nixpkgs.lib;
 
@@ -89,7 +89,9 @@
           cudaSupport = (backend == "cuda");
           rocmSupport = (backend == "rocm");
           permittedInsecurePackages = [
-            "python-2.7.18.7"
+            #"python-2.7.18.7"
+            "pypy2.7-setuptools-44.0.0"  # CVE-2025-47273; transitive dep via nix → nix-functional-tests → mercurial
+            "pypy2.7-pip-20.3.4"         # CVE-2021-28363; same chain
             "qtwebengine-5.15.19"
             "mbedtls-2.28.10"
           ];
@@ -196,6 +198,7 @@
           ./esnixi/thunderbolt.nix
           ./esnixi/virtualisation.nix
           ./esnixi/lvra.nix
+          ./esnixi/vllm-proxy.nix
           #./esnixi/exo.nix                            # Disabled: requires exo flake input
           #./esnixi/dcgm-exporter.nix                  # Disabled: dcgm-exporter not in nixpkgs
 
@@ -214,6 +217,15 @@
           hyte-touch-infinite-flakes.nixosModules.hyte-touch
           protontweaks.nixosModules.protontweaks
           sops-nix.nixosModules.sops
+          # Toshy - Mac-style keybindings for Linux
+          toshy.nixosModules.toshy
+          {
+            services.toshy = {
+              enable = true;
+              user = "celes";
+              gui.enable = true;
+            };
+          }
         ];
         homeImports = [
           ./home/default.nix
