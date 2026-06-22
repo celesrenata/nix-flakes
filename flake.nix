@@ -94,6 +94,7 @@
             "pypy2.7-pip-20.3.4"         # CVE-2021-28363; same chain
             "qtwebengine-5.15.19"
             "mbedtls-2.28.10"
+            "python3.13-vllm-0.23.0"     # CVE-2026-27893, CVE-2026-44222, CVE-2026-44223; we build from source with pinned deps
           ];
         };
         overlays = builtins.concatLists (map (g: overlayGroups.${g}) groups) ++ extraOverlays;
