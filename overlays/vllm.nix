@@ -11,8 +11,8 @@ let
   triton-kernels = prev.fetchFromGitHub {
     owner = "triton-lang";
     repo = "triton";
-    tag = "v3.6.0";
-    hash = "sha256-JFSpQn+WsNnh7CAPlcpOcUp0nyKXNbJEANdXqmkt4Tc=";
+    tag = "v3.5.1";
+    hash = "sha256-dyNRtS1qtU8C/iAf0Udt/1VgtKGSvng1+r2BtvT9RB4=";
   };
   
   qutlass = prev.fetchFromGitHub {
@@ -25,13 +25,13 @@ let
   
   flashmla = prev.stdenv.mkDerivation {
     pname = "flashmla";
-    version = "2025-04-18";
+    version = "2025-06-15";
     src = prev.fetchFromGitHub {
       name = "FlashMLA-source";
       owner = "vllm-project";
       repo = "FlashMLA";
-      rev = "692917b1cda61b93ac9ee2d846ec54e75afe87b1";
-      hash = "sha256-2nSrEUqdhYT6kI+wQTz+LJGEerDIznJR8oOlrVSQceg=";
+      rev = "a6ec2ba7bd0a7dff98b3f4d3e6b52b159c48d78b";
+      hash = "sha256-Oj37H0swZdxaprpaHq0XfOCagc0ypYKpS8e6JzqcDQg=";
     };
     dontConfigure = true;
     buildPhase = "true";
@@ -42,8 +42,8 @@ let
     name = "deepgemm-source";
     owner = "deepseek-ai";
     repo = "DeepGEMM";
-    rev = "477618cd51baffca09c4b0b87e97c03fe827ef03";
-    hash = "sha256-7I1O9DDBGzij2NIjf8tQPFMCpTnyzMRdv1+bP3APOOc=";
+    rev = "891d57b4db1071624b5c8fa0d1e51cb317fa709f";
+    hash = "sha256-sQM8SFkcDJmzyvKl1nv+nkwWaHvvo7mOGyNot2oduJg=";
     fetchSubmodules = true;
   };
 
@@ -51,8 +51,8 @@ let
     name = "vllm-flash-attn-source";
     owner = "vllm-project";
     repo = "flash-attention";
-    rev = "f5bc33cfc02c744d24a2e9d50e6db656de40611c";
-    hash = "sha256-jEjn1DVqq2BcR1tsLUQ42G3EtomH6T33lkXUxAVD5uI=";
+    rev = "dd62dac706b1cf7895bd99b18c6cb7e7e117ee25";
+    hash = "sha256-r7YW0FlsF7eeUOyKeoq6wnJMykExVqwBCgh2y/w9nPk=";
     fetchSubmodules = true;
   };
 in 
@@ -73,24 +73,24 @@ let
       };
 
       mistral-common = pyprev.mistral-common.overridePythonAttrs (old: rec {
-        version = "1.11.0";
+        version = "1.11.3";
         src = prev.fetchFromGitHub {
           owner = "mistralai";
           repo = "mistral-common";
           tag = "v${version}";
-          hash = "sha256-DejbLY2i6Hp1J+spxMut5RKugj7rDyrZmp6v+5wqyWY=";
+          hash = "sha256-9NeJqv7m7vT/lI6mV9QbAsrLUcxO4Wr+QgKfz6RWtsM=";
         };
         doCheck = false;
         pythonRuntimeDepsCheck = false;
       });
 
       compressed-tensors = pyprev.compressed-tensors.overridePythonAttrs (old: rec {
-        version = "0.15.0.1";
+        version = "0.17.0";
         src = prev.fetchFromGitHub {
           owner = "vllm-project";
           repo = "compressed-tensors";
           rev = version;
-          hash = "sha256-iiYo3Vne2CYlj+wMHxQFTTU7gb8oNwPtCe873nX5KgA=";
+          hash = "sha256-nQrpR/YhwwIU1KB5DHLA/EsQ4s4kSf21qYsnlhQySlA=";
         };
         propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
           pyprev.loguru
@@ -102,16 +102,19 @@ let
   };
 in {
   vllm = python313-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
-    version = "0.20.0";
+    version = "0.23.0";
     src = prev.fetchFromGitHub {
       owner = "vllm-project";
       repo = "vllm";
-      tag = "v0.20.0";
-      hash = "sha256-TUqkywqWQdnF+jzm3UYVAD5qe8jUK63f8nrZQaNnuZc=";
+      tag = "v0.23.0";
+      hash = "sha256-9mxu2jLchoKmRzD71enPomVJuP5LjbUtQqLMdP5k+Qw=";
     };
     
     patches = [];
-    postPatch = "";
+    postPatch = ''
+      sed -i 's/torch == 2.11.0/torch >= 2.11.0/' pyproject.toml
+      find . -path '*/requirements*' -name '*.txt' -exec sed -i 's/torch==2.11.0/torch>=2.11.0/' {} +
+    '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
     pythonRelaxDeps = true;
