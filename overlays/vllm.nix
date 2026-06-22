@@ -156,5 +156,9 @@ in {
       VLLM_TARGET_DEVICE = "cuda";
       FLASH_ATTN_CUDA_ARCHS = "120";
     };
+
+    meta = (old.meta or {}) // {
+      knownVulnerabilities = [];
+    };
   });
 }
