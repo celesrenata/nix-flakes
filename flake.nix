@@ -128,7 +128,15 @@
 
         modules = [
           # Set nixpkgs to use our pre-configured base package set
-          { nixpkgs.pkgs = pkgsBase; }
+          { nixpkgs.pkgs = pkgsBase;
+            nixpkgs.config.permittedInsecurePackages = [
+              "pypy2.7-setuptools-44.0.0"
+              "pypy2.7-pip-20.3.4"
+              "qtwebengine-5.15.19"
+              "mbedtls-2.28.10"
+              "python3.13-vllm-0.23.0"
+            ];
+          }
 
           # Core system configuration
           ./configuration.nix
