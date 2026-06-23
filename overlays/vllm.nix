@@ -129,6 +129,7 @@ in {
     
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
       python313-for-vllm.pkgs.grpcio-tools
+      python313-for-vllm.pkgs.setuptools-rust
     ];
     
     buildInputs = (old.buildInputs or []) ++ [
