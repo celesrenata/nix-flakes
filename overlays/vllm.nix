@@ -114,14 +114,24 @@ in {
     postPatch = ''
       sed -i 's/torch == 2.11.0/torch >= 2.11.0/' pyproject.toml
       find . -path '*/requirements*' -name '*.txt' -exec sed -i 's/torch==2.11.0/torch>=2.11.0/' {} +
-      # Remove setuptools-rust from build requirements - we skip the rust frontend
-      sed -i '/setuptools.rust/d' setup.py
-      sed -i '/RustExtension/d' setup.py
-      sed -i 's/from setuptools_rust import RustExtension//' setup.py || true
-      # Remove rust extensions from ext_modules
-      sed -i '/rust_extensions/d' setup.py
-      # Strip setuptools-rust from pyproject.toml build-system requires
+      # Remove setuptools-rust from pyproject.toml build-system requires
       sed -i '/setuptools-rust/d' pyproject.toml
+      # Patch setup.py to remove rust frontend entirely
+      sed -i 's/from setuptools_rust import Binding, RustExtension//' setup.py
+      sed -i 's/from setuptools_rust.build import build_rust//' setup.py
+      sed -i '/class precompiled_build_rust/,/^class /{ /^class precompiled_build_rust/d; /^class /!d; }' setup.py
+      # Replace rust_extensions list with empty list and remove from setup() call
+      python3 -c "
+import re
+with open('setup.py', 'r') as f:
+    content = f.read()
+# Remove the rust_extensions = [...] block
+content = re.sub(r'rust_extensions\s*=\s*\[.*?\]', 'rust_extensions = []', content, flags=re.DOTALL)
+# Remove build_rust references in cmdclass
+content = content.replace('cmdclass[\"build_rust\"] = precompiled_build_rust', '')
+with open('setup.py', 'w') as f:
+    f.write(content)
+"
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
