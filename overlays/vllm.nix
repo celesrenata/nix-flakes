@@ -114,6 +114,14 @@ in {
     postPatch = ''
       sed -i 's/torch == 2.11.0/torch >= 2.11.0/' pyproject.toml
       find . -path '*/requirements*' -name '*.txt' -exec sed -i 's/torch==2.11.0/torch>=2.11.0/' {} +
+      # Remove setuptools-rust from build requirements - we skip the rust frontend
+      sed -i '/setuptools.rust/d' setup.py
+      sed -i '/RustExtension/d' setup.py
+      sed -i 's/from setuptools_rust import RustExtension//' setup.py || true
+      # Remove rust extensions from ext_modules
+      sed -i '/rust_extensions/d' setup.py
+      # Strip setuptools-rust from pyproject.toml build-system requires
+      sed -i '/setuptools-rust/d' pyproject.toml
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
@@ -129,7 +137,6 @@ in {
     
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
       python313-for-vllm.pkgs.grpcio-tools
-      python313-for-vllm.pkgs.setuptools-rust
     ];
     
     buildInputs = (old.buildInputs or []) ++ [
