@@ -115,23 +115,8 @@ in {
       sed -i 's/torch == 2.11.0/torch >= 2.11.0/' pyproject.toml
       find . -path '*/requirements*' -name '*.txt' -exec sed -i 's/torch==2.11.0/torch>=2.11.0/' {} +
       # Remove setuptools-rust from pyproject.toml build-system requires
+      # (we provide it via nativeBuildInputs instead)
       sed -i '/setuptools-rust/d' pyproject.toml
-      # Create a mock setuptools_rust module so setup.py imports don't fail
-      mkdir -p setuptools_rust
-      cat > setuptools_rust/__init__.py << 'MOCK_EOF'
-class Binding:
-    Exec = None
-class RustExtension:
-    def __init__(self, *args, **kwargs):
-        pass
-MOCK_EOF
-      cat > setuptools_rust/build.py << 'MOCK_EOF'
-class build_rust:
-    def run(self):
-        pass
-MOCK_EOF
-      # Set env so rust frontend is not required
-      export VLLM_REQUIRE_RUST_FRONTEND=0
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
@@ -147,6 +132,9 @@ MOCK_EOF
     
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
       python313-for-vllm.pkgs.grpcio-tools
+      (python313-for-vllm.pkgs.setuptools-rust.overrideAttrs (old: {
+        setupHook = prev.writeText "setuptools-rust-hook-disabled" "";
+      }))
     ];
     
     buildInputs = (old.buildInputs or []) ++ [
