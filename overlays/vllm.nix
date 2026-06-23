@@ -116,27 +116,22 @@ in {
       find . -path '*/requirements*' -name '*.txt' -exec sed -i 's/torch==2.11.0/torch>=2.11.0/' {} +
       # Remove setuptools-rust from pyproject.toml build-system requires
       sed -i '/setuptools-rust/d' pyproject.toml
-      # Patch setup.py to remove rust frontend entirely using python
-      python3 << 'PATCH_EOF'
-import re
-
-with open("setup.py", "r") as f:
-    content = f.read()
-
-# Remove setuptools_rust imports
-content = content.replace("from setuptools_rust import Binding, RustExtension", "")
-content = content.replace("from setuptools_rust.build import build_rust", "")
-
-# Remove the rust_extensions = [...] block (multiline)
-content = re.sub(r"rust_extensions\s*=\s*\[.*?\]", "rust_extensions = []", content, flags=re.DOTALL)
-
-# Remove precompiled_build_rust class and its usage
-content = re.sub(r"class precompiled_build_rust\(build_rust\):.*?super\(\)\.run\(\)", "", content, flags=re.DOTALL)
-content = re.sub(r'cmdclass\["build_rust"\]\s*=\s*precompiled_build_rust', "", content)
-
-with open("setup.py", "w") as f:
-    f.write(content)
-PATCH_EOF
+      # Create a mock setuptools_rust module so setup.py imports don't fail
+      mkdir -p setuptools_rust
+      cat > setuptools_rust/__init__.py << 'MOCK_EOF'
+class Binding:
+    Exec = None
+class RustExtension:
+    def __init__(self, *args, **kwargs):
+        pass
+MOCK_EOF
+      cat > setuptools_rust/build.py << 'MOCK_EOF'
+class build_rust:
+    def run(self):
+        pass
+MOCK_EOF
+      # Set env so rust frontend is not required
+      export VLLM_REQUIRE_RUST_FRONTEND=0
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
@@ -178,6 +173,7 @@ PATCH_EOF
       TORCH_CUDA_ARCH_LIST = "12.0";
       VLLM_TARGET_DEVICE = "cuda";
       FLASH_ATTN_CUDA_ARCHS = "120";
+      VLLM_REQUIRE_RUST_FRONTEND = "0";
     };
 
     meta = (old.meta or {}) // {
