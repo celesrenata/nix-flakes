@@ -10,6 +10,11 @@
       if test -f ${inputs.dots-hyprland-source}/.config/fish/config.fish
         source ${inputs.dots-hyprland-source}/.config/fish/config.fish
       end
+
+      # GitHub PAT from sops secret for MCP servers (Codex, Kiro)
+      if test -r /run/secrets/github_token
+        set -gx GITHUB_PERSONAL_ACCESS_TOKEN (cat /run/secrets/github_token)
+      end
     '';
   };
 }

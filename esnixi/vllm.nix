@@ -68,7 +68,7 @@ in
       Type = "simple";
       User = "vllm";
       Group = "vllm";
-      ExecStart = "${pkgs.vllm}/bin/vllm serve AxionML/Qwen3.5-9B-NVFP4 --served-model-name qwen3.5:9b-fast --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.7 --max-model-len 32768 --max-num-seqs 4";
+      ExecStart = "${pkgs.vllm}/bin/vllm serve AxionML/Qwen3.5-9B-NVFP4 --served-model-name qwen3.5:9b-fast --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.92 --max-model-len 8192 --max-num-seqs 16 --enable-chunked-prefill --max-num-batched-tokens 8192 --reasoning-parser qwen3 --default-chat-template-kwargs '"'{"enable_thinking": false}'"'";
       Restart = "on-failure";
       RestartSec = "10s";
     };

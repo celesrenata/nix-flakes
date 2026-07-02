@@ -307,6 +307,7 @@
       # Desktop environment controls (converted from AGS to Quickshell)
       bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
       bind = $Secondary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
+      bind = $Primary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
       bind = $Secondary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle
       bind = $Secondary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle
       bind = $Secondary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle
@@ -407,6 +408,7 @@
       exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP # Some fix idk
       exec-once = hyprpm list &>/dev/null && hyprpm reload
       exec-once = easyeffects --gapplication-service
+      exec-once = sleep 2 && systemctl --user restart toshy-config toshy-session-monitor toshy-wlroots-dbus toshy-tray
     '';
   };
 

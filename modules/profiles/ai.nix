@@ -102,37 +102,21 @@
         exec ${pkgs.gcc14}/bin/g++ "$@"
       '';
 
-      # tvm-ffi C++ headers needed by flashinfer JIT compilation
-      tvmFfiHeaders = pkgs.fetchFromGitHub {
-        owner = "mlc-ai";
-        repo = "tvm-ffi";
-        rev = "583e4b73c11aa3257e7be862834b98f33c39a6dd";
-        hash = "sha256-noVRm8ba5DEM1qAYP8FzHuGA+KFWlR9w2GBBRsj/zhA=";
-        fetchSubmodules = true;
+      # apache-tvm-ffi: full runtime + headers from PyPI (flashinfer 0.6.4+ needs it)
+      tvmFfiPkg = pkgs.stdenvNoCC.mkDerivation {
+        name = "apache-tvm-ffi-0.1.10";
+        src = pkgs.fetchurl {
+          url = "https://files.pythonhosted.org/packages/51/f7/ca3fdadc2468e8b67a2f3f13bb7aa132c584feefd8a25dbf920e4bf0a03b/apache_tvm_ffi-0.1.10-cp312-abi3-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl";
+          hash = "sha256-lraQMMciVy4T4wGCczrfotYEJY6Yiz9mMKFvOXx/kog=";
+        };
+        nativeBuildInputs = [ pkgs.unzip pkgs.autoPatchelfHook ];
+        buildInputs = [ pkgs.stdenv.cc.cc.lib ];
+        unpackPhase = "unzip $src -d .";
+        installPhase = ''
+          mkdir -p $out/lib/python3.13/site-packages
+          cp -r tvm_ffi apache_tvm_ffi-0.1.10.dist-info $out/lib/python3.13/site-packages/
+        '';
       };
-
-      # Python shim for tvm_ffi module (flashinfer 0.6.4+ requires it)
-      tvmFfiShim = pkgs.writeTextDir "tvm_ffi/__init__.py" ''
-        """tvm_ffi shim for flashinfer JIT compatibility."""
-
-        class _LibInfo:
-            @staticmethod
-            def find_include_path():
-                return "${tvmFfiHeaders}/include"
-
-            @staticmethod
-            def find_dlpack_include_path():
-                return "${tvmFfiHeaders}/3rdparty/dlpack/include"
-
-        libinfo = _LibInfo()
-
-        def register_func(name, func=None, override=False):
-            if func: return func
-            return lambda f: f
-
-        def get_global_func(name, allow_missing=False):
-            return None
-      '';
     in {
       description = "vLLM OpenAI-compatible API server with NVFP4 support";
       after = [ "network-online.target" ];
@@ -145,7 +129,7 @@
         HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";
         CUDA_HOME = "${pkgsAccel.cudaPackages.cudatoolkit}";
         LD_LIBRARY_PATH = "${pkgsAccel.cudaPackages.cudatoolkit}/lib:${pkgsAccel.cudaPackages.cudnn}/lib:${config.hardware.nvidia.package}/lib";
-        PYTHONPATH = "${tvmFfiShim}:${pkgsAccel.vllm}/${pkgsAccel.python313.sitePackages}";
+        PYTHONPATH = "${tvmFfiPkg}/lib/python3.13/site-packages:${pkgsAccel.vllm}/${pkgsAccel.python313.sitePackages}";
         VLLM_LOGGING_LEVEL = "DEBUG";
         CUDACXX = "${pkgsAccel.cudaPackages.cudatoolkit}/bin/nvcc";
         CXX = "${pkgs.gcc14}/bin/g++";
@@ -170,12 +154,16 @@
         User = "vllm";
         Group = "vllm";
         ExecStart = ''
-          ${vllmWrapper} serve AxionML/Qwen3.5-9B-NVFP4 --served-model-name qwen3.5:9b-fast \
+          ${vllmWrapper} serve AxionML/Qwen3.5-9B-NVFP4 \
             --host 0.0.0.0 \
             --port 8000 \
-            --max-model-len 32768 \
+            --max-model-len 8192 \
             --gpu-memory-utilization 0.85 \
-            --dtype auto
+            --max-num-seqs 8 \
+            --enable-prefix-caching \
+            --dtype auto \
+            --reasoning-parser qwen3 \
+            --default-chat-template-kwargs '{"enable_thinking": false}'
         '';
         Restart = "on-failure";
         RestartSec = "10s";

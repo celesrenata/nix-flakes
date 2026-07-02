@@ -19,6 +19,11 @@
       openjdk
       typescript
 
+      # AI coding agents
+      codex
+      uv
+      pipx
+
       # Nix tooling
       nil
 

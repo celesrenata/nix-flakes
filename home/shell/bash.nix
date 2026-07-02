@@ -9,6 +9,11 @@
     # Custom bashrc configuration
     bashrcExtra = ''
       export PATH="$PATH:$HOME/bin:$HOME/.local/bin:$HOME/go/bin:"
+
+      # GitHub PAT from sops secret for MCP servers (Codex, Kiro)
+      if [ -r /run/secrets/github_token ]; then
+        export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat /run/secrets/github_token)"
+      fi
     '';
 
     # Shell aliases
