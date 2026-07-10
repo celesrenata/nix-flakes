@@ -21,6 +21,7 @@ let
 
     # Create required directory structure
     mkdir -p ${comfyHome}/{custom_nodes,models,input,output,temp,user,database}
+    mkdir -p ${comfyHome}/app/user
 
     # Create venv if missing
     if [ ! -d ${venvDir} ]; then
@@ -35,7 +36,7 @@ let
         -r ${comfyHome}/app/requirements.txt \
         pip pyyaml pycryptodome pyOpenSSL segment-anything dill facexlib \
         piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf \
-        llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm
+        llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm natsort
       rm -f ${comfyHome}/.deps-*
       touch ${comfyHome}/.deps-${comfyui.version}
     fi
