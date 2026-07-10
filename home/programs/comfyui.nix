@@ -34,12 +34,17 @@ let
       echo "Installing dependencies for ComfyUI ${comfyui.version}..."
       ${uv} pip install --python ${venvDir}/bin/python \
         -r ${comfyHome}/app/requirements.txt \
-        'transformers>=4.50.3,<5' \
+        'transformers>=4.50.3,<5'
+      ${uv} pip install --python ${venvDir}/bin/python \
         pip pyyaml pycryptodome pyOpenSSL segment-anything dill facexlib \
         piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf \
-        llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm natsort kernels \
+        onnxruntime imageio-ffmpeg opencv-python numba pynvml timm natsort kernels \
         addict anthropic dynamicprompts evalidate ffmpeg-python PyWavelets torchdiffeq \
-        hydra-core nunchaku openai-agents basicsr cupy-cuda12x
+        hydra-core openai-agents surrealist
+      # These may fail to build from source - install separately
+      ${uv} pip install --python ${venvDir}/bin/python nunchaku || true
+      ${uv} pip install --python ${venvDir}/bin/python cupy-cuda12x || true
+      ${uv} pip install --python ${venvDir}/bin/python basicsr || true
       rm -f ${comfyHome}/.deps-*
       touch ${comfyHome}/.deps-${comfyui.version}
     fi
