@@ -8,7 +8,7 @@ let
   uv = "${pkgs.uv}/bin/uv";
 
   comfyui-wrapper = pkgs.writeShellScript "comfyui-wrapper" ''
-    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:${pkgs.libGL}/lib:${pkgs.libGLU}/lib:${pkgs.glib}/lib:/run/opengl-driver/lib:''${LD_LIBRARY_PATH:-}
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:${pkgs.libGL}/lib:${pkgs.libGLU}/lib:${pkgs.glib}/lib:${pkgs.libxcb}/lib:${pkgs.xorg.libX11}/lib:/run/opengl-driver/lib:''${LD_LIBRARY_PATH:-}
 
     # Sync ComfyUI source from nix store on version change
     if [ ! -f ${comfyHome}/app/.version ] || [ "$(cat ${comfyHome}/app/.version)" != "${comfyui.version}" ]; then
@@ -20,7 +20,7 @@ let
     fi
 
     # Create required directory structure
-    mkdir -p ${comfyHome}/{custom_nodes,models,input,output,temp,user}
+    mkdir -p ${comfyHome}/{custom_nodes,models,input,output,temp,user,database}
 
     # Create venv if missing
     if [ ! -d ${venvDir} ]; then
@@ -41,7 +41,7 @@ let
     fi
 
     cd ${comfyHome}/app
-    exec ${venvDir}/bin/python main.py --base-dir ${comfyHome} --listen 0.0.0.0 "$@"
+    exec ${venvDir}/bin/python main.py --base-directory ${comfyHome} --listen 0.0.0.0 "$@"
   '';
 in
 {
