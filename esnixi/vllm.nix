@@ -29,6 +29,10 @@ let
         if func: return func
         return lambda f: f
 
+    def load_module(path):
+        import ctypes
+        return ctypes.CDLL(str(path))
+
     def get_global_func(name, allow_missing=False):
         return None
   '';
@@ -68,7 +72,7 @@ in
       Type = "simple";
       User = "vllm";
       Group = "vllm";
-      ExecStart = "${pkgs.vllm}/bin/vllm serve AxionML/Qwen3.5-9B-NVFP4 --served-model-name qwen3.5:9b-fast --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.92 --max-model-len 8192 --max-num-seqs 16 --enable-chunked-prefill --max-num-batched-tokens 8192 --reasoning-parser qwen3 --default-chat-template-kwargs '"'{"enable_thinking": false}'"'";
+      ExecStart = "${pkgs.vllm}/bin/vllm serve numind/NuExtract3 --served-model-name numind/NuExtract3 --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.45 --max-model-len 8192 --max-num-seqs 8";
       Restart = "on-failure";
       RestartSec = "10s";
     };

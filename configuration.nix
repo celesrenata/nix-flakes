@@ -450,6 +450,7 @@
     bash
 
     # Development Tools (not in profiles).
+    uv
     amazon-q-cli
     kiro
     jetbrains-toolbox

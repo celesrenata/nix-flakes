@@ -269,10 +269,10 @@
       bind = $Secondary, Page_Up, workspace, -1
 
       # Window split ratio
-      binde = $Primary$Secondary, Minus, splitratio, -0.1
-      binde = $Primary$Secondary, Equal, splitratio, 0.1
-      binde = $Secondary, Semicolon, splitratio, -0.1
-      binde = $Secondary, Apostrophe, splitratio, 0.1
+      binde = $Primary$Secondary, Minus, layoutmsg, splitratio, -0.1
+      binde = $Primary$Secondary, Equal, layoutmsg, splitratio, 0.1
+      binde = $Secondary, Semicolon, layoutmsg, splitratio, -0.1
+      binde = $Secondary, Apostrophe, layoutmsg, splitratio, 0.1
 
       #+! Window States
       # Fullscreen

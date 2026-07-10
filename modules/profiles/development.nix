@@ -15,7 +15,7 @@
       pkg-config
 
       # Language runtimes
-      nodejs_20
+      nodejs
       openjdk
       typescript
 

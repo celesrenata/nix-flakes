@@ -26,6 +26,7 @@
     ./programs/media.nix            # Media applications (OBS, players, editors)
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools
+    ./programs/mcp.nix              # MCP server configuration for Kiro CLI
     
     # Shell Environment Configuration
     ./shell/fish.nix                # Fish shell configuration and integration

@@ -27,17 +27,19 @@
     (import ./dots-hyprland-dp3-filter.nix inputs)
   ];
 
-  # Development tool overlays: Helm, JetBrains, LaTeX, static Nix
+  # Development tool overlays: Helm, JetBrains, LaTeX, static Nix, MCP servers
   development = [
     (import ./helmfile.nix)
     (import ./jetbrains-toolbox.nix)
     (import ./latex.nix)
     (import ./nix-static.nix)
+    (import ./mcp-servers.nix)
   ];
 
-  # Gaming overlays: Proton tweaks
+  # Gaming overlays: Proton tweaks, VR
   gaming = [
     inputs.protontweaks.overlay
+    (import ./wivrn-fix.nix)
   ];
 
   # AI/ML overlays: ComfyUI, vLLM, TensorRT, Ollama (GCC 13), xformers binary, bitsandbytes

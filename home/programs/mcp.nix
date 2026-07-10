@@ -13,7 +13,8 @@ let
     name = "mcp-chat-gpt52";
     runtimeInputs = [ pkgs.coreutils ];
     text = ''
-      export AI_CHAT_KEY="$(cat ${openAISecretPath})"
+      AI_CHAT_KEY="$(cat ${openAISecretPath})"
+      export AI_CHAT_KEY
       export AI_CHAT_NAME="GPT-5.2"
       export AI_CHAT_MODEL="gpt-5.2"
       export AI_CHAT_BASE_URL="https://api.openai.com/v1"
@@ -26,7 +27,8 @@ let
     name = "mcp-chat-codex";
     runtimeInputs = [ pkgs.coreutils ];
     text = ''
-      export AI_CHAT_KEY="$(cat ${openAISecretPath})"
+      AI_CHAT_KEY="$(cat ${openAISecretPath})"
+      export AI_CHAT_KEY
       export AI_CHAT_NAME="GPT-5.5"
       export AI_CHAT_MODEL="gpt-5.5"
       export AI_CHAT_BASE_URL="https://api.openai.com/v1"
@@ -39,7 +41,8 @@ let
     name = "mcp-server-github-wrapped";
     runtimeInputs = [ pkgs.coreutils ];
     text = ''
-      export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat ${githubTokenPath})"
+      GITHUB_PERSONAL_ACCESS_TOKEN="$(cat ${githubTokenPath})"
+      export GITHUB_PERSONAL_ACCESS_TOKEN
       exec ${lib.getExe pkgs.mcp-server-github} "$@"
     '';
   };
