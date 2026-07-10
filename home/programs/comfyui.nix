@@ -33,7 +33,8 @@ let
     if [ ! -f ${comfyHome}/.deps-${comfyui.version} ]; then
       echo "Installing dependencies for ComfyUI ${comfyui.version}..."
       ${uv} pip install --python ${venvDir}/bin/python \
-        -r ${comfyHome}/app/requirements.txt \
+        -r ${comfyHome}/app/requirements.txt
+      ${uv} pip install --python ${venvDir}/bin/python \
         'transformers>=4.50.3,<5' \
         'huggingface-hub>=0.34.0,<1.0'
       ${uv} pip install --python ${venvDir}/bin/python \
