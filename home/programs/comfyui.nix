@@ -34,11 +34,10 @@ let
       echo "Installing dependencies for ComfyUI ${comfyui.version}..."
       ${uv} pip install --python ${venvDir}/bin/python \
         -r ${comfyHome}/app/requirements.txt
-      ${uv} pip install --python ${venvDir}/bin/python --reinstall-package transformers --reinstall-package huggingface-hub \
-        'transformers>=4.50.3,<5' \
-        'huggingface-hub>=0.34.0,<1.0'
-      ${uv} pip install --python ${venvDir}/bin/python --reinstall-package diffusers \
-        'diffusers>=0.33.0,<0.39'
+      ${uv} pip install --python ${venvDir}/bin/python --reinstall-package transformers --reinstall-package huggingface-hub --reinstall-package diffusers \
+        'transformers>=5' \
+        'huggingface-hub>=1.0' \
+        'diffusers==0.39.0'
       ${uv} pip install --python ${venvDir}/bin/python \
         pip pyyaml pycryptodome pyOpenSSL segment-anything dill facexlib \
         piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf \
