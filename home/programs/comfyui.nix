@@ -36,7 +36,9 @@ let
         -r ${comfyHome}/app/requirements.txt \
         pip pyyaml pycryptodome pyOpenSSL segment-anything dill facexlib \
         piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf \
-        llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm natsort kernels
+        llama-cpp-python onnxruntime imageio-ffmpeg opencv-python numba pynvml timm natsort kernels \
+        addict anthropic dynamicprompts evalidate ffmpeg-python PyWavelets torchdiffeq \
+        hydra-core nunchaku openai-agents basicsr cupy-cuda12x
       rm -f ${comfyHome}/.deps-*
       touch ${comfyHome}/.deps-${comfyui.version}
     fi
