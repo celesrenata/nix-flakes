@@ -72,6 +72,15 @@ let
         doCheck = false;
       };
 
+      prometheus-fastapi-instrumentator = pyprev.prometheus-fastapi-instrumentator.overridePythonAttrs (old: rec {
+        version = "8.0.2";
+        src = prev.fetchPypi {
+          pname = "prometheus_fastapi_instrumentator";
+          inherit version;
+          hash = "sha256-PCUudIFRdop679ZoJKBKhwFE9x3kimeu0hF0mpyipUg=";
+        };
+        doCheck = false;
+      });
       mistral-common = pyprev.mistral-common.overridePythonAttrs (old: rec {
         version = "1.11.3";
         src = prev.fetchFromGitHub {
@@ -120,6 +129,7 @@ in {
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
+    dontCheckRuntimeDeps = true;
     pythonRelaxDeps = true;
     pythonRemoveDeps = [
       "opentelemetry-semantic-conventions-ai"
@@ -128,6 +138,10 @@ in {
       "fastsafetensors"
       "nvidia-cutlass-dsl"
       "quack-kernels"
+      "apache-tvm-ffi"
+      "tilelang"
+      "tokenspeed-mla"
+      "humming-kernels"
     ];
     
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [

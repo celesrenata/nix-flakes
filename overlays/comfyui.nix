@@ -1,14 +1,14 @@
 final: prev: {
   comfyui = prev.python3Packages.buildPythonApplication rec {
     pname = "comfyui";
-    version = "0.3.75";
+    version = "0.27.1";
     format = "other";
 
     src = prev.fetchFromGitHub {
       owner = "comfyanonymous";
       repo = "ComfyUI";
       rev = "v${version}";
-      hash = "sha256-T6O6UzcIcBsLWGHmgRnQB/EgsM5Mw2OTmMRq+BBtwsE=";
+      hash = "sha256-Y0Oiweq/Yu0MMXS1VEYxf7m9dZk9ntGvbvOzvME/KEw=";
     };
 
     nativeBuildInputs = [ prev.makeWrapper prev.uv prev.python3Packages.pip ];
