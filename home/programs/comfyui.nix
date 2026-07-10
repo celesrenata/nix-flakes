@@ -34,7 +34,8 @@ let
       echo "Installing dependencies for ComfyUI ${comfyui.version}..."
       ${uv} pip install --python ${venvDir}/bin/python \
         -r ${comfyHome}/app/requirements.txt \
-        'transformers>=4.50.3,<5'
+        'transformers>=4.50.3,<5' \
+        'huggingface-hub>=0.34.0,<1.0'
       ${uv} pip install --python ${venvDir}/bin/python \
         pip pyyaml pycryptodome pyOpenSSL segment-anything dill facexlib \
         piexif insightface deepdiff webcolors ultralytics py-cpuinfo gguf \
