@@ -16,6 +16,7 @@
     (import ./keyboard-visualizer.nix)
     (import ./debugpy.nix)
     (import ./comfyui.nix)
+    (import ./mkvtoolnix.nix)
   ];
 
   # Desktop environment overlays: theming, emoji picker, calculator, DP-3 filter

@@ -103,8 +103,19 @@ let
         };
         propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
           pyprev.loguru
+          pyprev.psutil
         ];
         doCheck = false;
+      });
+
+      flashinfer = pyprev.flashinfer.overridePythonAttrs (old: {
+        # flashinfer 0.6.4 added requests as a runtime dep but nixpkgs missed it
+        dependencies = (old.dependencies or []) ++ [ pyprev.requests ];
+      });
+
+      outlines = pyprev.outlines.overridePythonAttrs (old: {
+        # outlines 1.2.12 added pillow as a runtime dep but nixpkgs missed it
+        dependencies = (old.dependencies or []) ++ [ pyprev.pillow ];
       });
       
     };
@@ -126,6 +137,8 @@ in {
       # Remove setuptools-rust from pyproject.toml build-system requires
       # (we provide it via nativeBuildInputs instead)
       sed -i '/setuptools-rust/d' pyproject.toml
+      # Relax setuptools version upper bound (nixpkgs has 82.x, vllm wants <81)
+      sed -i 's/"setuptools>=77.0.3,<81.0.0"/"setuptools>=77.0.3"/' pyproject.toml
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;

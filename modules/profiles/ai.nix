@@ -17,12 +17,18 @@
       host = "0.0.0.0";
       port = 11434;
       models = config.my.paths.ollamaModels;
+      syncModels = false;
+      loadModels = [
+        "nutboy02/Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-uncenfull:Q2_K_MTX"
+      ];
       environmentVariables = {
-        OLLAMA_NUM_PARALLEL = "1";
-        OLLAMA_MAX_LOADED_MODELS = "1";
         OLLAMA_FLASH_ATTENTION = "1";
         OLLAMA_KV_CACHE_TYPE = "q4_0";
-        OLLAMA_MAX_VRAM = "0.9";
+        OLLAMA_NUM_PARALLEL = "4";
+        OLLAMA_MAX_LOADED_MODELS = "1";
+        OLLAMA_CONTEXT_LENGTH = "262144";
+        OLLAMA_KEEP_ALIVE = "-1";
+        OLLAMA_MAX_QUEUE = "32";
       };
     };
 
@@ -74,6 +80,117 @@
           fi
         '');
       };
+    };
+
+    # ── Qwen 3.6 Opus 4×256K alias (Modelfile + oneshot) ────────────────
+    systemd.services.ollama-qwen36-opus-profile =
+      let
+        ollamaExe = lib.getExe config.services.ollama.package;
+        qwenModelfile = pkgs.writeText "qwen36-opus-4x-256k.Modelfile" ''
+          FROM nutboy02/Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-uncenfull:Q2_K_MTX
+
+          PARAMETER num_ctx 262144
+          PARAMETER num_batch 64
+          PARAMETER num_predict 8192
+        '';
+      in {
+        description = "Create the Qwen 3.6 Opus 4×256K Ollama profile";
+        wantedBy = [ "multi-user.target" ];
+        wants = [ "network-online.target" ];
+        after = [
+          "network-online.target"
+          "ollama.service"
+          "ollama-model-loader.service"
+        ];
+        requires = [ "ollama.service" ];
+
+        environment = {
+          OLLAMA_HOST = "${config.services.ollama.host}:${toString config.services.ollama.port}";
+          OLLAMA_MODELS = config.my.paths.ollamaModels;
+        };
+
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          User = "ollama";
+          Group = "ollama";
+        };
+
+        script = ''
+          set -euo pipefail
+
+          # Wait for Ollama API to be ready (up to 120s)
+          for attempt in $(seq 1 60); do
+            if ${pkgs.curl}/bin/curl \
+              --fail \
+              --silent \
+              "http://${config.services.ollama.host}:${toString config.services.ollama.port}/api/version" \
+              >/dev/null; then
+              break
+            fi
+
+            if [ "$attempt" -eq 60 ]; then
+              echo "ERROR: Ollama did not become ready within 120s"
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          # Verify source model is present
+          if ! ${ollamaExe} show \
+            "nutboy02/Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-uncenfull:Q2_K_MTX" \
+            >/dev/null 2>&1; then
+            echo "ERROR: Source model Q2_K_MTX not found. Waiting for model-loader..."
+            exit 1
+          fi
+
+          # Create or refresh the alias
+          echo "Creating qwen36-opus-4x-256k alias..."
+          ${ollamaExe} create \
+            qwen36-opus-4x-256k \
+            -f ${qwenModelfile}
+
+          echo "Alias qwen36-opus-4x-256k created successfully."
+        '';
+      };
+
+    # ── Preload qwen36-opus-4x-256k into VRAM ───────────────────────────
+    systemd.services.ollama-preload-qwen36-opus = {
+      description = "Preload qwen36-opus-4x-256k into GPU VRAM";
+      wantedBy = [ "multi-user.target" ];
+      wants = [ "network-online.target" ];
+      after = [
+        "network-online.target"
+        "ollama.service"
+        "ollama-qwen36-opus-profile.service"
+      ];
+      requires = [ "ollama.service" "ollama-qwen36-opus-profile.service" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        User = "ollama";
+        Group = "ollama";
+      };
+
+      script = ''
+        set -euo pipefail
+
+        # Send a minimal request to load the model with keep_alive=-1
+        echo "Preloading qwen36-opus-4x-256k into VRAM..."
+        ${pkgs.curl}/bin/curl \
+          --silent \
+          --show-error \
+          --fail \
+          --max-time 300 \
+          "http://${config.services.ollama.host}:${toString config.services.ollama.port}/api/chat" \
+          --header 'Content-Type: application/json' \
+          --data '{"model":"qwen36-opus-4x-256k","messages":[{"role":"user","content":"hi"}],"stream":false,"keep_alive":-1}' \
+          >/dev/null
+
+        echo "Model preloaded and pinned in VRAM (keep_alive=-1)."
+      '';
     };
 
     # ── vLLM user / group ────────────────────────────────────────────────
