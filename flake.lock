@@ -125,15 +125,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1778284830,
-        "narHash": "sha256-flU0MUfdiUJfiircDm+XMS0/9OdxbzOjiWZJNc/Zv/Q=",
+        "lastModified": 1784575712,
+        "narHash": "sha256-oJ5mdVualoqfJra+dyXg5SmUl0mNoty4qjhb5A5XZJ0=",
         "owner": "celesrenata",
         "repo": "end-4-flakes",
-        "rev": "c3b892a5c8792e955a84ef105c93643b19a4b795",
+        "rev": "f3f76246f97a1343eaad4f4598ba99d26b758be6",
         "type": "github"
       },
       "original": {
         "owner": "celesrenata",
+        "ref": "upstream-sync-2026",
         "repo": "end-4-flakes",
         "type": "github"
       }
@@ -141,16 +142,16 @@
     "dots-hyprland-source": {
       "flake": false,
       "locked": {
-        "lastModified": 1777702361,
-        "narHash": "sha256-NGGdhOVcFL4tAUOnE0LeNrrA3B8mRkFX34vrJlaEODo=",
+        "lastModified": 1784534367,
+        "narHash": "sha256-fvQhh3VyB4Px0N26vqYfpFRYCaMQnYG33lSEvxICOdE=",
         "owner": "celesrenata",
         "repo": "dots-hyprland",
-        "rev": "d3c09bf1088cdc964e29df03f58b75f0b037591b",
+        "rev": "2f5e4ac3fc3af02e2ead129b80b28176346cfcb2",
         "type": "github"
       },
       "original": {
         "owner": "celesrenata",
-        "ref": "quickshell-locked",
+        "ref": "upstream-sync-2026",
         "repo": "dots-hyprland",
         "type": "github"
       }
