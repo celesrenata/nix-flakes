@@ -59,6 +59,7 @@
 
     # Other development tools
     graphviz
+    inputs.mermaid-rs-renderer.packages.${pkgs.stdenv.hostPlatform.system}.default  # mmdr - fast mermaid renderer
 
     # Python environment with development packages
     pyenv.out

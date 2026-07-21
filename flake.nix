@@ -36,10 +36,14 @@
 
     # Window managers and desktop environments
     niri.url = "github:sodiboo/niri-flake";                       # Niri wayland compositor (experimental)
-    dots-hyprland.url = "github:celesrenata/end-4-flakes";        # End-4's Hyprland configuration
+    dots-hyprland.url = "github:celesrenata/end-4-flakes/upstream-sync-2026";
     dots-hyprland.inputs.nixpkgs.follows = "nixpkgs";
-    dots-hyprland-source.url = "github:celesrenata/dots-hyprland/quickshell-locked";
+    dots-hyprland-source.url = "github:celesrenata/dots-hyprland/upstream-sync-2026";
     dots-hyprland-source.flake = false;                           # Source files only, not a flake
+
+    # Mermaid diagram renderer (pure Rust, no Chromium)
+    mermaid-rs-renderer.url = "github:1jehuang/mermaid-rs-renderer";
+    mermaid-rs-renderer.inputs.nixpkgs.follows = "nixpkgs";
 
     # Graphics and OpenGL support
     nix-gl-host.url = "github:numtide/nix-gl-host";               # OpenGL support for non-NixOS
@@ -67,10 +71,14 @@
     # Keyboard remapping - Mac-style keybindings
     toshy.url = "github:celesrenata/toshy/flake-rewrite";
     toshy.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Desktop intelligence MCP server (Hyprland + Quickshell + system tools)
+    ii-desktop-mcp.url = "github:celesrenata/hyprmcp/ii-desktop-mcp";
+    ii-desktop-mcp.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, toshy, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, toshy, ii-desktop-mcp, ... }:
   let
     lib = nixpkgs.lib;
 
@@ -202,6 +210,7 @@
           ./esnixi/virtualisation.nix
           ./esnixi/lvra.nix
           ./esnixi/vllm-proxy.nix
+          ./esnixi/lan-mouse.nix
           #./esnixi/exo.nix                            # Disabled: requires exo flake input
           #./esnixi/dcgm-exporter.nix                  # Disabled: dcgm-exporter not in nixpkgs
 
@@ -233,6 +242,7 @@
         homeImports = [
           ./home/default.nix
           ./esnixi/hyprland.nix
+          ii-desktop-mcp.homeManagerModules.default
         ];
       };
     };
