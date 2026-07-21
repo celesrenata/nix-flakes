@@ -69,8 +69,6 @@
     cline-cli.inputs.nixpkgs.follows = "nixpkgs";
 
     # Keyboard remapping - Mac-style keybindings
-    toshy.url = "github:celesrenata/toshy/flake-rewrite";
-    toshy.inputs.nixpkgs.follows = "nixpkgs";
 
     # Desktop intelligence MCP server (Hyprland + Quickshell + system tools)
     ii-desktop-mcp.url = "github:celesrenata/hyprmcp/ii-desktop-mcp";
@@ -78,7 +76,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, toshy, ii-desktop-mcp, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ii-desktop-mcp, ... }:
   let
     lib = nixpkgs.lib;
 
@@ -229,15 +227,6 @@
           hyte-touch-infinite-flakes.nixosModules.hyte-touch
           protontweaks.nixosModules.protontweaks
           sops-nix.nixosModules.sops
-          # Toshy - Mac-style keybindings for Linux
-          toshy.nixosModules.toshy
-          {
-            services.toshy = {
-              enable = true;
-              user = "celes";
-              gui.enable = true;
-            };
-          }
         ];
         homeImports = [
           ./home/default.nix

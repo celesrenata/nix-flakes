@@ -91,6 +91,20 @@ let
         args = [ "mcp-server-fetch" ];
         env = { };
       };
+
+      ii-desktop = {
+        command = lib.getExe inputs.ii-desktop-mcp.packages.${pkgs.system}.default;
+        args = [ ];
+        env = {
+          HYPRLAND_INSTANCE_SIGNATURE = "$(hyprctl instances -j | jq -r '.[0].instance')";
+        };
+        autoApprove = [
+          "config_read" "audio_status" "network_status" "network_wifi_list"
+          "systemd_status" "systemd_logs" "clipboard_list" "apps_search"
+          "diagnostic_bundle" "shell_logs" "system_info" "list_monitors"
+          "list_workspaces" "list_clients" "get_active_window" "screenshot"
+        ];
+      };
     };
   };
 

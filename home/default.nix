@@ -27,6 +27,7 @@
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools
     ./programs/mcp.nix              # MCP server configuration for Kiro CLI
+    ./programs/ii-desktop-mcp.nix   # Desktop intelligence MCP service
     
     # Shell Environment Configuration
     ./shell/fish.nix                # Fish shell configuration and integration

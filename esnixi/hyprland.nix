@@ -407,7 +407,6 @@
       exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP # Some fix idk
       exec-once = hyprpm list &>/dev/null && hyprpm reload
       exec-once = easyeffects --gapplication-service
-      exec-once = sleep 2 && systemctl --user restart toshy-config toshy-session-monitor toshy-wlroots-dbus toshy-tray
     '';
   };
 
