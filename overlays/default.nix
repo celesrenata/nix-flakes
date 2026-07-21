@@ -35,6 +35,7 @@
     (import ./latex.nix)
     (import ./nix-static.nix)
     (import ./mcp-servers.nix)
+    (import ./inline-snapshot-fix.nix)
   ];
 
   # Gaming overlays: Proton tweaks, VR
