@@ -125,11 +125,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784631809,
-        "narHash": "sha256-yP9gwK9oJrBcyaSG6G+yoRIRmQGfgdFwQBXs5/W2MY0=",
+        "lastModified": 1784632115,
+        "narHash": "sha256-+UAieMXLFPg6iiOD8I6BQuHshH7eRjW/VynuXIu4HGo=",
         "owner": "celesrenata",
         "repo": "end-4-flakes",
-        "rev": "fda7a5001fdbe7b418087339427c18d003cc7e76",
+        "rev": "638c54e112285935fdbd73eca7f0cca1e27ca488",
         "type": "github"
       },
       "original": {
