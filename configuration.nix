@@ -235,8 +235,8 @@
           # Mac-style: left ctrl becomes super, super becomes ctrl
           control = "layer(meta)";
           meta = "layer(control)";
-          # Left Alt: tap = F20 (dictation trigger), hold = alt
-          leftalt = "overload(alt, f20)";
+          # Left Alt: tap = ScrollLock (dictation trigger), hold = alt
+          leftalt = "overload(alt, scrolllock)";
         };
       };
     };
