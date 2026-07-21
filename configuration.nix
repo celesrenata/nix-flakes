@@ -223,25 +223,30 @@
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
-  # Disabled — Toshy handles key remapping now
-  #   # services.keyd = {
-  #     enable = true;
-  #     keyboards.mac.settings = {
-  #       main = {
-  #         control = "layer(meta)";
-  #         meta = "layer(control)";
-  #         rightcontrol = "layer(meta)";
-  #       };
-  #       meta = {
-  #         left =  "control-left";
-  #         right = "control-right";
-  #         space = "control-space";
-  #       };
-  #     };
-  #     keyboards.mac.ids = [
-  #       "*"
-  #     ];
-  # };
+
+  # keyd: kernel-level key remapping (replaces Toshy)
+  # Mac-style Ctrl↔Super swap + Right Alt double-tap → F20 for dictation
+  services.keyd = {
+    enable = true;
+    keyboards.mac = {
+      ids = [ "*" ];
+      settings = {
+        main = {
+          # Mac-style: left ctrl becomes super, super becomes ctrl
+          control = "layer(meta)";
+          meta = "layer(control)";
+          # Right Alt: hold = alt, double-tap = F20 (dictation trigger)
+          rightalt = "overloadt2(alt, f20, 400)";
+        };
+        meta = {
+          # Arrow key shortcuts under meta layer
+          left = "control-left";
+          right = "control-right";
+          space = "control-space";
+        };
+      };
+    };
+  };
 
   # Gestures with custom configuration
   services.touchegg.enable = true;
