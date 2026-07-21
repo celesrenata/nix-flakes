@@ -225,7 +225,7 @@
   services.libinput.enable = true;
 
   # keyd: kernel-level key remapping (replaces Toshy)
-  # Mac-style Ctrl↔Super swap + Right Alt double-tap → F20 for dictation
+  # Mac-style Ctrl↔Super swap + Right Alt tap → F20 for dictation
   services.keyd = {
     enable = true;
     keyboards.mac = {
@@ -235,14 +235,8 @@
           # Mac-style: left ctrl becomes super, super becomes ctrl
           control = "layer(meta)";
           meta = "layer(control)";
-          # Right Alt: hold = alt, double-tap = F20 (dictation trigger)
-          rightalt = "overloadt2(alt, f20, 400)";
-        };
-        meta = {
-          # Arrow key shortcuts under meta layer
-          left = "control-left";
-          right = "control-right";
-          space = "control-space";
+          # Right Alt: tap = F20 (dictation trigger), hold = alt
+          rightalt = "overload(alt, f20)";
         };
       };
     };
