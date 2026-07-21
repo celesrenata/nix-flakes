@@ -125,11 +125,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784636488,
-        "narHash": "sha256-RtrG/pGSNZ03OvQTMUrhitxIjtvzOAKeKPfZ04dxiDc=",
+        "lastModified": 1784637038,
+        "narHash": "sha256-gNyFtEMkLJ6ZGq97zPeHzE4VH+mNkEgf9VoK46uGYUQ=",
         "owner": "celesrenata",
         "repo": "end-4-flakes",
-        "rev": "516b342dc08d37a121c375b8764261bdc63452c0",
+        "rev": "e6f69ef507162ad7eb3e56cf2fbeabdfdba50b51",
         "type": "github"
       },
       "original": {
@@ -142,11 +142,11 @@
     "dots-hyprland-source": {
       "flake": false,
       "locked": {
-        "lastModified": 1784636497,
-        "narHash": "sha256-ArM5iYHDDzKAQ3wdux2EdZE4m5RXjRYlevQx2XLrqUk=",
+        "lastModified": 1784637047,
+        "narHash": "sha256-AMoPC5fI0rJOBn+4wKx8S5+JugCyTLB/X8EZU6SUWu0=",
         "owner": "celesrenata",
         "repo": "dots-hyprland",
-        "rev": "839e354aa8ea003ac9dc0d5e14923eccfd1c1be0",
+        "rev": "8672aaee0bb240196be6029597b83e3e6b344896",
         "type": "github"
       },
       "original": {
