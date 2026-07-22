@@ -225,7 +225,7 @@
   services.libinput.enable = true;
 
   # keyd: kernel-level key remapping (replaces Toshy)
-  # Mac-style Ctrl↔Super swap + Right Alt tap → F20 for dictation
+  # Mac-style Ctrl↔Super swap + dictation triggers
   services.keyd = {
     enable = true;
     keyboards.mac = {
@@ -234,9 +234,14 @@
         main = {
           # Mac-style: left ctrl becomes super, super becomes ctrl
           control = "layer(meta)";
-          meta = "layer(control)";
+          meta = "layer(control_override)";
           # Left Alt: tap = dispatch dictation via hyprctl, hold = alt
           leftalt = "overload(alt, command(/etc/keyd/dictation-dispatch.sh))";
+        };
+        # Custom layer for physical Super key (remapped to Ctrl behavior)
+        # Intercepts Super+H (Logi Dictation button) → F20 for Quickshell
+        "control_override:C" = {
+          h = "f20";
         };
       };
     };
