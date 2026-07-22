@@ -30,7 +30,7 @@ in
     # Start before keyd so we grab the raw devices first
     before = [ "keyd.service" ];
     wants = [ "systemd-udev-settle.service" ];
-    after = [ "systemd-udev-settle.service" ];
+    after = [ "systemd-udev-settle.service" "systemd-modules-load.service" ];
 
     serviceConfig = {
       Type = "simple";
@@ -38,21 +38,12 @@ in
       Restart = "always";
       RestartSec = 2;
       
-      # Run as root to access input devices
+      # Run as root to access input devices and uinput
       User = "root";
       
-      # Hardening
-      ProtectHome = true;
-      ProtectSystem = "strict";
+      # Minimal hardening — needs full device access
       PrivateTmp = true;
-      NoNewPrivileges = true;
-      
-      # Need access to input devices and uinput
-      DeviceAllow = [
-        "/dev/input/event* rw"
-        "/dev/uinput rw"
-      ];
-      SupplementaryGroups = [ "input" ];
+      ProtectHome = true;
     };
   };
 }
