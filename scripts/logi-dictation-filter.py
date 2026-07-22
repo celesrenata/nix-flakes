@@ -169,6 +169,13 @@ class DictationFilter:
     async def run(self):
         """Main loop."""
         self.loop = asyncio.get_event_loop()
+        
+        # Create virtual device FIRST, then wait for Hyprland to discover it
+        print(f"Created virtual device: {self.uinput.device.path}", flush=True)
+        print("Waiting 2s for Hyprland to discover new device...", flush=True)
+        await asyncio.sleep(2)
+        
+        # NOW grab the source — Hyprland should have the new device ready
         self.grab()
         print(f"Filter active: {self.device.path} -> {self.uinput.device.path}",
               flush=True)
