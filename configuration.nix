@@ -13,7 +13,7 @@
       #"${pkgs}/nixos/modules/programs/alvr.nix"
       # Hardware-configuration.nix is imported per-host in flake.nix
       inputs.dots-hyprland.nixosModules.default  # UPower and other system services
-      ./logi-dictation-filter.nix  # Logitech Dictation button firmware macro → F20
+      # ./logi-dictation-filter.nix  # Disabled: can't grab keyd output without losing keyboard
     ];
 
   environment.localBinInPath = true;
