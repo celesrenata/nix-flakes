@@ -241,6 +241,13 @@
           # Logi Dictation button — dispatch directly (bypasses layer processing)
           micmute = "command(/etc/keyd/dictation-dispatch.sh)";
         };
+        # Override micmute in control layer too (Logi sends it while Meta is held)
+        "control:C" = {
+          micmute = "command(/etc/keyd/dictation-dispatch.sh)";
+        };
+        "meta:M" = {
+          micmute = "command(/etc/keyd/dictation-dispatch.sh)";
+        };
       };
     };
   };
