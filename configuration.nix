@@ -234,14 +234,9 @@
         main = {
           # Mac-style: left ctrl becomes super, super becomes ctrl
           control = "layer(meta)";
-          meta = "layer(control_override)";
+          meta = "layer(control)";
           # Left Alt: tap = dispatch dictation via hyprctl, hold = alt
           leftalt = "overload(alt, command(/etc/keyd/dictation-dispatch.sh))";
-        };
-        # Custom layer for physical Super key (remapped to Ctrl behavior)
-        # Intercepts Super+H (Logi Dictation button) → F20 for Quickshell
-        "control_override:C" = {
-          h = "f20";
         };
       };
     };
