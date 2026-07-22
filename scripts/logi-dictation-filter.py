@@ -18,9 +18,9 @@ from evdev import InputDevice, UInput, ecodes, InputEvent, categorize
 # Sequence timeout in seconds — Logi firmware macro is very fast (~5ms between events)
 SEQUENCE_TIMEOUT = 0.10  # 100ms is generous
 
-# The raw sequence the Logi Dictation button sends (before keyd):
-# KEY_LEFTMETA down → KEY_LEFTMETA up → KEY_MICMUTE down → KEY_MICMUTE up → KEY_LEFTMETA down → KEY_LEFTMETA up
-META_KEY = ecodes.KEY_LEFTMETA
+# The post-keyd sequence (after Meta→Control swap):
+# KEY_LEFTCTRL down → KEY_LEFTCTRL up → KEY_MICMUTE down → KEY_MICMUTE up → KEY_LEFTCTRL down → KEY_LEFTCTRL up
+META_KEY = ecodes.KEY_LEFTCTRL  # After keyd swap, physical Meta becomes Control
 MICMUTE_KEY = 248  # KEY_MICMUTE
 OUTPUT_KEY = ecodes.KEY_F20
 
@@ -34,9 +34,8 @@ GOT_META2_DOWN = 5
 
 
 class DictationFilter:
-    def __init__(self, kbd_path, consumer_path):
-        self.kbd_dev = InputDevice(kbd_path)
-        self.consumer_dev = InputDevice(consumer_path)
+    def __init__(self, device_path):
+        self.device = InputDevice(device_path)
         
         # Create virtual device that can emit all keys
         self.uinput = UInput(name="Logitech Dictation Filtered",
@@ -47,9 +46,8 @@ class DictationFilter:
         self.timeout_task = None
         
     def grab_devices(self):
-        """Grab both devices so raw events don't reach other consumers."""
-        self.kbd_dev.grab()
-        self.consumer_dev.grab()
+        """Grab the device so raw events don't reach other consumers."""
+        self.device.grab()
         
     def flush_buffer(self):
         """Replay all buffered events through the virtual device."""
@@ -153,39 +151,38 @@ class DictationFilter:
                 self.buffer.append(ev)
                 self.flush_buffer()
 
-    async def read_device(self, device):
-        """Read events from a device and process them."""
-        async for ev in device.async_read_loop():
-            self.process_event(ev)
-            
     async def run(self):
-        """Main event loop — read from both devices concurrently."""
+        """Main event loop — read from the device."""
         self.grab_devices()
-        print(f"Grabbed devices, filter active. Virtual device: {self.uinput.device.path}", 
+        print(f"Grabbed keyd virtual keyboard, filter active. Virtual device: {self.uinput.device.path}", 
               flush=True)
         
-        await asyncio.gather(
-            self.read_device(self.kbd_dev),
-            self.read_device(self.consumer_dev),
-        )
+        async for ev in self.device.async_read_loop():
+            self.process_event(ev)
+
+
+def find_keyd_virtual_keyboard():
+    """Find keyd's virtual keyboard device by name."""
+    import glob
+    for path in sorted(glob.glob("/dev/input/event*")):
+        try:
+            dev = InputDevice(path)
+            if dev.name == "keyd virtual keyboard":
+                return path
+        except (PermissionError, OSError):
+            continue
+    return None
 
 
 def main():
-    if len(sys.argv) < 3:
-        print(f"Usage: {sys.argv[0]} <kbd_device> <consumer_device>")
-        print(f"  e.g. {sys.argv[0]} /dev/input/event0 /dev/input/event2")
+    device_path = find_keyd_virtual_keyboard()
+    if not device_path:
+        print("Error: could not find 'keyd virtual keyboard' device", file=sys.stderr)
         sys.exit(1)
-        
-    kbd_path = sys.argv[1]
-    consumer_path = sys.argv[2]
     
-    # Verify devices exist
-    for path in [kbd_path, consumer_path]:
-        if not os.path.exists(path):
-            print(f"Error: device {path} not found", file=sys.stderr)
-            sys.exit(1)
+    print(f"Found keyd virtual keyboard at {device_path}", flush=True)
     
-    filt = DictationFilter(kbd_path, consumer_path)
+    filt = DictationFilter(device_path)
     
     try:
         asyncio.run(filt.run())
@@ -193,8 +190,7 @@ def main():
         pass
     finally:
         try:
-            filt.kbd_dev.ungrab()
-            filt.consumer_dev.ungrab()
+            filt.device.ungrab()
         except Exception:
             pass
 
