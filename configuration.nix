@@ -13,6 +13,7 @@
       #"${pkgs}/nixos/modules/programs/alvr.nix"
       # Hardware-configuration.nix is imported per-host in flake.nix
       inputs.dots-hyprland.nixosModules.default  # UPower and other system services
+      ./logi-dictation-filter.nix  # Logitech Dictation button firmware macro → F20
     ];
 
   environment.localBinInPath = true;
@@ -237,8 +238,6 @@
           meta = "layer(control)";
           # Left Alt: tap = dispatch dictation via hyprctl, hold = alt
           leftalt = "overload(alt, command(/etc/keyd/dictation-dispatch.sh))";
-          # Logi Dictation button sends micmute — remap to F20 (swallows the raw event)
-          micmute = "f20";
         };
       };
     };
