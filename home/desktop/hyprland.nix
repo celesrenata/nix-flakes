@@ -155,6 +155,10 @@
       $Tertiary = Shift
       $Alternate = Alt
 
+      #+! Dictation
+      bind = , XF86AudioMicMute, global, quickshell:dictationTap # Logi Dictation button
+      bind = , F20, global, quickshell:dictationTap # Alt trigger (keyd leftalt tap)
+
       #+! System Controls
       # Volume
       bindl = ,XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
