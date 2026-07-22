@@ -156,7 +156,8 @@
       $Alternate = Alt
 
       #+! Dictation
-      bind = , XF86AudioMicMute, global, quickshell:dictationTap # Logi Dictation button
+      bind = Control, H, global, quickshell:dictationTap # Logi Dictation button (firmware sends Win+H → keyd → Ctrl+H)
+      bind = , XF86AudioMicMute, global, quickshell:dictationTap # Logi Dictation button (consumer control)
       bind = , F20, global, quickshell:dictationTap # Alt trigger (keyd leftalt tap)
 
       #+! System Controls
