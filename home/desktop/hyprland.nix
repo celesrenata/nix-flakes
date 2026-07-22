@@ -178,7 +178,7 @@
       # Discord
       bind = $Primary$Secondary, I, exec, discord 
       # Foot
-      bind = $Primary$Secondary, H, exec, foot
+      bind = $Primary$Secondary, G, exec, foot
       bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
       # Finders
       bind = $Primary$Secondary, J, exec, thunar
