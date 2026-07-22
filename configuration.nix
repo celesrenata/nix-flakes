@@ -236,10 +236,37 @@
           control = "layer(meta)";
           meta = "layer(control)";
           # Left Alt: tap = dispatch dictation via hyprctl, hold = alt
-          leftalt = "overload(alt, command(hyprctl dispatch global quickshell:dictationTap))";
+          leftalt = "overload(alt, command(/etc/keyd/dictation-dispatch.sh))";
         };
       };
     };
+  };
+
+  # Keyd dictation dispatch wrapper script
+  # Runs as root from keyd - resolves Hyprland socket and dispatches with logging
+  environment.etc."keyd/dictation-dispatch.sh" = {
+    mode = "0755";
+    text = ''
+      #!/bin/bash
+      LOG_TAG="keyd-dictation"
+      TIMESTAMP=$(date +%s.%N)
+      HYPR_SIG=$(find /run/user/*/hypr -maxdepth 1 -name ".socket.sock" 2>/dev/null | head -1 | xargs dirname | xargs basename)
+      RUNTIME_DIR=$(find /run/user -maxdepth 1 -type d -name "[0-9]*" 2>/dev/null | head -1)
+      if [ -z "$HYPR_SIG" ] || [ -z "$RUNTIME_DIR" ]; then
+        logger -t "$LOG_TAG" "FAIL ts=$TIMESTAMP reason=no_hyprland_socket"
+        exit 1
+      fi
+      export HYPRLAND_INSTANCE_SIGNATURE="$HYPR_SIG"
+      export XDG_RUNTIME_DIR="$RUNTIME_DIR"
+      logger -t "$LOG_TAG" "DISPATCH ts=$TIMESTAMP sig=$HYPR_SIG"
+      RESULT=$("${pkgs.hyprland}/bin/hyprctl" dispatch global quickshell:dictationTap 2>&1)
+      EXIT_CODE=$?
+      if [ $EXIT_CODE -eq 0 ]; then
+        logger -t "$LOG_TAG" "OK ts=$TIMESTAMP result=$RESULT"
+      else
+        logger -t "$LOG_TAG" "FAIL ts=$TIMESTAMP exit=$EXIT_CODE result=$RESULT"
+      fi
+    '';
   };
 
   # Gestures with custom configuration
