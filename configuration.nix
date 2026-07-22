@@ -235,8 +235,8 @@
           # Mac-style: left ctrl becomes super, super becomes ctrl
           control = "layer(meta)";
           meta = "layer(control)";
-          # Left Alt: tap = ScrollLock (dictation trigger), hold = alt
-          leftalt = "overload(alt, scrolllock)";
+          # Left Alt: tap = dispatch dictation via hyprctl, hold = alt
+          leftalt = "overload(alt, command(hyprctl dispatch global quickshell:dictationTap))";
         };
       };
     };
