@@ -238,6 +238,8 @@
           meta = "layer(control)";
           # Left Alt: tap = dispatch dictation via hyprctl, hold = alt
           leftalt = "overload(alt, command(/etc/keyd/dictation-dispatch.sh))";
+          # Logi Dictation button — remap before layer processing
+          micmute = "f20";
         };
       };
     };
