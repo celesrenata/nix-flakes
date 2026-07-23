@@ -125,8 +125,8 @@
         ]
       },
       "locked": {
-        "lastModified": 1784720394,
-        "narHash": "sha256-esMQ2iUl5Onfd1N/2icwaDuY1XisCGLZAp4QW1tFeEM=",
+        "lastModified": 1784765603,
+        "narHash": "sha256-c/fVefEIv+DQEsDtkcewsPphYefdJen/ytsfY3jgbaE=",
         "path": "/home/celes/sources/celesrenata/end-4-flakes",
         "type": "path"
       },
@@ -138,8 +138,8 @@
     "dots-hyprland-source": {
       "flake": false,
       "locked": {
-        "lastModified": 1784637049,
-        "narHash": "sha256-O9v8Q5BTlclvqNLYt+6hEIAPyerc1ej/TmwlrKZSJn8=",
+        "lastModified": 1784757085,
+        "narHash": "sha256-rO2gbstHQHMdi59ZjeLaVeRN6XAvimDUIbT0JIEwT24=",
         "path": "/home/celes/sources/celesrenata/dots-hyprland",
         "type": "path"
       },
@@ -670,11 +670,11 @@
         "quickshell": "quickshell"
       },
       "locked": {
-        "lastModified": 1777074446,
-        "narHash": "sha256-eiN7QkX4uYIjjpdKF6qRu8n4T2UelKKIrCyQfSQCo98=",
+        "lastModified": 1784757967,
+        "narHash": "sha256-RuzEEkoZXqdYjMgzg4vv8eKTqWBxvMN41deXPL8/25U=",
         "owner": "celesrenata",
         "repo": "hyte-touch-infinite-flakes",
-        "rev": "5af71b427f344ef850f16ba90efea2922cce427b",
+        "rev": "fc0f1964a205212304d061da08f1829a7fafebdf",
         "type": "github"
       },
       "original": {

@@ -244,6 +244,8 @@
         # Override micmute in control layer too (Logi sends it while Meta is held)
         "control:C" = {
           micmute = "command(/etc/keyd/dictation-dispatch.sh)";
+          # Logi dictation button sends Meta+H → enters control layer → intercept H
+          h = "command(/etc/keyd/dictation-dispatch.sh)";
         };
         "meta:M" = {
           micmute = "command(/etc/keyd/dictation-dispatch.sh)";

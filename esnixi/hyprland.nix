@@ -74,6 +74,9 @@
       }
       windowrule = decorate on, match:xwayland true
       
+      # Voice dictation is handled via Hyprland keybind (keyd outputs Ctrl+H for Logi button)
+      bind = CTRL, H, global, quickshell:dictationTap
+
       # Source external custom configuration
       source = ~/.config/hypr/custom.conf
       
@@ -239,7 +242,7 @@
       # Discord
       bind = $Primary$Secondary, I, exec, discord 
       # Foot
-      bind = $Primary$Secondary, H, exec, foot
+      bind = $Primary$Secondary, G, exec, foot
       bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
       # Finders
       bind = $Primary$Secondary, J, exec, thunar

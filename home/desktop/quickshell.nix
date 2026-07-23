@@ -24,52 +24,10 @@
     };
   };
 
-  # Generate env.sh and deploy quickshell fixes
-  home.activation.generateQuickshellEnv = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    # Ensure dots-hyprland setup marker exists so quickshell-startup skips its broken setup check
+  # Ensure dots-hyprland setup marker exists so quickshell-startup skips its broken setup check
+  home.activation.ensureDotsSetupMarker = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p $HOME/.cache/dots-hyprland
     test -f $HOME/.cache/dots-hyprland/setup-complete || echo "$(date)" > $HOME/.cache/dots-hyprland/setup-complete
-
-    mkdir -p $HOME/.config/quickshell
-    cat > $HOME/.config/quickshell/env.sh << 'EOF'
-export LD_LIBRARY_PATH="${lib.makeLibraryPath [
-  pkgs.gcc.cc.lib
-  pkgs.glibc
-  pkgs.zlib
-  pkgs.libffi
-  pkgs.openssl
-  pkgs.bzip2
-  pkgs.xz
-  pkgs.ncurses
-  pkgs.readline
-  pkgs.sqlite
-]}"
-EOF
-    
-    # Deploy quickshell scripts and fixes if quickshell config exists
-    if [ -d "$HOME/.config/quickshell/ii" ]; then
-      echo "Deploying quickshell scripts..."
-      
-      # Copy color scripts
-      mkdir -p $HOME/.config/quickshell/ii/scripts/colors
-      cp ${./quickshell-scripts}/*.sh $HOME/.config/quickshell/ii/scripts/colors/
-      cp ${./quickshell-scripts}/*.py $HOME/.config/quickshell/ii/scripts/colors/
-      chmod +x $HOME/.config/quickshell/ii/scripts/colors/*.sh
-      chmod +x $HOME/.config/quickshell/ii/scripts/colors/*.py
-      
-      # Copy terminal sequences
-      mkdir -p $HOME/.config/quickshell/ii/scripts/colors/terminal
-      cp -r ${./quickshell-scripts/terminal}/* $HOME/.config/quickshell/ii/scripts/colors/terminal/
-      
-      # Copy MaterialThemeLoader
-      cp ${./quickshell-scripts}/MaterialThemeLoader.qml $HOME/.config/quickshell/ii/services/
-      
-      # Update Directories.qml to use switchwall-wrapper.sh
-      if [ -f "$HOME/.config/quickshell/ii/modules/common/Directories.qml" ]; then
-        ${pkgs.gnused}/bin/sed -i 's|switchwall\.sh|switchwall-wrapper.sh|g' \
-          $HOME/.config/quickshell/ii/modules/common/Directories.qml
-      fi
-    fi
   '';
 
   # Temporarily disabled due to build issues with Qt6::WaylandClientPrivate
