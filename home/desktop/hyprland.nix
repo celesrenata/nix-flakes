@@ -341,4 +341,36 @@
   # MacBook T2 specific GPU card configuration files
   home.file.".config/hypr/card-intel".text = "/dev/dri/card1";
   home.file.".config/hypr/card-amd".text = "/dev/dri/card2";
+
+  # Deploy processed keybinds.conf for the cheatsheet to read
+  home.file.".config/hypr/hyprland/keybinds.conf".source =
+    let
+      template = "${inputs.dots-hyprland}/configs/hypr/keybinds.conf.template";
+    in pkgs.runCommand "keybinds.conf" {} ''
+      ${pkgs.gnused}/bin/sed \
+        -e 's|@FUZZEL_BIN@|fuzzel|g' \
+        -e 's|@QUICKSHELL_BIN@|quickshell|g' \
+        -e 's|@WLOGOUT_BIN@|wlogout|g' \
+        -e 's|@HYPRSHOT_BIN@|hyprshot|g' \
+        -e 's|@GRIM_BIN@|grim|g' \
+        -e 's|@SLURP_BIN@|slurp|g' \
+        -e 's|@TESSERACT_BIN@|tesseract|g' \
+        -e 's|@HYPRPICKER_BIN@|hyprpicker|g' \
+        -e 's|@CLIPHIST_BIN@|cliphist|g' \
+        -e 's|@WL_COPY_BIN@|wl-copy|g' \
+        -e 's|@PLAYERCTL_BIN@|playerctl|g' \
+        -e 's|@BRIGHTNESSCTL_BIN@|brightnessctl|g' \
+        -e 's|@WPCTL_BIN@|wpctl|g' \
+        -e 's|@TERMINAL_APPS@|foot kitty alacritty|g' \
+        -e 's|@FILE_MANAGER_APPS@|thunar nautilus dolphin|g' \
+        -e 's|@BROWSER_APPS@|firefox chromium|g' \
+        -e 's|@CODE_EDITOR_APPS@|code subl|g' \
+        -e 's|@OFFICE_APPS@|libreoffice|g' \
+        -e 's|@TEXT_EDITOR_APPS@|subl gedit|g' \
+        -e 's|@VOLUME_MIXER_APPS@|pavucontrol|g' \
+        -e 's|@SETTINGS_APPS@|gnome-control-center|g' \
+        -e 's|@TASK_MANAGER_APPS@|htop btop|g' \
+        -e 's|@CUSTOM_KEYBINDS@||g' \
+        ${template} > $out
+    '';
 }
