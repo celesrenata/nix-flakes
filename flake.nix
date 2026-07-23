@@ -36,9 +36,9 @@
 
     # Window managers and desktop environments
     niri.url = "github:sodiboo/niri-flake";                       # Niri wayland compositor (experimental)
-    dots-hyprland.url = "path:/home/celes/sources/celesrenata/end-4-flakes";
+    dots-hyprland.url = "github:celesrenata/end-4-flakes/upstream-sync-2026";
     dots-hyprland.inputs.nixpkgs.follows = "nixpkgs";
-    dots-hyprland-source.url = "path:/home/celes/sources/celesrenata/dots-hyprland";
+    dots-hyprland-source.url = "github:celesrenata/dots-hyprland/quickshell-locked";
     dots-hyprland-source.flake = false;                           # Source files only, not a flake
 
     # Mermaid diagram renderer (pure Rust, no Chromium)
