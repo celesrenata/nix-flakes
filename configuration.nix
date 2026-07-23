@@ -259,7 +259,7 @@
   environment.etc."keyd/dictation-dispatch.sh" = {
     mode = "0755";
     text = ''
-      #!/bin/bash
+      #!/usr/bin/env bash
       LOG_TAG="keyd-dictation"
       TIMESTAMP=$(date +%s.%N)
       HYPR_SIG=$(find /run/user/*/hypr -maxdepth 1 -name ".socket.sock" 2>/dev/null | head -1 | xargs dirname | xargs basename)
