@@ -31,7 +31,7 @@ hosts = {
 | **games** | Steam + Proton GE + protontricks, gamemode, ALVR (wireless VR streaming), WiVRn, xpadneo (Xbox controller), Gamescope session, `/mnt/games` with proper ownership |
 | **development** | GCC 13, CMake, Meson, Ninja, Node.js, Java, TypeScript, AWS CLI + CDK, k3s, Helm + plugins (secrets/diff/s3/git), helmfile, kustomize, kompose, kubevirt, krew, ccache, codex (AI coding agent), uv/pipx, nil (Nix LSP) |
 | **videoEditing** | Kdenlive, ffmpeg-full, mkvtoolnix, darktable, Blender |
-| **virtualization** | Docker (btrfs backend), QEMU/KVM + libvirtd + virt-manager, nested virtualization, IOMMU/GPU passthrough, Windows container (dockurr/windows with RDP + WinApps Office 365 integration), bridge/macvlan networking |
+| **virtualization** | Docker (btrfs backend), QEMU/KVM + libvirtd + virt-manager, nested virtualization, IOMMU/GPU passthrough, Windows 11 container (dockurr/windows) with RDP + WinApps for seamless M365/Adobe app integration, bridge/macvlan networking |
 | **ai** | Ollama (CUDA, flash attention, 262K context, auto-loaded Qwen 3.6 models), vLLM (NVFP4 quantized serving on port 8000), Open WebUI (port 8776), CUDA toolkit, PyTorch + torchvision + torchaudio, transformers, diffusers, accelerate, HuggingFace model management, model directory ownership management |
 
 ### Overlay Groups
@@ -72,6 +72,33 @@ my.paths = {
   buildScratch = "/var/tmp/nix-build";
 };
 ```
+
+### WinApps — Seamless Windows Applications on Linux
+
+The virtualization profile includes a fully automated pipeline for running Microsoft 365 and Adobe Creative Cloud apps as if they were native Linux applications, via [WinApps](https://github.com/celesrenata/winapps) + FreeRDP.
+
+**How it works:**
+
+1. A Windows 11 container (dockurr/windows) runs headless in Docker with KVM acceleration (6 cores, 8GB RAM, 128GB disk)
+2. On first boot, an OEM post-install script (`install.bat`) automatically installs via winget:
+   - Microsoft 365 Apps (Word, Excel, PowerPoint, Outlook, OneNote, Publisher, Access)
+   - Adobe Creative Cloud + Photoshop, Lightroom, Lightroom Classic, Acrobat Reader
+   - Ninite bundle (7zip, Notepad++, PuTTY, VS Code, Zoom)
+3. A systemd oneshot (`winapps-setup`) watches for the OEM install to complete, then runs the WinApps installer
+4. `winapps-autoinstall.sh` creates Linux `.desktop` entries and wrapper scripts for each app
+5. Apps launch via FreeRDP seamless mode — they appear as regular Linux windows with their own taskbar entries
+
+**Available as native-feeling Linux apps:**
+
+| Category | Apps |
+|----------|------|
+| Microsoft Office | Word, Excel, PowerPoint, Outlook, OneNote, Publisher, Access |
+| Adobe | Creative Cloud, Photoshop, Lightroom, Illustrator, Premiere Pro, After Effects, Acrobat Reader |
+| Utilities | cmd, PowerShell |
+
+**M365 configuration** uses the Office Deployment Tool XML (`m365config.xml`): 64-bit, Current Channel, O365ProPlusRetail, excludes Lync and OneDrive (those stay on Linux side).
+
+The Windows container exposes RDP on port 3389 and a web interface on port 8006 for fallback access. Shared storage at `/mnt/shared` enables file exchange between Linux and Windows.
 
 ## Desktop Environment
 
