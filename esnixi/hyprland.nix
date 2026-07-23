@@ -260,9 +260,6 @@
       bind = ,XF86Calculator, exec, ~/.local/bin/wofi-calc
       # Settings (Super+Comma)
       bind = $Primary$Secondary, comma, exec, quickshell -p ~/.config/quickshell/ii/settings.qml
-      # Flux/Gammastep
-      bind = $Primary$Secondary, N, exec, gammastep -O +3000 &
-      bind = $Primary$Secondary$Alternate, N, exec, gammastep -0 +6500 &
 
       #+! Window Actions
       bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji

@@ -156,176 +156,173 @@
       $Alternate = Alt
 
       #+! Dictation
-      bind = Control, H, global, quickshell:dictationTap # Logi Dictation button (firmware sends Win+H → keyd → Ctrl+H)
-      bind = , XF86AudioMicMute, global, quickshell:dictationTap # Logi Dictation button (consumer control)
-      bind = , F20, global, quickshell:dictationTap # Alt trigger (keyd leftalt tap)
+      bind = Control, H, global, quickshell:dictationTap # Dictation (Logi button)
+      bind = , XF86AudioMicMute, global, quickshell:dictationTap # Dictation (mic mute key)
+      bind = , F20, global, quickshell:dictationTap # Dictation (Alt tap via keyd)
 
       #+! System Controls
       # Volume
-      bindl = ,XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
-      bindle=, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
-      bindle=, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+      bindl = ,XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle # Toggle mute
+      bindle=, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ # Volume up
+      bindle=, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- # Volume down
 
       # Brightness (updated for Quickshell)
-      bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
-      bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
+      bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow # Brightness up
+      bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow # Brightness down
 
       #+! Applications
       # Music
-      bind = $Primary$Secondary, M, exec, tidal-hifi
-      bind = $Primary$Secondary$Tertiary, M, exec, env -u NIXOS_OZONE_WL cider --use-gl=desktop
-      bind = $Primary$Secondary$Alternate, M, exec, spotify
+      bind = $Primary$Secondary, M, exec, tidal-hifi # Tidal HiFi
+      bind = $Primary$Secondary$Tertiary, M, exec, env -u NIXOS_OZONE_WL cider --use-gl=desktop # Cider (Apple Music)
+      bind = $Primary$Secondary$Alternate, M, exec, spotify # Spotify
       # Discord
-      bind = $Primary$Secondary, I, exec, discord 
+      bind = $Primary$Secondary, I, exec, discord # Discord
       # Foot
-      bind = $Primary$Secondary, G, exec, foot
-      bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
+      bind = $Primary$Secondary, G, exec, foot # Terminal (foot)
+      bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui # Network manager TUI
       # Finders
-      bind = $Primary$Secondary, J, exec, thunar
-      bind = $Primary$Secondary$Tertiary, J, exec, nautilus
+      bind = $Primary$Secondary, J, exec, thunar # File manager (Thunar)
+      bind = $Primary$Secondary$Tertiary, J, exec, nautilus # File manager (Nautilus)
       # Browsers
-      bind = $Primary$Secondary, B, exec, firefox
-      bind = $Primary$Secondary$Tertiary, B, exec, chromium 
+      bind = $Primary$Secondary, B, exec, firefox # Firefox
+      bind = $Primary$Secondary$Tertiary, B, exec, chromium # Chromium
       # Code editors
-      bind = $Primary$Secondary, U, exec, code
-      bind = $Primary$Secondary, X, exec, subl
-      bind = $Primary$Secondary, C, exec, code
-      bind = $Primary$Secondary$Tertiary, C, exec, jetbrains-toolbox
+      bind = $Primary$Secondary, U, exec, code # VS Code
+      bind = $Primary$Secondary, X, exec, subl # Sublime Text
+      bind = $Primary$Secondary, C, exec, code # VS Code (alt)
+      bind = $Primary$Secondary$Tertiary, C, exec, jetbrains-toolbox # JetBrains Toolbox
       # Calculator
-      bind = $Primary$Secondary, 3, exec, ~/.local/bin/wofi-calc
-      bind = ,XF86Calculator, exec, ~/.local/bin/wofi-calc
+      bind = $Primary$Secondary, 3, exec, ~/.local/bin/wofi-calc # Calculator
+      bind = ,XF86Calculator, exec, ~/.local/bin/wofi-calc # Calculator (media key)
       # Settings (Super+Comma)
-      bind = $Primary$Secondary, comma, exec, quickshell -p ~/.config/quickshell/ii/settings.qml
-      # Flux/Gammastep
-      bind = $Primary$Secondary, N, exec, gammastep -O +3000 &
-      bind = $Primary$Secondary$Alternate, N, exec, gammastep -0 +6500 &
+      bind = $Primary$Secondary, comma, exec, quickshell -p ~/.config/quickshell/ii/settings.qml # Settings
 
       #+! Window Actions
-      bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji
-      bind = $Alternate, F4, killactive,
-      bind = $Secondary$Alternate, Space, togglefloating, 
-      bind = $Secondary$Alternate, Q, exec, hyprctl kill
+      bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji # Emoji picker
+      bind = $Alternate, F4, killactive, # Close window
+      bind = $Secondary$Alternate, Space, togglefloating, # Toggle floating
+      bind = $Secondary$Alternate, Q, exec, hyprctl kill # Force kill window
 
       #+! Screenshot & Recording
-      bind = $Secondary$Tertiary, 4, exec, grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" - | wl-copy
+      bind = $Secondary$Tertiary, 4, exec, grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" - | wl-copy # Screen snip >> clipboard
       bind = $Secondary$Tertiary, 5, exec, ~/.config/quickshell/ii/scripts/record.sh # Record region (no sound)
-      bind = $Secondary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record --sound
-      bind = $Secondary$Tertiary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record.sh --fullscreen-sound
+      bind = $Secondary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record --sound # Record region (with sound)
+      bind = $Secondary$Tertiary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record.sh --fullscreen-sound # Record fullscreen (with sound)
       bind = Super+Shift+Alt, mouse:273, exec, ~/.config/quickshell/ii/scripts/ai/primary-buffer-query.sh # AI summary for selected text
-      bindl =,Print,exec,grim - | wl-copy
-      bind = $Secondary$Alternate, C, exec, hyprpicker -a
-      bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
-      bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
+      bindl =,Print,exec,grim - | wl-copy # Screenshot >> clipboard
+      bind = $Secondary$Alternate, C, exec, hyprpicker -a # Color picker >> clipboard
+      bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl # Clipboard history + paste
+      bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl # Clipboard history + paste (alt)
 
-      #+! Text Recognition (OCR)
-      bind = $Primary$Secondary$Tertiary,S,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract "tmp.png" - | wl-copy && rm "tmp.png"
-      bind = $Secondary$Tertiary,T,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract -l eng "tmp.png" - | wl-copy && rm "tmp.png"
+      #+! Text Recognition
+      bind = $Primary$Secondary$Tertiary,S,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract "tmp.png" - | wl-copy && rm "tmp.png" # OCR >> clipboard
+      bind = $Secondary$Tertiary,T,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract -l eng "tmp.png" - | wl-copy && rm "tmp.png" # OCR English >> clipboard
 
       # Media controls
       #+! Media Controls
-      bind = $Secondary$Tertiary, N, exec, playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"`
-      bindl  = , XF86AudioNext, exec, playerctl next 
-      bindl  = , XF86AudioPrev, exec, playerctl previous
-      bindl  = , XF86AudioPlay, exec, playerctl play-pause
-      bind = $Secondary$Tertiary, B, exec, playerctl previous
-      bind = $Secondary$Tertiary, P, exec, playerctl play-pause
+      bind = $Secondary$Tertiary, N, exec, playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"` # Next track
+      bindl  = , XF86AudioNext, exec, playerctl next # Next track (media key)
+      bindl  = , XF86AudioPrev, exec, playerctl previous # Previous track (media key)
+      bindl  = , XF86AudioPlay, exec, playerctl play-pause # Play/pause (media key)
+      bind = $Secondary$Tertiary, B, exec, playerctl previous # Previous track
+      bind = $Secondary$Tertiary, P, exec, playerctl play-pause # Play/pause
 
       #+! System Actions
       # Lock screen
-      bind = $Primary$Secondary, L, exec, hyprlock
+      bind = $Primary$Secondary, L, exec, hyprlock # Lock screen
 
       #+! Quickshell Interface
       # Quickshell restart (equivalent to the old AGS restart)
-      bindr = $Primary$Secondary, R, exec, pkill quickshell; quickshell -c ii &
-      bindr = $Primary$Secondary, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh
+      bindr = $Primary$Secondary, R, exec, pkill quickshell; quickshell -c ii & # Restart Quickshell
+      bindr = $Primary$Secondary, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh # Change wallpaper
       
       # Desktop environment controls (converted from AGS to Quickshell)
-      bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
-      bind = $Secondary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
-      bind = $Secondary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle
-      bind = $Secondary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle
-      bind = $Secondary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle
-      bind = $Secondary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle
-      bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle
+      bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle # Overview/launcher
+      bind = $Secondary, Space, exec, hyprctl dispatch global quickshell:overviewToggle # Overview/launcher (alt)
+      bind = $Secondary, B, exec, hyprctl dispatch global quickshell:sidebarLeftToggle # Left sidebar
+      bind = $Secondary, N, exec, hyprctl dispatch global quickshell:sidebarRightToggle # Right sidebar
+      bind = $Secondary, M, exec, hyprctl dispatch global quickshell:mediaControlsToggle # Media controls
+      bind = $Secondary, Comma, exec, hyprctl dispatch global quickshell:settingsToggle # Settings panel
+      bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle # Cheatsheet
 
       #+! Window Management
       # Swap windows
-      bind = $Secondary$Tertiary, left, movewindow, l
-      bind = $Secondary$Tertiary, right, movewindow, r
-      bind = $Secondary$Tertiary, up, movewindow, u
-      bind = $Secondary$Tertiary, down, movewindow, d
+      bind = $Secondary$Tertiary, left, movewindow, l # Move window left
+      bind = $Secondary$Tertiary, right, movewindow, r # Move window right
+      bind = $Secondary$Tertiary, up, movewindow, u # Move window up
+      bind = $Secondary$Tertiary, down, movewindow, d # Move window down
       
       # Move focus
-      bind = $Secondary, left, movefocus, l
-      bind = $Secondary, right, movefocus, r
-      bind = $Alternate, up, movefocus, u
-      bind = $Alternate, down, movefocus, d
-      bind = $Secondary, BracketLeft, movefocus, l
-      bind = $Secondary, BracketRight, movefocus, r
+      bind = $Secondary, left, movefocus, l # Focus left
+      bind = $Secondary, right, movefocus, r # Focus right
+      bind = $Alternate, up, movefocus, u # Focus up
+      bind = $Alternate, down, movefocus, d # Focus down
+      bind = $Secondary, BracketLeft, movefocus, l # Focus left (bracket)
+      bind = $Secondary, BracketRight, movefocus, r # Focus right (bracket)
 
       #+! Workspace Navigation
-      bind = $Primary$Secondary, right, workspace, +1
-      bind = $Primary$Secondary, left, workspace, -1
-      bind = $Primary$Secondary, BracketLeft, workspace, -1
-      bind = $Primary$Secondary, BracketRight, workspace, +1
-      bind = $Primary$Secondary, up, workspace, -5
-      bind = $Primary$Secondary, down, workspace, +5
-      bind = $Secondary, Page_Down, workspace, +1
-      bind = $Secondary, Page_Up, workspace, -1
+      bind = $Primary$Secondary, right, workspace, +1 # Next workspace
+      bind = $Primary$Secondary, left, workspace, -1 # Previous workspace
+      bind = $Primary$Secondary, BracketLeft, workspace, -1 # Previous workspace (bracket)
+      bind = $Primary$Secondary, BracketRight, workspace, +1 # Next workspace (bracket)
+      bind = $Primary$Secondary, up, workspace, -5 # Jump 5 workspaces back
+      bind = $Primary$Secondary, down, workspace, +5 # Jump 5 workspaces forward
+      bind = $Secondary, Page_Down, workspace, +1 # Next workspace (PgDn)
+      bind = $Secondary, Page_Up, workspace, -1 # Previous workspace (PgUp)
 
       # Window split ratio
-      binde = $Primary$Secondary, Minus, layoutmsg, splitratio, -0.1
-      binde = $Primary$Secondary, Equal, layoutmsg, splitratio, 0.1
-      binde = $Secondary, Semicolon, layoutmsg, splitratio, -0.1
-      binde = $Secondary, Apostrophe, layoutmsg, splitratio, 0.1
+      binde = $Primary$Secondary, Minus, layoutmsg, splitratio, -0.1 # Shrink split
+      binde = $Primary$Secondary, Equal, layoutmsg, splitratio, 0.1 # Grow split
+      binde = $Secondary, Semicolon, layoutmsg, splitratio, -0.1 # Shrink split (alt)
+      binde = $Secondary, Apostrophe, layoutmsg, splitratio, 0.1 # Grow split (alt)
 
       #+! Window States
       # Fullscreen
-      bind = $Primary$Secondary, F, fullscreen, 0
-      bind = $Primary$Secondary, D, fullscreen, 1
-      bind = $Secondary$Alternate, F, fullscreenstate, 0
+      bind = $Primary$Secondary, F, fullscreen, 0 # Fullscreen
+      bind = $Primary$Secondary, D, fullscreen, 1 # Maximize
+      bind = $Secondary$Alternate, F, fullscreenstate, 0 # Fullscreen spoof
 
       #+! Workspace Switching
-      bind = $Secondary, 1, workspace, 1
-      bind = $Secondary, 2, workspace, 2
-      bind = $Secondary, 3, workspace, 3
-      bind = $Secondary, 4, workspace, 4
-      bind = $Secondary, 5, workspace, 5
-      bind = $Secondary, 6, workspace, 6
-      bind = $Secondary, 7, workspace, 7
-      bind = $Secondary, 8, workspace, 8
-      bind = $Secondary, 9, workspace, 9
-      bind = $Secondary, 0, workspace, 10
-      bind = $Primary$Secondary, S, togglespecialworkspace,
-      bind = $Alternate, Tab, cyclenext
-      bind = $Alternate, Tab, bringactivetotop,   # bring it to the top
+      bind = $Secondary, 1, workspace, 1 # Workspace 1
+      bind = $Secondary, 2, workspace, 2 # Workspace 2
+      bind = $Secondary, 3, workspace, 3 # Workspace 3
+      bind = $Secondary, 4, workspace, 4 # Workspace 4
+      bind = $Secondary, 5, workspace, 5 # Workspace 5
+      bind = $Secondary, 6, workspace, 6 # Workspace 6
+      bind = $Secondary, 7, workspace, 7 # Workspace 7
+      bind = $Secondary, 8, workspace, 8 # Workspace 8
+      bind = $Secondary, 9, workspace, 9 # Workspace 9
+      bind = $Secondary, 0, workspace, 10 # Workspace 10
+      bind = $Primary$Secondary, S, togglespecialworkspace, # Scratchpad
+      bind = $Alternate, Tab, cyclenext # Cycle windows
+      bind = $Alternate, Tab, bringactivetotop, # [hidden]
 
       #+! Move Windows to Workspace
-      bind = $Secondary$Alternate, 1, movetoworkspacesilent, 1
-      bind = $Secondary$Alternate, 2, movetoworkspacesilent, 2
-      bind = $Secondary$Alternate, 3, movetoworkspacesilent, 3
-      bind = $Secondary$Alternate, 4, movetoworkspacesilent, 4
-      bind = $Secondary$Alternate, 5, movetoworkspacesilent, 5
-      bind = $Secondary$Alternate, 6, movetoworkspacesilent, 6
-      bind = $Secondary$Alternate, 7, movetoworkspacesilent, 7
-      bind = $Secondary$Alternate, 8, movetoworkspacesilent, 8
-      bind = $Secondary$Alternate, 9, movetoworkspacesilent, 9
-      bind = $Secondary$Alternate, 0, movetoworkspacesilent, 10
-      bind = $Secondary$Alternate, S, movetoworkspacesilent, special
+      bind = $Secondary$Alternate, 1, movetoworkspacesilent, 1 # Send to workspace 1
+      bind = $Secondary$Alternate, 2, movetoworkspacesilent, 2 # Send to workspace 2
+      bind = $Secondary$Alternate, 3, movetoworkspacesilent, 3 # Send to workspace 3
+      bind = $Secondary$Alternate, 4, movetoworkspacesilent, 4 # Send to workspace 4
+      bind = $Secondary$Alternate, 5, movetoworkspacesilent, 5 # Send to workspace 5
+      bind = $Secondary$Alternate, 6, movetoworkspacesilent, 6 # Send to workspace 6
+      bind = $Secondary$Alternate, 7, movetoworkspacesilent, 7 # Send to workspace 7
+      bind = $Secondary$Alternate, 8, movetoworkspacesilent, 8 # Send to workspace 8
+      bind = $Secondary$Alternate, 9, movetoworkspacesilent, 9 # Send to workspace 9
+      bind = $Secondary$Alternate, 0, movetoworkspacesilent, 10 # Send to workspace 10
+      bind = $Secondary$Alternate, S, movetoworkspacesilent, special # Send to scratchpad
 
       #+! Mouse Controls
       # Mouse workspace scrolling
-      bind = $Secondary, mouse_up, workspace, +1
-      bind = $Secondary, mouse_down, workspace, -1
-      bind = $Primary$Secondary, mouse_up, workspace, +1
-      bind = $Primary$Secondary, mouse_down, workspace, -1
+      bind = $Secondary, mouse_up, workspace, +1 # Scroll workspace next
+      bind = $Secondary, mouse_down, workspace, -1 # Scroll workspace prev
+      bind = $Primary$Secondary, mouse_up, workspace, +1 # [hidden]
+      bind = $Primary$Secondary, mouse_down, workspace, -1 # [hidden]
 
       # Mouse window controls
-      bindm = $Secondary, mouse:273, resizewindow
-      bindm = $Primary$Secondary, mouse:273, resizewindow
-      bindm = ,mouse:274, movewindow
-      bindm = $Primary$Secondary, Z, movewindow
-      bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480
+      bindm = $Secondary, mouse:273, resizewindow # Resize window (RMB)
+      bindm = $Primary$Secondary, mouse:273, resizewindow # [hidden]
+      bindm = ,mouse:274, movewindow # Move window (MMB)
+      bindm = $Primary$Secondary, Z, movewindow # [hidden]
+      bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480 # Resize to 640x480
 
       # Quickshell integration and desktop environment
       exec-once = quickshell -c ii

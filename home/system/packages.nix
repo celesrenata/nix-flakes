@@ -8,7 +8,6 @@
     xdg-desktop-portal-hyprland
     xwayland
     brightnessctl
-    wlsunset
     wayland-scanner
     waypipe
     xhost
@@ -77,7 +76,6 @@
     wlogout
     wl-clipboard
     hyprpicker
-    gammastep
     libnotify
     bc
     xdg-user-dirs
