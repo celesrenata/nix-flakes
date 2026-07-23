@@ -125,27 +125,35 @@
         ]
       },
       "locked": {
-        "lastModified": 1784765603,
-        "narHash": "sha256-c/fVefEIv+DQEsDtkcewsPphYefdJen/ytsfY3jgbaE=",
-        "path": "/home/celes/sources/celesrenata/end-4-flakes",
-        "type": "path"
+        "lastModified": 1784773343,
+        "narHash": "sha256-IYX5eyihLetk4SJDGgI2UD80g8fG4AB5AnvG2AL9UTo=",
+        "owner": "celesrenata",
+        "repo": "end-4-flakes",
+        "rev": "81b9c74dab57b1281af45f515e871acd56782f16",
+        "type": "github"
       },
       "original": {
-        "path": "/home/celes/sources/celesrenata/end-4-flakes",
-        "type": "path"
+        "owner": "celesrenata",
+        "ref": "upstream-sync-2026",
+        "repo": "end-4-flakes",
+        "type": "github"
       }
     },
     "dots-hyprland-source": {
       "flake": false,
       "locked": {
-        "lastModified": 1784757085,
-        "narHash": "sha256-rO2gbstHQHMdi59ZjeLaVeRN6XAvimDUIbT0JIEwT24=",
-        "path": "/home/celes/sources/celesrenata/dots-hyprland",
-        "type": "path"
+        "lastModified": 1777702361,
+        "narHash": "sha256-NGGdhOVcFL4tAUOnE0LeNrrA3B8mRkFX34vrJlaEODo=",
+        "owner": "celesrenata",
+        "repo": "dots-hyprland",
+        "rev": "d3c09bf1088cdc964e29df03f58b75f0b037591b",
+        "type": "github"
       },
       "original": {
-        "path": "/home/celes/sources/celesrenata/dots-hyprland",
-        "type": "path"
+        "owner": "celesrenata",
+        "ref": "quickshell-locked",
+        "repo": "dots-hyprland",
+        "type": "github"
       }
     },
     "dream2nix": {
