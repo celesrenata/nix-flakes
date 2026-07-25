@@ -104,11 +104,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1763103684,
-        "narHash": "sha256-tS0HyXrZY4+btspQa7ezE5hBBbZEknMr6ZrgLVFJxZo=",
+        "lastModified": 1784950024,
+        "narHash": "sha256-RFh8el8lAum4gm90dvzwe+7DVCwiOFtHqOmd/QtBXeY=",
         "owner": "celesrenata",
         "repo": "clinecli-flakes",
-        "rev": "980b5269452a9e0737004be199babfa3ffe6e08d",
+        "rev": "2afc21738c731fa577b3c4f4f19b471d050347a0",
         "type": "github"
       },
       "original": {
