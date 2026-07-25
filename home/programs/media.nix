@@ -21,9 +21,6 @@
     mpv
     vlc
     jellyfin-media-player
-  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
-    plex-desktop
-  ] ++ [
 
     # Audio tools
     pavucontrol
@@ -58,10 +55,9 @@
     discord
     signal-desktop
     tidal-hifi
-  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
-    spotify
-  ] ++ [
-    # Previously from unstable, now in main pkgs
     lan-mouse
-  ]);
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
+    plex-desktop
+    spotify
+  ];
 }
