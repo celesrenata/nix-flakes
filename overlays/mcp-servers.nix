@@ -122,7 +122,7 @@ in
     bin = "any-chat-completions-mcp";
     hash = "sha256-IA1PNlF7pmt3H1nSzxpZ32bxsml7SS6UVrkp0Djw4IM=";
     depsHash = if final.stdenv.hostPlatform.isAarch64
-      then "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      then "sha256-SPq1I75BYi0e5q5tFFvWCiJ1yG7GRnUM0WOjPUxs8/M="
       else "sha256-gKJW3FPL7C8ocgqiSw+69GyQCM+JKhI+hE56pAtOcQM=";
     description = "MCP server bridging to any OpenAI-compatible chat completions API";
   };
