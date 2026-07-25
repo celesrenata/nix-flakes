@@ -11,6 +11,7 @@
 {
   # Overlays needed by all hosts: OpenGL, Hyprland desktop base, keyboard visualizer, debugpy
   common = [
+    (import ./inline-snapshot-fix.nix)
     inputs.nixgl.overlay
     inputs.dots-hyprland.overlays.default
     (import ./keyboard-visualizer.nix)
@@ -35,7 +36,6 @@
     (import ./latex.nix)
     (import ./nix-static.nix)
     (import ./mcp-servers.nix)
-    (import ./inline-snapshot-fix.nix)
   ];
 
   # Gaming overlays: Proton tweaks, VR
@@ -44,7 +44,7 @@
     (import ./wivrn-fix.nix)
   ];
 
-  # AI/ML overlays: ComfyUI, vLLM, TensorRT, Ollama (GCC 13), xformers binary, bitsandbytes
+  # AI/ML overlays: ComfyUI, vLLM, TensorRT, xformers binary, bitsandbytes
   ai = [
     (import ./vllm.nix)
     (import ./tensorrt.nix)

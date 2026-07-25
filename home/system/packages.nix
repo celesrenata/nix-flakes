@@ -84,6 +84,6 @@
     tesseract
     
     # Node.js (required for various desktop components)
-    nodejs_20
+    nodejs_22
   ];
 }

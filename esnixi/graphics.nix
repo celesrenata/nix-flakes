@@ -44,6 +44,7 @@ in
       libva-vdpau-driver
       libvdpau-va-gl
       libGL
+      libgbm
       vulkan-headers
     ];
     extraPackages32 = with pkgs.pkgsi686Linux; [ libva ];

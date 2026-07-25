@@ -80,6 +80,7 @@
 +bind = $Secondary$Tertiary, 5, exec, ~/.config/ags/scripts/record-script.sh
 +bind = $Secondary$Alternate, 5, exec, ~/.config/ags/scripts/record-script.sh --sound
 +bind = $Secondary$Tertiary$Alternate, 5, exec, ~/.config/ags/scripts/record-script.sh --fullscreen-sound
++bind = $Primary$Secondary$Tertiary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record.sh --fullscreen-mixed
 +
 +bind = $Secondary$Alternate, C, exec, hyprpicker -a
 +bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl

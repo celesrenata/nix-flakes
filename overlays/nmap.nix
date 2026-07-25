@@ -3,8 +3,8 @@ final: prev:
   nmap = prev.nmap.overrideAttrs(old: rec {
     nativeBuildInputs = old.nativeBuildInputs ++ [
       prev.pkgs.gobject-introspection
-      prev.pkgs.python313Packages.build
-      prev.pkgs.python313Packages.setuptools
+      prev.pkgs.python3Packages.build
+      prev.pkgs.python3Packages.setuptools
       (prev.python3.withPackages(pypkgs: [
         pypkgs.pygobject3
       ]))

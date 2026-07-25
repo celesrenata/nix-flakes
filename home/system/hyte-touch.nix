@@ -2,7 +2,7 @@
 { inputs, lib, pkgs, config, ... }:
 
 let
-  pythonWithAudio = pkgs.python313.withPackages (ps: with ps; [ numpy scipy ]);
+  pythonWithAudio = pkgs.python3.withPackages (ps: with ps; [ numpy scipy ]);
 in
 {
   # Install Qt WebEngine for embedded browser

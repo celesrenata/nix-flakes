@@ -26,7 +26,7 @@
     jetbrains-toolbox
     git
     git-lfs
-    nodejs_20
+    nodejs_22
     meson
     # gcc13                                 # Temporarily disabled due to collision with clang
     cmake
@@ -63,7 +63,7 @@
 
     # Python environment with development packages
     pyenv.out
-    (pkgs.lib.setPrio 10 (python313.withPackages(ps: with ps; [
+    (pkgs.lib.setPrio 10 (pkgs.python3.withPackages(ps: with ps; [
       # Input handling and system integration
       evdev
       xkeysnail

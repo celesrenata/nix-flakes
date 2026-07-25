@@ -47,17 +47,33 @@ let
     fetchSubmodules = true;
   };
 
-  vllm-flash-attn = prev.fetchFromGitHub {
-    name = "vllm-flash-attn-source";
+  vllm-flash-attn = prev.runCommand "vllm-flash-attn-source" {
+    src = prev.fetchFromGitHub {
+      name = "vllm-flash-attn-source";
+      owner = "vllm-project";
+      repo = "flash-attention";
+      rev = "2c839c33742309ec41e620bf837495ec9926c56e";
+      hash = "sha256-VwEcC3i76/ekhQX/01XAYa5koyQrxhasUd3HurTzJEs=";
+      fetchSubmodules = true;
+    };
+  } ''
+    cp -r $src $out
+    chmod -R u+w $out
+    # Add Python 3.14 to supported versions
+    sed -i 's/"3.9" "3.10" "3.11" "3.12" "3.13"/"3.9" "3.10" "3.11" "3.12" "3.13" "3.14"/' $out/CMakeLists.txt
+  '';
+
+  fmha-sm100 = prev.fetchFromGitHub {
+    name = "fmha-sm100-source";
     owner = "vllm-project";
-    repo = "flash-attention";
-    rev = "dd62dac706b1cf7895bd99b18c6cb7e7e117ee25";
-    hash = "sha256-r7YW0FlsF7eeUOyKeoq6wnJMykExVqwBCgh2y/w9nPk=";
+    repo = "MSA";
+    rev = "2e63ec37a0fc29bc20f39cd1a52e0f5affc33a73";
+    hash = "sha256-TFW3THDfTn8Uf91+BhcY6ApU1jxxvzs5m0oxJ+kzgdM=";
     fetchSubmodules = true;
   };
 in 
 let
-  python313-for-vllm = prev.python313.override {
+  python3-for-vllm = prev.python3.override {
     packageOverrides = pyfinal: pyprev: {
       tvm-ffi = pyprev.buildPythonPackage rec {
         pname = "tvm-ffi";
@@ -110,24 +126,37 @@ let
 
       flashinfer = pyprev.flashinfer.overridePythonAttrs (old: {
         # flashinfer 0.6.4 added requests as a runtime dep but nixpkgs missed it
+        # metadata check fails because installed name doesn't match pname
         dependencies = (old.dependencies or []) ++ [ pyprev.requests ];
+        dontCheckPythonMetadata = true;
       });
 
       outlines = pyprev.outlines.overridePythonAttrs (old: {
         # outlines 1.2.12 added pillow as a runtime dep but nixpkgs missed it
         dependencies = (old.dependencies or []) ++ [ pyprev.pillow ];
       });
+
+      # nixpkgs sets doCheck = false for this package, but our python override scope
+      # rebuilds it without that setting — re-apply it here
+      model-hosting-container-standards = pyprev.model-hosting-container-standards.overridePythonAttrs (old: {
+        doCheck = false;
+      });
+
+      # nixpkgs gguf version (9967, llama.cpp rev) doesn't match metadata (0.19.0)
+      gguf = pyprev.gguf.overridePythonAttrs (old: {
+        dontCheckPythonMetadata = true;
+      });
       
     };
   };
 in {
-  vllm = python313-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
-    version = "0.23.0";
+  vllm = python3-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
+    version = "0.25.1";
     src = prev.fetchFromGitHub {
       owner = "vllm-project";
       repo = "vllm";
-      tag = "v0.23.0";
-      hash = "sha256-9mxu2jLchoKmRzD71enPomVJuP5LjbUtQqLMdP5k+Qw=";
+      tag = "v0.25.1";
+      hash = "sha256-a2OoTfQOJyB8iKBfkfCC23MMBMOHEBjAZ0WGag8hcTQ=";
     };
     
     patches = [];
@@ -137,12 +166,13 @@ in {
       # Remove setuptools-rust from pyproject.toml build-system requires
       # (we provide it via nativeBuildInputs instead)
       sed -i '/setuptools-rust/d' pyproject.toml
-      # Relax setuptools version upper bound (nixpkgs has 82.x, vllm wants <81)
+      # Relax setuptools version upper bound (nixpkgs has 83.x, vllm wants <81)
       sed -i 's/"setuptools>=77.0.3,<81.0.0"/"setuptools>=77.0.3"/' pyproject.toml
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
     dontCheckRuntimeDeps = true;
+    dontCheckPythonMetadata = true;
     pythonRelaxDeps = true;
     pythonRemoveDeps = [
       "opentelemetry-semantic-conventions-ai"
@@ -158,21 +188,21 @@ in {
     ];
     
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
-      python313-for-vllm.pkgs.grpcio-tools
-      (python313-for-vllm.pkgs.setuptools-rust.overrideAttrs (old: {
+      python3-for-vllm.pkgs.grpcio-tools
+      (python3-for-vllm.pkgs.setuptools-rust.overrideAttrs (old: {
         setupHook = prev.writeText "setuptools-rust-hook-disabled" "";
       }))
     ];
     
     buildInputs = (old.buildInputs or []) ++ [
-      python313-for-vllm.pkgs.torch
+      python3-for-vllm.pkgs.torch
     ];
     
     propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [
-      python313-for-vllm.pkgs.ijson
-      python313-for-vllm.pkgs.mcp
-      python313-for-vllm.pkgs.grpcio-reflection
-      python313-for-vllm.pkgs.tvm-ffi
+      python3-for-vllm.pkgs.ijson
+      python3-for-vllm.pkgs.mcp
+      python3-for-vllm.pkgs.grpcio-reflection
+      python3-for-vllm.pkgs.tvm-ffi
     ];
     
     preBuild = (old.preBuild or "") + ''
@@ -182,6 +212,7 @@ in {
       export VLLM_FLASH_ATTN_SRC_DIR="${vllm-flash-attn}"
       export QUTLASS_SRC_DIR="${qutlass}"
       export DEEPGEMM_SRC_DIR="${deepgemm}"
+      export FMHA_SM100_SRC_DIR="${fmha-sm100}"
     '';
     
     env = (old.env or {}) // {

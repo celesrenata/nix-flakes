@@ -3,7 +3,7 @@
 { lib, pkgs, ... }:
 
 let
-  pythonWithOpenRGB = pkgs.python312.withPackages (ps: [ ps.openrgb-python ]);
+  pythonWithOpenRGB = pkgs.python3.withPackages (ps: [ ps.openrgb-python ]);
 in
 {
   home.file.".local/bin/rgb-gradient.py" = {

@@ -211,7 +211,7 @@
     # ── vLLM service (CUDA-only) ─────────────────────────────────────────
     systemd.services.vllm = lib.mkIf (config.my.acceleration.backend == "cuda")
     (let
-      vllmPython = pkgsAccel.python313.withPackages (ps: [ pkgsAccel.vllm ]);
+      vllmPython = pkgsAccel.python3.withPackages (ps: [ pkgsAccel.vllm ]);
       vllmWrapper = pkgs.writeShellScript "vllm-wrapper" ''
         exec ${vllmPython}/bin/python -m vllm.entrypoints.cli.main "$@"
       '';
@@ -246,7 +246,7 @@
         HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";
         CUDA_HOME = "${pkgsAccel.cudaPackages.cudatoolkit}";
         LD_LIBRARY_PATH = "${pkgsAccel.cudaPackages.cudatoolkit}/lib:${pkgsAccel.cudaPackages.cudnn}/lib:${config.hardware.nvidia.package}/lib";
-        PYTHONPATH = "${tvmFfiPkg}/lib/python3.13/site-packages:${pkgsAccel.vllm}/${pkgsAccel.python313.sitePackages}";
+        PYTHONPATH = "${tvmFfiPkg}/lib/${pkgsAccel.python3.libPrefix}/site-packages:${pkgsAccel.vllm}/${pkgsAccel.python3.sitePackages}";
         VLLM_LOGGING_LEVEL = "DEBUG";
         CUDACXX = "${pkgsAccel.cudaPackages.cudatoolkit}/bin/nvcc";
         CXX = "${pkgs.gcc14}/bin/g++";
@@ -321,7 +321,7 @@
       pkgsAccel.vllm
       pkgsAccel.cudaPackages.cudatoolkit
 
-      (pkgsAccel.python313.withPackages (ps: with ps; [
+      (pkgsAccel.python3.withPackages (ps: with ps; [
         torchvision
         torchaudio
         torch
