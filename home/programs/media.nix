@@ -53,12 +53,12 @@
     
     # Music applications
     signal-desktop
-    tidal-hifi
     lan-mouse
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     plex-desktop
     spotify
     discord
+    tidal-hifi
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [
     legcord
   ];
