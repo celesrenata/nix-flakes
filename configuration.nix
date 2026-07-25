@@ -490,7 +490,6 @@
     # Development Tools (not in profiles).
     uv
     amazon-q-cli
-    kiro
     jetbrains-toolbox
 
     # Session.
@@ -537,6 +536,7 @@
     
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     # x86_64 only — may not have aarch64 builds
+    kiro
     plex-desktop
     moonlight-qt
     wine
