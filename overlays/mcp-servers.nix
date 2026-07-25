@@ -100,7 +100,7 @@ in
     bin = "mcp-server-memory";
     hash = "sha256-cD9iexZwFnV0ofEZAxgWSBvgENaLcv8JypuZ1x5e9SQ=";
     depsHash = if final.stdenv.hostPlatform.isAarch64
-      then "sha256-n9JJPa8190cL78j0Sx5HZD7MpfazXm2Lue9s3XD7UNM="
+      then "sha256-n9JJPa8190cL78j0Sx5HZD7MpfazXm2Lve9s3XD7UNO="
       else "sha256-RDOBfPgOI6gtYG8CYDkGGqy0OiGNXTIpoRBPWDrgLfQ=";
     description = "MCP server providing persistent knowledge graph memory";
   };
