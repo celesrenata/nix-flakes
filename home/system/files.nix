@@ -69,7 +69,9 @@ in
 
   # Staging directory for mutable configs (used by dotsSetup activation)
   home.file.".configstaging/quickshell" = {
-    source = "${pkgs.dots-hyprland-source-filtered}/.config/quickshell";
+    source = "${if pkgs ? dots-hyprland-source-filtered
+      then pkgs.dots-hyprland-source-filtered
+      else inputs.dots-hyprland-source}/.config/quickshell";
     recursive = true;
   };
   

@@ -112,25 +112,26 @@
     # Creates a complete nixpkgs.lib.nixosSystem configuration for a host.
     mkHost = { hostname, system, backend, groups, extraModules ? [], homeImports ? [], extraOverlays ? [] }:
       let
-        # Base package set: no CUDA/ROCm, common + desktop + development + gaming overlays
+        # Base package set: overlays selected based on host profile groups
         pkgsBase = mkPkgs {
           inherit system extraOverlays;
           backend = "cpu";
-          groups = [ "common" "desktop" "development" "gaming" ];
+          groups = [ "common" "desktop" "development" ]
+            ++ lib.optionals (groups.games or false) [ "gaming" ];
         };
 
-        # Accelerator package set: backend-selected, common + ai overlays
+        # Accelerator package set: backend-selected, common + ai overlays (only when AI is enabled)
         pkgsAccel = mkPkgs {
           inherit system;
           inherit backend;
-          #config = { allowUnfree = true; };
-          groups = [ "common" "ai" ];
+          groups = [ "common" ] ++ lib.optionals (groups.ai or false) [ "ai" ];
         };
 
       in
       inputs.nixpkgs.lib.nixosSystem {
         specialArgs = {
           inherit inputs pkgsAccel;
+        } // lib.optionalAttrs (inputs.hyte-touch-infinite-flakes.inputs.quickshell.packages ? ${system}) {
           quickshell = inputs.hyte-touch-infinite-flakes.inputs.quickshell.packages.${system}.default;
         };
 
@@ -230,8 +231,50 @@
         ];
         homeImports = [
           ./home/default.nix
+          ./home/programs/comfyui.nix
+          ./home/programs/lvra.nix
+          ./home/programs/ii-desktop-mcp.nix
           ./esnixi/hyprland.nix
           ii-desktop-mcp.homeManagerModules.default
+        ];
+      };
+
+      # ── Parallels Desktop VM (Apple Silicon / aarch64) ───────────────
+      nixberry = {
+        system = "aarch64-linux";
+        backend = "cpu";
+        groups = {
+          games = true;
+          development = true;
+          videoEditing = true;
+          virtualization = false;
+          ai = false;
+        };
+        extraModules = [
+          # Platform-specific VM configurations
+          ./vm/hardware-configuration.nix
+          ./vm/boot.nix
+          ./vm/graphics.nix
+          ./vm/networking.nix
+          ./vm/virtualisation.nix
+
+          # Shared configuration modules
+          ./secrets.nix
+
+          # CA certificate configuration
+          {
+            security.pki.certificates = [
+              (builtins.readFile ./celestium-ca.crt)
+            ];
+          }
+
+          # External modules
+          protontweaks.nixosModules.protontweaks
+          sops-nix.nixosModules.sops
+        ];
+        homeImports = [
+          ./home/default.nix
+          ./vm/hyprland.nix
         ];
       };
     };

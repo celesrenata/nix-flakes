@@ -20,8 +20,10 @@
     # Media players
     mpv
     vlc
-    plex-desktop
     jellyfin-media-player
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
+    plex-desktop
+  ] ++ [
 
     # Audio tools
     pavucontrol

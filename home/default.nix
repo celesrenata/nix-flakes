@@ -20,14 +20,11 @@
     ./desktop/theming.nix           # Cursors, themes, and visual appearance
     
     # Application and Program Configuration
-    ./programs/comfyui.nix          # ComfyUI AI image generation service
-    ./programs/lvra.nix
     ./programs/development.nix      # Development tools (VSCode, Git, Python, etc.)
     ./programs/media.nix            # Media applications (OBS, players, editors)
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools
     ./programs/mcp.nix              # MCP server configuration for Kiro CLI
-    ./programs/ii-desktop-mcp.nix   # Desktop intelligence MCP service
     
     # Shell Environment Configuration
     ./shell/fish.nix                # Fish shell configuration and integration
@@ -38,8 +35,6 @@
     ./system/files.nix              # Dotfiles and home.file configurations
     ./system/packages.nix           # Desktop environment and system packages
     ./system/variables.nix          # Environment variables and system settings
-    ./system/hyte-touch.nix         # Hyte Touch Display user service
-    ./system/rgb-gradient.nix       # RGB LED gradient from wallpaper colors
   ];
 
   # Basic user configuration

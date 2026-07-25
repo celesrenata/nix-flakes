@@ -2,11 +2,11 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, pkgsAccel, inputs, ... }:
+{ config, lib, pkgs, pkgsAccel, inputs, ... }:
 {
   # Licences.
   # nixpkgs.config.allowUnfree = true;  # Already set in flake pkgs
-  nixpkgs.hostPlatform = "x86_64-linux";
+  # nixpkgs.hostPlatform is set per-host in hardware-configuration.nix
 
   imports =
     [ # Include the results of the hardware scan.
@@ -98,8 +98,8 @@
   # Enable the Enlightenment Desktop Environment.
   #services.xserver.desktopManager.enlightenment.enable = true;
 
-  # Enable OpenRGB.
-  services.hardware.openrgb.enable = true;
+  # Enable OpenRGB (x86 desktop only — hardware RGB controllers).
+  services.hardware.openrgb.enable = lib.mkDefault (pkgs.stdenv.hostPlatform.isx86_64);
 
   programs.hyprland = {
     # Install the packages from nixpkgs
@@ -437,8 +437,8 @@
     vim
     
     # CLI Tools
-    inputs.cline-cli.packages.x86_64-linux.default
-    inputs.kiro-cli.packages.x86_64-linux.default
+    inputs.cline-cli.packages.${pkgs.stdenv.hostPlatform.system}.default
+    inputs.kiro-cli.packages.${pkgs.stdenv.hostPlatform.system}.default
     
     # Secrets Management
     sops
@@ -527,16 +527,21 @@
     wofi
     libqalculate
     #sunshine 
-    moonlight-qt
     thunar
     thunar-volman
     wayland-scanner
     waypipe
 
     # Media
-    plex-desktop
     jellyfin-media-player
     
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
+    # x86_64 only — may not have aarch64 builds
+    plex-desktop
+    moonlight-qt
+    wine
+    wine64
+  ] ++ [
     # GTK
     gtk3
     gtk3.dev
@@ -563,8 +568,6 @@
     foot
 
     # Emulation
-    wine
-    wine64
     qemu
 
     # Mac Sound.

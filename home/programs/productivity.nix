@@ -5,10 +5,13 @@
   # System monitoring
   programs.btop = {
     enable = true;
-    package = pkgs.btop.override { cudaSupport = true; };
+    package = if pkgs.stdenv.hostPlatform.isx86_64
+      then pkgs.btop.override { cudaSupport = true; }
+      else pkgs.btop;
     settings = {
       color_theme = "Default";
       theme_background = false;
+    } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isx86_64 {
       shown_boxes = "cpu mem net proc gpu0";
       show_gpu_info = "On";
     };
@@ -46,10 +49,11 @@
     # Calculator
     wofi-calc
     
-    # Hardware control
+    # Hardware control (x86 desktop only)
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     openrgb-with-all-plugins
     KeyboardVisualizer
-    
+  ] ++ [
     # Remote access
     wlvncc
     #tigervnc
