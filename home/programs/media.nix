@@ -55,11 +55,12 @@
     antimicrox
     
     # Music applications
-    spotify
     discord
     signal-desktop
     tidal-hifi
-  ] ++ (with pkgs; [
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
+    spotify
+  ] ++ [
     # Previously from unstable, now in main pkgs
     lan-mouse
   ]);
