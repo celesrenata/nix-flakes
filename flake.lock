@@ -719,11 +719,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1782966398,
-        "narHash": "sha256-77JzAF5Ofrcq6TpEvjC8R4VNKDmctQy9YkF7MmHMOkM=",
+        "lastModified": 1784951760,
+        "narHash": "sha256-iI6qs87Nmcf3ADzLHAvC5GphrMlfUQukwu9pd2iXUwc=",
         "owner": "celesrenata",
         "repo": "kiro-cli-flake",
-        "rev": "869a9721929e096671a705e8692d5f361203dcaf",
+        "rev": "ac3c12053dace495f263649e546fc898f82ebe4a",
         "type": "github"
       },
       "original": {
