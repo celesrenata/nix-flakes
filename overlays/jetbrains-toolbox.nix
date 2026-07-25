@@ -1,9 +1,25 @@
 final: prev:
 
+let
+  version = "3.6.2.85969";
+  sources = {
+    x86_64-linux = {
+      url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}.tar.gz";
+      sha256 = "sha256-S4B7semtrNK56mbfUOapYuFTPX1VKNULIm8yY2ojn8M=";
+    };
+    aarch64-linux = {
+      url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}-arm64.tar.gz";
+      sha256 = "sha256-vI14klIETSY71fpXU8C7XmiSDa3NPOrOYWSWppBLN6I=";
+    };
+  };
+  platform = prev.stdenv.hostPlatform.system;
+in
+
 rec {
   jetbrains-toolbox = prev.stdenv.mkDerivation rec {
     pname = "jetbrains-toolbox";
-    version = "2.5.2.35332";
+    inherit version;
+
     appimageContents = prev.runCommand "${pname}-extracted" {
       nativeBuildInputs = [prev.appimageTools.appimage-exec];
     } ''
@@ -14,14 +30,10 @@ rec {
       '';
 
     src = prev.fetchzip {
-      url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}.tar.gz";
-      sha256 = "sha256-uuDUKm+120kOYoRIXIPXam6tQd2aglaN/xDE2Yl4ZhU=";
+      inherit (sources.${platform}) url sha256;
       stripRoot = false;
     };
-    toolboxIcon = prev.fetchurl {
-      url = "https://resources.jetbrains.com/storage/products/company/brand/logos/Toolbox_icon.svg";
-      hash = "sha256-usMkm+9ksY40Rh0C/ZzXPOv5hVwKWf/3wSKLEKqj/EE=";
-    };
+
     appimage = prev.appimageTools.wrapAppImage {
       inherit pname version;
       src = appimageContents;
@@ -33,7 +45,7 @@ rec {
     installPhase = ''
       runHook preInstall;
       
-      install -Dm644 ${toolboxIcon} $out/share/icons/hicolor/scalable/apps/jetbrains-toolbox.svg
+      install -Dm644 ${../resources/icons/jetbrains-toolbox.svg} $out/share/icons/hicolor/scalable/apps/jetbrains-toolbox.svg
       makeWrapper ${appimage}/bin/${pname} $out/bin/${pname} --append-flags "--update-failed" --prefix LD_LIBRARY_PATH : ${prev.lib.makeLibraryPath [prev.icu]} --prefix MESA_EXTENSION_OVERRIDE : "-GL_ARB_invalidate_subdata" --set TOOLBOX_JDK "${prev.pkgs.jetbrains.jdk}" --set JETBRAINSCLIENT_JDK "${prev.pkgs.jetbrains.jdk.home}"
       
       runHook postInstall;
@@ -41,7 +53,6 @@ rec {
 
     desktopItems = ["${appimageContents}/jetbrains-toolbox.desktop"];
     
-    # Disabling the tests, this seems to be very difficult to test this app.
     doCheck = false;
 
     meta = with prev.lib; {
@@ -49,7 +60,7 @@ rec {
       homepage = "https://jetbrains.com/";
       license = licenses.unfree;
       maintainers = with maintainers; [AnatolyPopov];
-      platforms = ["x86_64-linux"];
+      platforms = ["x86_64-linux" "aarch64-linux"];
       mainProgram = "${pname}";
     };
   };
