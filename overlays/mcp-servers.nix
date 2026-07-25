@@ -114,7 +114,7 @@ in
     bin = "mcp-server-github";
     hash = "sha256-HVsbypMFrfDIBVEx8ihlFMm+pusxEARgiZoe2f/s5cE=";
     depsHash = if final.stdenv.hostPlatform.isAarch64
-      then "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC="
+      then "sha256-XBmhiAnZBs4NorY7UTzKbciS4bYQSuHuO2AIm+t+oms="
       else "sha256-KbcTUqhAxGKKDbRsIQShmuPjDuLcNoNFgLnc8nND+JM=";
     description = "MCP server for GitHub repository interaction";
   };
