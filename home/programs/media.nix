@@ -52,12 +52,14 @@
     antimicrox
     
     # Music applications
-    discord
     signal-desktop
     tidal-hifi
     lan-mouse
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     plex-desktop
     spotify
+    discord
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [
+    legcord
   ];
 }
