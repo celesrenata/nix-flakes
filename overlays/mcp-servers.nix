@@ -86,7 +86,7 @@ in
     bin = "mcp-server-sequential-thinking";
     hash = "sha256-WiHm+kc3IrjmIqm7vdcrxtvN30MPJqtZic0z3+XcdwM=";
     depsHash = if final.stdenv.hostPlatform.isAarch64
-      then "sha256-2c+snmvNQeHNOKHBIBOLGCjjrFSaZiGh3LZtlMp9+1A="
+      then "sha256-2c+snmvNQeHNOKHBIB0LGCjjrFSaZiGh3LZtlMp9+1A="
       else "sha256-iX0+iMMOO1ImuFeb7K4uX6YvBUbQMiHQNEk2AKwl/zI=";
     description = "MCP server for structured sequential thinking and problem decomposition";
   };
