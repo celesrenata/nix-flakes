@@ -85,7 +85,9 @@ in
     entry = "dist/index.js";
     bin = "mcp-server-sequential-thinking";
     hash = "sha256-WiHm+kc3IrjmIqm7vdcrxtvN30MPJqtZic0z3+XcdwM=";
-    depsHash = "sha256-iX0+iMMOO1ImuFeb7K4uX6YvBUbQMiHQNEk2AKwl/zI=";
+    depsHash = if final.stdenv.hostPlatform.isAarch64
+      then "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      else "sha256-iX0+iMMOO1ImuFeb7K4uX6YvBUbQMiHQNEk2AKwl/zI=";
     description = "MCP server for structured sequential thinking and problem decomposition";
   };
 
@@ -97,7 +99,9 @@ in
     entry = "dist/index.js";
     bin = "mcp-server-memory";
     hash = "sha256-cD9iexZwFnV0ofEZAxgWSBvgENaLcv8JypuZ1x5e9SQ=";
-    depsHash = "sha256-RDOBfPgOI6gtYG8CYDkGGqy0OiGNXTIpoRBPWDrgLfQ=";
+    depsHash = if final.stdenv.hostPlatform.isAarch64
+      then "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB="
+      else "sha256-RDOBfPgOI6gtYG8CYDkGGqy0OiGNXTIpoRBPWDrgLfQ=";
     description = "MCP server providing persistent knowledge graph memory";
   };
 
@@ -109,7 +113,9 @@ in
     entry = "dist/index.js";
     bin = "mcp-server-github";
     hash = "sha256-HVsbypMFrfDIBVEx8ihlFMm+pusxEARgiZoe2f/s5cE=";
-    depsHash = "sha256-KbcTUqhAxGKKDbRsIQShmuPjDuLcNoNFgLnc8nND+JM=";
+    depsHash = if final.stdenv.hostPlatform.isAarch64
+      then "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC="
+      else "sha256-KbcTUqhAxGKKDbRsIQShmuPjDuLcNoNFgLnc8nND+JM=";
     description = "MCP server for GitHub repository interaction";
   };
 
