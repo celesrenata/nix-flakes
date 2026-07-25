@@ -9,7 +9,7 @@ let
     };
     aarch64-linux = {
       url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}-arm64.tar.gz";
-      sha256 = "sha256-vI14klIETSY71fpXU8C7XmiSDa3NPOrOYWSWppBLN6I=";
+      sha256 = "sha256-C0C4fng34YzdLugDBXwsH4H9ERkmI/FqWgUss92d6y0=";
     };
   };
   platform = prev.stdenv.hostPlatform.system;
