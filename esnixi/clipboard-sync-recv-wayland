@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# clipboard-sync-recv-wayland — Receive handler for clipboard sync (called by socat per-connection)
+# Reads one CLIP protocol frame from stdin and applies to Wayland clipboard.
+set -uo pipefail
+
+# These must be set by the caller
+: "${STATE_DIR:?}"
+: "${FILE_STAGING:?}"
+: "${WAYLAND_DISPLAY:?}"
+: "${XDG_RUNTIME_DIR:?}"
+
+# Read header
+IFS= read -r header || exit 0
+header="${header%$'\r'}"
+[[ "$header" == CLIP:* ]] || exit 0
+
+# Parse CLIP:<mime>:<len>
+rest="${header#CLIP:}"
+len="${rest##*:}"
+mime="${rest%:*}"
+[[ -n "$mime" && "$len" =~ ^[0-9]+$ ]] || exit 0
+
+# Read base64 data until END
+data=""
+while IFS= read -r line; do
+  line="${line%$'\r'}"
+  [[ "$line" != "END" ]] || break
+  data+="$line"
+done
+[[ -n "$data" ]] || exit 0
+
+# Decode
+tmp="$(mktemp)"
+if ! printf '%s' "$data" | base64 -d > "$tmp" 2>/dev/null; then
+  rm -f "$tmp"
+  exit 0
+fi
+[[ -s "$tmp" ]] || { rm -f "$tmp"; exit 0; }
+
+# Hash check
+hash="$(sha256sum "$tmp" | cut -d' ' -f1)"
+last_sent="$(cat "$STATE_DIR/last_sent_hash" 2>/dev/null)"
+[[ "$hash" != "$last_sent" ]] || { rm -f "$tmp"; exit 0; }
+
+# Set suppress flag and hash BEFORE clipboard change
+touch "$STATE_DIR/suppress"
+echo "$hash" > "$STATE_DIR/last_recv_hash"
+
+# Apply based on mime type
+case "$mime" in
+  x-special/file-transfer)
+    find "${FILE_STAGING:?}" -mindepth 1 -delete 2>/dev/null
+    if tar -xf "$tmp" -C "$FILE_STAGING" 2>/dev/null; then
+      extracted="$(find "$FILE_STAGING" -maxdepth 1 -mindepth 1 | head -1)"
+      if [[ -n "$extracted" ]]; then
+        printf 'copy\nfile://%s\n' "$extracted" | wl-copy --type text/uri-list 2>/dev/null
+      fi
+    fi
+    ;;
+  *)
+    wl-copy --type "$mime" < "$tmp" 2>/dev/null
+    ;;
+esac
+
+printf '[%s] Received %s (%d bytes) from peer\n' "$(date '+%H:%M:%S')" "$mime" "$(wc -c < "$tmp")" >&2
+rm -f "$tmp"

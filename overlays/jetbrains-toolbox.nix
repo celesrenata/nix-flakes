@@ -7,7 +7,7 @@ let
   sources = {
     x86_64-linux = {
       url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}.tar.gz";
-      sha256 = "sha256-S4B7semtrNK56mbfUOapYuFTPX1VKNULIm8yY2ojn8M=";
+      sha256 = "sha256-1vVXHE4x2eq1LG1DoA/eeg5S4sA8sr/k5DhwD8+P6aE=";
     };
     aarch64-linux = {
       url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${version}-arm64.tar.gz";
@@ -15,7 +15,7 @@ let
     };
   };
 
-  # x86_64: AppImage-based packaging
+  # x86_64: regular ELF binary in tarball (no longer AppImage as of 3.6.x)
   mkToolbox-x86 = prev.stdenv.mkDerivation rec {
     pname = "jetbrains-toolbox";
     inherit version;
@@ -25,34 +25,43 @@ let
       stripRoot = false;
     };
 
-    appimageContents = prev.runCommand "${pname}-extracted" {
-      nativeBuildInputs = [ prev.appimageTools.appimage-exec ];
-    } ''
-      appimage-exec.sh -x $out ${src}/${pname}-${version}/${pname}
-      sed -Ei '/Exec/c\Exec=jetbrains-toolbox %U' $out/jetbrains-toolbox.desktop;
-    '';
-
-    appimage = prev.appimageTools.wrapAppImage {
-      inherit pname version;
-      src = appimageContents;
-    };
-
-    nativeBuildInputs = [ prev.makeWrapper prev.copyDesktopItems ];
-    buildInputs = [ prev.jetbrains.jdk ];
+    nativeBuildInputs = [ prev.makeWrapper prev.autoPatchelfHook prev.copyDesktopItems ];
+    buildInputs = with prev; [ stdenv.cc.cc.lib libGL xorg.libX11 xorg.libXi xorg.libXrender xorg.libXtst fontconfig freetype icu libXScrnSaver libxcb ];
 
     installPhase = ''
       runHook preInstall
-      install -Dm644 ${../resources/icons/jetbrains-toolbox.svg} $out/share/icons/hicolor/scalable/apps/jetbrains-toolbox.svg
-      makeWrapper ${appimage}/bin/${pname} $out/bin/${pname} \
+
+      mkdir -p $out/bin $out/lib $out/share/icons/hicolor/scalable/apps
+
+      # Copy the binary and libraries
+      cp ${src}/${pname}-${version}/bin/${pname} $out/bin/${pname}-unwrapped
+      cp ${src}/${pname}-${version}/bin/*.so* $out/lib/ 2>/dev/null || true
+
+      # Icon
+      install -Dm644 ${src}/${pname}-${version}/bin/toolbox.svg $out/share/icons/hicolor/scalable/apps/jetbrains-toolbox.svg
+
+      # Wrapper
+      makeWrapper $out/bin/${pname}-unwrapped $out/bin/${pname} \
         --append-flags "--update-failed" \
-        --prefix LD_LIBRARY_PATH : ${prev.lib.makeLibraryPath [ prev.icu ]} \
+        --prefix LD_LIBRARY_PATH : "$out/lib:${prev.lib.makeLibraryPath [ prev.icu prev.libGL prev.xorg.libX11 prev.libXScrnSaver prev.libxcb ]}" \
         --prefix MESA_EXTENSION_OVERRIDE : "-GL_ARB_invalidate_subdata" \
         --set TOOLBOX_JDK "${prev.pkgs.jetbrains.jdk}" \
         --set JETBRAINSCLIENT_JDK "${prev.pkgs.jetbrains.jdk.home}"
+
       runHook postInstall
     '';
 
-    desktopItems = [ "${appimageContents}/jetbrains-toolbox.desktop" ];
+    desktopItems = [
+      (prev.makeDesktopItem {
+        name = "jetbrains-toolbox";
+        desktopName = "JetBrains Toolbox";
+        exec = "jetbrains-toolbox %U";
+        icon = "jetbrains-toolbox";
+        comment = "Manage JetBrains tools";
+        categories = [ "Development" ];
+        startupWMClass = "jetbrains-toolbox";
+      })
+    ];
     doCheck = false;
 
     meta = with prev.lib; {

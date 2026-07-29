@@ -18,6 +18,7 @@
     (import ./debugpy.nix)
     (import ./comfyui.nix)
     (import ./mkvtoolnix.nix)
+    (import ./tidal-hifi.nix)
   ];
 
   # Desktop environment overlays: theming, emoji picker, calculator, DP-3 filter

@@ -210,6 +210,8 @@
           ./esnixi/lvra.nix
           ./esnixi/vllm-proxy.nix
           ./esnixi/lan-mouse.nix
+          ./esnixi/clipboard-sync.nix
+          ./esnixi/qdrant.nix
           #./esnixi/exo.nix                            # Disabled: requires exo flake input
           #./esnixi/dcgm-exporter.nix                  # Disabled: dcgm-exporter not in nixpkgs
 
@@ -236,6 +238,59 @@
           ./home/programs/ii-desktop-mcp.nix
           ./esnixi/hyprland.nix
           ii-desktop-mcp.homeManagerModules.default
+        ];
+      };
+
+      # ── Nigel (Lenovo ideacentre AIO 700-27ISH) ─────────────────────
+      # Intel i7-6700, NVIDIA GTX 950M (Hyprland), Intel HD Graphics 530 (VM passthrough)
+      # Profiles: gaming, development, virtualization, mini-ai
+      # Mini-ai uses upstream ollama only (no vLLM/TensorRT/BitAndBytes)
+      nigel = {
+        system = "x86_64-linux";
+        backend = "cpu";  # GTX 950M too weak for CUDA AI — use CPU backend with upstream ollama
+        groups = {
+          games = true;
+          development = true;
+          videoEditing = false;
+          virtualization = true;
+          ai = false;     # mini-ai: avoid heavy AI overlays, handled via extraOverlays
+        };
+        extraOverlays = [
+          # Only upstream ollama — no CUDA-heavy packages
+          (final: prev: { ollama = prev.ollama; })
+        ];
+        extraModules = [
+          # Platform-specific Nigel configurations
+          ./nigel/hardware-configuration.nix
+          ./nigel/boot.nix
+          ./nigel/games.nix
+          ./nigel/graphics.nix
+          ./nigel/networking.nix
+          ./nigel/virtualisation.nix
+          ./nigel/development.nix
+          ./nigel/mini-ai.nix
+
+          # Shared configuration modules
+          ./remote-build.nix
+          ./secrets.nix
+
+          # CA certificate configuration
+          {
+            security.pki.certificates = [
+              (builtins.readFile ./celestium-ca.crt)
+            ];
+          }
+
+          # External modules
+          protontweaks.nixosModules.protontweaks
+          sops-nix.nixosModules.sops
+        ];
+        homeImports = [
+          ./home/default.nix
+          ./home/programs/development.nix
+          ./home/programs/media.nix
+          ./home/programs/productivity.nix
+          ./nigel/hyprland.nix
         ];
       };
 

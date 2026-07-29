@@ -1,0 +1,209 @@
+#!/usr/bin/env bash
+# clipboard-sync-wayland — Bidirectional clipboard sync (Wayland/NixOS side)
+#
+# Syncs clipboard between this Wayland machine and a macOS peer over TCP.
+# Handles text, images, and file copies via base64 over TCP.
+#
+# Protocol (one frame per TCP connection):
+#   "CLIP:<mime>:<base64-byte-count>\n<base64-data>\nEND\n"
+#
+# For files, mime is "x-special/file-transfer" and payload is a tar of the files.
+#
+# Dependencies: bash, socat, wl-clipboard, coreutils, tar
+set -uo pipefail
+
+###############################################################################
+# Configuration
+###############################################################################
+PEER="${1:-${CLIPBOARD_PEER:-}}"
+PORT="${CLIPBOARD_PORT:-24802}"
+FILE_STAGING="${HOME}/.clipboard-files"
+
+if [[ -z "$PEER" ]]; then
+  echo "Usage: clipboard-sync-wayland <peer-ip>" >&2
+  exit 2
+fi
+
+: "${WAYLAND_DISPLAY:?WAYLAND_DISPLAY must be set}"
+: "${XDG_RUNTIME_DIR:?XDG_RUNTIME_DIR must be set}"
+
+mkdir -p "$FILE_STAGING"
+
+###############################################################################
+# State
+###############################################################################
+STATE_DIR="${XDG_RUNTIME_DIR}/clipboard-sync"
+mkdir -p "$STATE_DIR"
+echo "" > "$STATE_DIR/last_sent_hash"
+echo "" > "$STATE_DIR/last_recv_hash"
+rm -f "$STATE_DIR/suppress"
+
+###############################################################################
+# Logging
+###############################################################################
+log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*" >&2; }
+
+###############################################################################
+# Choose best MIME type from available types
+###############################################################################
+choose_mime() {
+  local types="$1"
+
+  # File copies: detect text/uri-list with "copy\nfile://" content
+  if echo "$types" | grep -qx 'text/uri-list'; then
+    local uri_content
+    uri_content="$(wl-paste --type text/uri-list 2>/dev/null)"
+    if echo "$uri_content" | grep -q '^file://'; then
+      echo "x-special/file-transfer"
+      return
+    fi
+  fi
+
+  if echo "$types" | grep -qx 'text/plain;charset=utf-8'; then
+    echo 'text/plain;charset=utf-8'; return
+  fi
+  if echo "$types" | grep -qx 'text/plain'; then
+    echo 'text/plain'; return
+  fi
+  if echo "$types" | grep -qx 'image/png'; then
+    echo 'image/png'; return
+  fi
+  local t
+  t="$(echo "$types" | grep '^text/' | head -1)"
+  if [[ -n "$t" ]]; then echo "$t"; return; fi
+  t="$(echo "$types" | grep '^image/' | head -1)"
+  if [[ -n "$t" ]]; then echo "$t"; return; fi
+  echo "$types" | head -1
+}
+
+###############################################################################
+# Local clipboard watcher (sends changes to peer)
+###############################################################################
+watch_local() {
+  log "Watching local clipboard, sending to ${PEER}:${PORT}"
+
+  wl-paste --watch bash -c '
+    STATE_DIR="'"$STATE_DIR"'"
+    PEER="'"$PEER"'"
+    PORT="'"$PORT"'"
+    FILE_STAGING="'"$FILE_STAGING"'"
+
+    # Check suppress flag
+    if [[ -f "$STATE_DIR/suppress" ]]; then
+      suppress_age=$(( $(date +%s) - $(stat -c %Y "$STATE_DIR/suppress" 2>/dev/null || echo 0) ))
+      if (( suppress_age < 2 )); then
+        exit 0
+      fi
+      rm -f "$STATE_DIR/suppress"
+    fi
+
+    sleep 0.3
+
+    types="$(wl-paste --list-types 2>/dev/null)" || exit 0
+    [[ -n "$types" ]] || exit 0
+
+    # Determine mime type and get data
+    mime=""
+    tmp="$(mktemp)"
+    trap "rm -f $tmp" EXIT
+
+    # Check for file copy (text/uri-list with file:// URIs)
+    if echo "$types" | grep -qx "text/uri-list"; then
+      uri_content="$(wl-paste --type text/uri-list 2>/dev/null)"
+      if echo "$uri_content" | grep -q "^file://"; then
+        # Extract file paths from URIs (skip "copy" line if present)
+        file_paths=""
+        while IFS= read -r line; do
+          case "$line" in
+            file://*)
+              # URL decode and strip file://
+              path="${line#file://}"
+              # Basic percent-decode
+              path="$(printf "%b" "${path//%/\\x}")"
+              if [[ -e "$path" ]]; then
+                file_paths="${file_paths}${path}\n"
+              fi
+              ;;
+          esac
+        done <<< "$uri_content"
+
+        if [[ -n "$file_paths" ]]; then
+          # Tar the first file (handles single file/dir)
+          first_path="$(printf "%b" "$file_paths" | head -1)"
+          if [[ -e "$first_path" ]]; then
+            parent="$(dirname "$first_path")"
+            base="$(basename "$first_path")"
+            if tar -cf "$tmp" -C "$parent" "$base" 2>/dev/null && [[ -s "$tmp" ]]; then
+              mime="x-special/file-transfer"
+            fi
+          fi
+        fi
+      fi
+    fi
+
+    # If not a file, try image/text
+    if [[ -z "$mime" ]]; then
+      if echo "$types" | grep -qx "image/png"; then
+        mime="image/png"
+      elif echo "$types" | grep -qx "text/plain;charset=utf-8"; then
+        mime="text/plain;charset=utf-8"
+      elif echo "$types" | grep -qx "text/plain"; then
+        mime="text/plain"
+      else
+        mime="$(echo "$types" | head -1)"
+      fi
+      wl-paste --type "$mime" > "$tmp" 2>/dev/null || exit 0
+    fi
+
+    [[ -n "$mime" && -s "$tmp" ]] || exit 0
+
+    # Hash and loop prevention
+    hash="$(sha256sum "$tmp" | cut -d" " -f1)"
+    last_recv="$(cat "$STATE_DIR/last_recv_hash" 2>/dev/null)"
+    last_sent="$(cat "$STATE_DIR/last_sent_hash" 2>/dev/null)"
+    [[ "$hash" != "$last_recv" ]] || exit 0
+    [[ "$hash" != "$last_sent" ]] || exit 0
+
+    # Encode and send
+    b64="$(base64 -w0 < "$tmp")"
+    len="${#b64}"
+
+    if printf "CLIP:%s:%d\n%s\nEND\n" "$mime" "$len" "$b64" | \
+         socat -T10 - "TCP:${PEER}:${PORT},connect-timeout=3" 2>/dev/null; then
+      echo "$hash" > "$STATE_DIR/last_sent_hash"
+      printf "[%s] Sent %s (%d bytes) to %s\n" "$(date +%H:%M:%S)" "$mime" "$(wc -c < "$tmp")" "$PEER" >&2
+    fi
+  ' 2>&1
+}
+
+###############################################################################
+# TCP server — receive clipboard from peer
+###############################################################################
+serve_incoming() {
+  log "Listening for incoming clipboard on port ${PORT}"
+  export STATE_DIR FILE_STAGING WAYLAND_DISPLAY XDG_RUNTIME_DIR
+  socat "TCP-LISTEN:${PORT},reuseaddr,fork" \
+    "EXEC:clipboard-sync-recv-wayland" 2>&1
+}
+
+###############################################################################
+# Main
+###############################################################################
+main() {
+  for cmd in socat wl-copy wl-paste sha256sum base64 tar; do
+    command -v "$cmd" >/dev/null || { log "Missing: $cmd"; exit 1; }
+  done
+
+  log "Clipboard sync starting: peer=${PEER} port=${PORT}"
+
+  serve_incoming &
+  local server_pid=$!
+
+  trap 'kill $server_pid 2>/dev/null; rm -rf "$STATE_DIR"; exit 0' INT TERM
+
+  watch_local
+
+  wait
+}
+
+main "$@"

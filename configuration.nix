@@ -437,7 +437,7 @@
     vim
     
     # CLI Tools
-    inputs.cline-cli.packages.${pkgs.stdenv.hostPlatform.system}.default
+    inputs.cline-cli.packages.${pkgs.stdenv.hostPlatform.system}.cline-262k  # 262k context window
     inputs.kiro-cli.packages.${pkgs.stdenv.hostPlatform.system}.default
     
     # Secrets Management
@@ -450,6 +450,14 @@
     nmap
     pssh
     tmate
+    dnsutils     # dig, nslookup
+    ldns         # drill (dig replacement)
+    aria2        # multi-protocol download utility
+    socat        # netcat replacement
+    masscan      # fast network scanner
+    net-snmp     # SNMP tools (snmpget, etc.)
+    ipcalc       # IPv4/v6 calculator
+    mermaid-cli  # mermaid cli 
 
     # Audio.
     ladspaPlugins
@@ -481,6 +489,7 @@
     android-tools
     postgresql
     gvfs
+    file             # file type detection utility
 
     # Shells.
     fish
@@ -491,6 +500,7 @@
     uv
     amazon-q-cli
     jetbrains-toolbox
+    cowsay           # fun ascii art text
 
     # Session.
     polkit

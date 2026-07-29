@@ -85,9 +85,11 @@
       setuptools-scm
       wheel
       hatchling
+      pytest
       
       # Utilities
       pywal
+      pyyaml
       appdirs
       inotify-simple
       ordered-set

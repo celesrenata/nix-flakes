@@ -1,120 +1,42 @@
-# Hyprland configuration for esnixi (desktop)
+# Hyprland configuration for Nigel (Lenovo ideacentre AIO 700-27ISH)
+# NVIDIA GTX 950M — Maxwell GPU, no explicit sync (pre-555 drivers)
+# Simplified config: no DP-3 touch display, single monitor
+# GTX 950M is adequate for Hyprland but may need reduced animations
+
 { inputs, lib, pkgs, config, ... }:
 
 {
-  imports = [ 
+  imports = [
     inputs.ags.homeManagerModules.default
     inputs.dots-hyprland.homeManagerModules.default
-    ../home/system/hyte-touch.nix
-    ../home/system/rgb-gradient.nix
   ];
 
-  # dots-hyprland configuration for esnixi
+  # dots-hyprland configuration for Nigel
   programs.dots-hyprland = {
     enable = true;
-    source = pkgs.dots-hyprland-source-filtered;  # Use DP-3 filtered version
+    source = inputs.dots-hyprland-source;
     packageSet = "essential";
     mode = "hybrid";
-    
+
     touchegg.enable = lib.mkForce false;
     configuration.copyMiscConfig = lib.mkForce true;
     configuration.applications.foot.enable = lib.mkForce false;
     configuration.applications.kitty.enable = lib.mkForce false;
     configuration.applications.fuzzel.enable = lib.mkForce false;
     configuration.copyFishConfig = lib.mkForce false;
-    
-    overrides.hyprlandConf = ''
-      # Hyprland configuration for esnixi (desktop)
-      
-      # Start cursor barrier script to prevent mouse from entering DP-3
-      
-      # Hyte Touch Display Configuration - Isolate DP-3
-      workspace = name:touch, monitor:DP-3, default:true
-      workspace = name:touch, gapsin:0, gapsout:0, border:false
 
-      # Prevent mouse cursor from crossing to DP-3 and enable direct touch
+    overrides.hyprlandConf = ''
+      # Hyprland configuration for Nigel (GTX 950M / Maxwell)
+
       misc {
           disable_hyprland_logo = true
           disable_splash_rendering = true
-          mouse_move_enables_dpms = false
-          key_press_enables_dpms = false
+          force_default_wallpaper = -1
       }
 
-      # Isolate DP-3 with workspace rules
-      workspace = DP-3,1
-      
-      # Prevent cursor from warping to DP-3
-      cursor {
-          no_warps = true
-          hide_on_touch = true
-      }
-      
-      # Window rules to lock touch interface to DP-3
-      windowrule {
-        name = hyte-touch
-        match:title = ^(hyte-touch-interface)$
-        monitor = DP-3
-        fullscreen = on
-      }
-
-      # ProjectM visualizer - behind QuickShell
-      windowrule {
-        name = projectm
-        match:class = ^(projectMSDL)$
-        workspace = name:touch
-        monitor = DP-3
-        fullscreen = on
-      }
-
-      # OneTrainer window rules - force decorations on Xwayland
-      windowrule {
-        name = onetrainer-tk
-        match:class = ^(Tk)$
-        tile = on
-        decorate = on
-      }
-      windowrule = decorate on, match:xwayland true
-      
-      # Voice dictation is handled via Hyprland keybind (keyd outputs Ctrl+H for Logi button)
-      bind = CTRL, H, global, quickshell:dictationTap
-
-      # Source external custom configuration
-      source = ~/.config/hypr/custom.conf
-      
-
-
-      # Map Hyte touchpad specifically to DP-3
-      device {
-          name = ilitek-------ilitek-touch
-          output = DP-3
-          enabled = true
-          transform = 3
-      }
-
-      # Disable cursor on DP-3 for direct touch interaction
-      cursor {
-          no_warps = true
-          hide_on_touch = true
-          inactive_timeout = 0
-      }
-
-      # Touch-specific input configuration
-      input {
-          touchpad {
-              disable_while_typing = false
-              tap-to-click = true
-              drag_lock = false
-          }
-          touchdevice {
-              output = DP-3
-              transform = 3
-          }
-      }
-      
       # Environment variables
       env = XCURSOR_SIZE,24
       env = QT_QPA_PLATFORMTHEME,qt5ct
-      env = OLLAMA_HOST,http://10.1.1.12:2701
       env = QT_IM_MODULE, fcitx
       env = XMODIFIERS, @im=fcitx
       env = SDL_IM_MODULE, fcitx
@@ -122,20 +44,19 @@
       env = INPUT_METHOD, fcitx
       env = ELECTRON_OZONE_PLATFORM_HINT,auto
       env = QT_QPA_PLATFORM, wayland
-      env = QT_QPA_PLATFORMTHEME, kde
       env = XDG_MENU_PREFIX, plasma-
       env = TERMINAL,foot
-      
+
+      # NVIDIA-specific environment for GTX 950M
+      env = LIBVA_DRIVER_NAME,nvidia
+      env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+      env = NVD_BACKEND, direct
+
       # Input configuration
       input {
           kb_layout = us
-          kb_variant =
-          kb_model =
-          kb_options =
-          kb_rules =
-          
           follow_mouse = 1
-          
+
           touchpad {
               natural_scroll = yes
               tap-to-click = yes
@@ -143,35 +64,28 @@
               clickfinger_behavior = 1
               middle_button_emulation = yes
           }
-          
-          sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
+
+          sensitivity = 0
       }
 
       # General configuration
       general {
-          # Gaps and border
           gaps_in = 4
           gaps_out = 7
           border_size = 2
           col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
           col.inactive_border = rgba(595959aa)
-          
-          # Layout
           layout = dwindle
           allow_tearing = false
       }
 
       decoration {
-          # Rounding and blur
           rounding = 16
-          
           blur {
-              enabled = true
+              enabled = false  # Disabled for GTX 950M performance
               size = 3
               passes = 1
           }
-          
-          # Updated shadow syntax for newer Hyprland versions
           shadow {
               enabled = yes
               range = 4
@@ -182,9 +96,7 @@
 
       animations {
           enabled = yes
-          
           bezier = myBezier, 0.05, 0.9, 0.1, 1.05
-          
           animation = windows, 1, 7, myBezier
           animation = windowsOut, 1, 7, default, popin 80%
           animation = border, 1, 10, default
@@ -201,110 +113,75 @@
           new_status = master
       }
 
-      # Gestures (Hyprland 0.51+ syntax)
+      # Gestures
       gestures {
-          gesture = 3, horizontal, workspace
-          gesture = 4, pinchin, dispatcher, fullscreen 1
-          gesture = 4, pinchout, dispatcher, fullscreen 1
-          gesture = 4, left, dispatcher, exec ~/.local/bin/gesture-toggle.sh left
-          gesture = 4, right, dispatcher, exec ~/.local/bin/gesture-toggle.sh right
-          gesture = 4, up, dispatcher, exec ~/.local/bin/gesture-toggle.sh up
-          gesture = 4, down, dispatcher, exec ~/.local/bin/gesture-toggle.sh down
-      }
-
-      misc {
-          force_default_wallpaper = -1
+          workspace_swipe = true
       }
 
       # Window rules
       windowrule = suppress_event maximize, match:class .*
 
-      # KEYBIND VARIABLES - Fixed with proper definitions
+      # KEYBIND VARIABLES
       $Primary = Super
       $Secondary = Control
       $Tertiary = Shift
       $Alternate = Alt
 
       #+! System Controls
-      # Volume
       bindl = ,XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
       bindle=, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 3%+
       bindle=, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 3%-
-
-      # Brightness (disabled on desktop - no backlight)
-      # bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+' && hyprctl dispatch global quickshell:osdShow
-      # bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-' && hyprctl dispatch global quickshell:osdShow
+      bindle=, XF86MonBrightnessUp, exec, brightnessctl set '12.75+'
+      bindle=, XF86MonBrightnessDown, exec, brightnessctl set '12.75-'
 
       #+! Applications
-      # Music
       bind = $Primary$Secondary, M, exec, tidal-hifi
-      bind = $Primary$Secondary$Tertiary, M, exec, env -u NIXOS_OZONE_WL cider --use-gl=desktop
-      bind = $Primary$Secondary$Alternate, M, exec, spotify
-      # Discord
-      bind = $Primary$Secondary, I, exec, discord 
-      # Foot
+      bind = $Primary$Secondary, I, exec, discord
       bind = $Primary$Secondary, G, exec, foot
       bind = $Primary$Secondary$Tertiary, T, exec, foot sleep 0.01 && nmtui
-      # Finders
       bind = $Primary$Secondary, J, exec, thunar
       bind = $Primary$Secondary$Tertiary, J, exec, nautilus
-      # Browsers
       bind = $Primary$Secondary, B, exec, firefox
-      bind = $Primary$Secondary$Tertiary, B, exec, chromium 
-      # Code editors
+      bind = $Primary$Secondary$Tertiary, B, exec, chromium
       bind = $Primary$Secondary, U, exec, code
-      bind = $Primary$Secondary, X, exec, subl
       bind = $Primary$Secondary, C, exec, code
       bind = $Primary$Secondary$Tertiary, C, exec, jetbrains-toolbox
-      # Calculator
       bind = $Primary$Secondary, 3, exec, ~/.local/bin/wofi-calc
       bind = ,XF86Calculator, exec, ~/.local/bin/wofi-calc
-      # Settings (Super+Comma)
-      bind = $Primary$Secondary, comma, exec, quickshell -p ~/.config/quickshell/ii/settings.qml
 
       #+! Window Actions
       bind = $Primary$Secondary, Period, exec, pkill fuzzel || ~/.local/bin/fuzzel-emoji
       bind = $Alternate, F4, killactive,
-      bind = $Secondary$Alternate, Space, togglefloating, 
+      bind = $Secondary$Alternate, Space, togglefloating,
       bind = $Secondary$Alternate, Q, exec, hyprctl kill
 
       #+! Screenshot & Recording
       bind = $Secondary$Tertiary, 4, exec, grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" - | wl-copy
-      bind = $Secondary$Tertiary, 5, exec, ~/.config/quickshell/ii/scripts/record.sh # Record region (no sound)
-      bind = $Secondary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record --sound
-      bind = $Secondary$Tertiary$Alternate, 5, exec, ~/.config/quickshell/ii/scripts/record.sh --fullscreen-sound
-      bind = Super+Shift+Alt, mouse:273, exec, ~/.config/quickshell/ii/scripts/ai/primary-buffer-query.sh # AI summary for selected text
+      bind = $Secondary$Tertiary, 5, exec, wf-recorder -g "$(slurp)"
       bindl =,Print,exec,grim - | wl-copy
       bind = $Secondary$Alternate, C, exec, hyprpicker -a
       bind = $Primary$Alternate, Space, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
-      bind = $Secondary$Alternate, V, exec, cliphist list | wofi -Iim --dmenu | cliphist decode | wl-copy && wtype -M ctrl v -M ctrl
 
       #+! Text Recognition (OCR)
       bind = $Primary$Secondary$Tertiary,S,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract "tmp.png" - | wl-copy && rm "tmp.png"
-      bind = $Secondary$Tertiary,T,exec,grim -g "$(slurp -d -c D1E5F4BB -b 1B232866 -s 00000000)" "tmp.png" && tesseract -l eng "tmp.png" - | wl-copy && rm "tmp.png"
 
       # Media controls
-      #+! Media Controls
-      bind = $Secondary$Tertiary, N, exec, playerctl next || playerctl position `bc <<< "100 * $(playerctl metadata mpris:length) / 1000000 / 100"`
-      bindl  = , XF86AudioNext, exec, playerctl next 
+      bind = $Secondary$Tertiary, N, exec, playerctl next
+      bindl  = , XF86AudioNext, exec, playerctl next
       bindl  = , XF86AudioPrev, exec, playerctl previous
       bindl  = , XF86AudioPlay, exec, playerctl play-pause
       bind = $Secondary$Tertiary, B, exec, playerctl previous
       bind = $Secondary$Tertiary, P, exec, playerctl play-pause
 
       #+! System Actions
-      # Lock screen
       bind = $Primary$Secondary, L, exec, hyprlock
 
       #+! Quickshell Interface
-      # Quickshell restart (equivalent to the old AGS restart)
       bindr = $Primary$Secondary, R, exec, systemctl --user reload quickshell.service
-      
-      # Wallpaper selection
       bind = CTRL SUPER, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh --choose
       bind = CTRL SUPER SHIFT, T, exec, ~/.config/quickshell/ii/scripts/colors/switchwall.sh
-      
-      # Desktop environment controls (converted from AGS to Quickshell)
+
+      # Desktop environment controls
       bind = $Alternate, Tab, exec, hyprctl dispatch global quickshell:overviewToggle
       bind = $Secondary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
       bind = $Primary, Space, exec, hyprctl dispatch global quickshell:overviewToggle
@@ -315,13 +192,10 @@
       bind = $Secondary$Alternate, Slash, exec, hyprctl dispatch global quickshell:cheatsheetToggle
 
       #+! Window Management
-      # Swap windows
       bind = $Secondary$Tertiary, left, movewindow, l
       bind = $Secondary$Tertiary, right, movewindow, r
       bind = $Secondary$Tertiary, up, movewindow, u
       bind = $Secondary$Tertiary, down, movewindow, d
-      
-      # Move focus
       bind = $Secondary, left, movefocus, l
       bind = $Secondary, right, movefocus, r
       bind = $Alternate, up, movefocus, u
@@ -342,14 +216,10 @@
       # Window split ratio
       binde = $Primary$Secondary, Minus, layoutmsg, splitratio, -0.1
       binde = $Primary$Secondary, Equal, layoutmsg, splitratio, 0.1
-      binde = $Secondary, Semicolon, layoutmsg, splitratio, -0.1
-      binde = $Secondary, Apostrophe, layoutmsg, splitratio, 0.1
 
       #+! Window States
-      # Fullscreen
       bind = $Primary$Secondary, F, fullscreen, 0
       bind = $Primary$Secondary, D, fullscreen, 1
-      bind = $Secondary$Alternate, F, fullscreenstate, 0
 
       #+! Workspace Switching
       bind = $Secondary, 1, workspace, 1
@@ -363,8 +233,6 @@
       bind = $Secondary, 9, workspace, 9
       bind = $Secondary, 0, workspace, 10
       bind = $Primary$Secondary, S, togglespecialworkspace,
-      bind = $Alternate, Tab, cyclenext
-      bind = $Alternate, Tab, bringactivetotop,   # bring it to the top
 
       #+! Move Windows to Workspace
       bind = $Secondary$Alternate, 1, movetoworkspacesilent, 1
@@ -380,35 +248,44 @@
       bind = $Secondary$Alternate, S, movetoworkspacesilent, special
 
       #+! Mouse Controls
-      # Mouse workspace scrolling
       bind = $Secondary, mouse_up, workspace, +1
       bind = $Secondary, mouse_down, workspace, -1
-      bind = $Primary$Secondary, mouse_up, workspace, +1
-      bind = $Primary$Secondary, mouse_down, workspace, -1
-
-      # Mouse window controls
       bindm = $Secondary, mouse:273, resizewindow
-      bindm = $Primary$Secondary, mouse:273, resizewindow
       bindm = ,mouse:274, movewindow
       bindm = $Primary$Secondary, Z, movewindow
       bind = $Primary$Secondary, Backslash, resizeactive, exact 640 480
 
-      # Quickshell integration and desktop environment
+      # Startup
       exec-once = hyprctl setcursor Bibata-Modern-Classic 24
-      exec-once = sleep 3 && openrgb -p default.orp
       exec-once = systemctl --user start quickshell.service
-      exec-once = [workspace name:touch silent] hyte-touch-interface
       exec-once = wl-paste --watch cliphist store
-      exec-once = ~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh
       exec-once = gnome-keyring-daemon --start --components=secrets
-      exec-once = /usr/lib/polkit-kde-authentication-agent-1 || /usr/libexec/polkit-kde-authentication-agent-1  || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 || /usr/libexec/polkit-gnome-authentication-agent-1
+      exec-once = /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 || /usr/libexec/polkit-gnome-authentication-agent-1
       exec-once = hypridle
-      exec-once = touchegg
       exec-once = dbus-update-activation-environment --all
-      exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP # Some fix idk
-      exec-once = hyprpm list &>/dev/null && hyprpm reload
-      exec-once = easyeffects --gapplication-service
+      exec-once = sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+
+      # Source external custom configuration
+      source = ~/.config/hypr/custom.conf
     '';
+  };
+
+  # Hyprland monitor/gesture settings
+  programs.dots-hyprland.hyprland = {
+    general = {
+      gapsIn = 4;
+      gapsOut = 7;
+      borderSize = 2;
+      allowTearing = false;
+    };
+    decoration = {
+      rounding = 16;
+      blurEnabled = false;  # Disabled for GTX 950M performance
+    };
+    gestures = {
+      workspaceSwipe = true;
+    };
+    monitors = [ ];  # Let auto-detect
   };
 
   # Prevent HM from managing icons dir — Steam needs to write here

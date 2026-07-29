@@ -3,7 +3,13 @@
 # - gguf: nixpkgs uses llama.cpp rev (9967) as version but metadata says 0.19.0
 # - pipx: test_inject parametrize mismatch (nixpkgs already sets doCheck=false)
 # - ultralytics: setuptools<=82.0.1 constraint vs nixpkgs 83.0.0
+# - mcp-nixos: flaky test_read_text_file assertion (finds "Error" in random nix store file)
 final: prev: {
+  # Top-level package fix (not in python3Packages)
+  mcp-nixos = prev.mcp-nixos.overrideAttrs (old: {
+    doInstallCheck = false;
+    doCheck = false;
+  });
   python3 = prev.python3.override {
     packageOverrides = pyfinal: pyprev: {
       inline-snapshot = pyprev.inline-snapshot.overridePythonAttrs (old: {

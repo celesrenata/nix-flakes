@@ -20,6 +20,7 @@
       syncModels = false;
       loadModels = [
         "nutboy02/Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-uncenfull:Q2_K_MTX"
+        "snowflake-arctic-embed2"
       ];
       environmentVariables = {
         OLLAMA_FLASH_ATTENTION = "1";
@@ -27,6 +28,7 @@
         OLLAMA_NUM_PARALLEL = "4";
         OLLAMA_MAX_LOADED_MODELS = "1";
         OLLAMA_CONTEXT_LENGTH = "262144";
+        OLLAMA_NUM_PREDICT = "-1";
         OLLAMA_KEEP_ALIVE = "-1";
         OLLAMA_MAX_QUEUE = "32";
       };
@@ -107,6 +109,7 @@
         environment = {
           OLLAMA_HOST = "${config.services.ollama.host}:${toString config.services.ollama.port}";
           OLLAMA_MODELS = config.my.paths.ollamaModels;
+          OLLAMA_ORIGINS = "*";
         };
 
         serviceConfig = {

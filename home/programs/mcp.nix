@@ -92,6 +92,17 @@ let
         env = { };
       };
 
+      nixos = {
+        command = lib.getExe pkgs.mcp-nixos;
+        args = [ ];
+        env = { };
+        autoApprove = [
+          "nixos_search" "nixos_info" "nixos_stats"
+          "home_manager_search" "home_manager_info" "home_manager_stats"
+          "nix_packages_search" "nix_packages_info" "nix_packages_stats"
+        ];
+      };
+
       ii-desktop = {
         command = lib.getExe inputs.ii-desktop-mcp.packages.${pkgs.system}.default;
         args = [ ];
@@ -117,6 +128,18 @@ let
     useLegacyMcpJson = true;
   };
 
+  # ── ZooCode/VSCode MCP Configuration ────────────────────────────────────
+  # Generates the ZooCode MCP settings that mirrors kiro's config
+  zooCodeMcpConfig = {
+    mcpServers = builtins.mapAttrs (name: server: {
+      command = server.command;
+      args = server.args or [ ];
+      env = server.env or { };
+    } // (if server ? autoApprove then { alwaysAllow = server.autoApprove; } else { })
+      // (if server ? timeout then { timeout = server.timeout / 1000; } else { })
+    ) mcpConfig.mcpServers;
+  };
+
 in
 {
   home.file.".kiro/settings/mcp.json" = {
@@ -125,5 +148,10 @@ in
 
   home.file.".kiro/agents/kiro_default.json" = {
     text = builtins.toJSON kiroDefaultAgent;
+  };
+
+  # ZooCode MCP settings
+  xdg.configFile."Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" = {
+    text = builtins.toJSON zooCodeMcpConfig;
   };
 }
