@@ -75,8 +75,73 @@ let
         platforms = platforms.all;
       };
     };
+  # Helper: builds a Python MCP server from a GitHub source.
+  buildPythonMcpServer =
+    {
+      pname,
+      version,
+      src,
+      pythonDeps,
+      bin ? pname,
+      description,
+    }:
+
+    let
+      python = final.python313;
+      pythonWithDeps = python.withPackages pythonDeps;
+    in
+    final.stdenv.mkDerivation {
+      inherit pname version src;
+
+      nativeBuildInputs = [ final.makeWrapper ];
+
+      dontBuild = true;
+
+      installPhase = ''
+        runHook preInstall
+        mkdir -p $out/lib/${pname} $out/bin
+        cp -r . $out/lib/${pname}/
+        makeWrapper "${pythonWithDeps}/bin/python" "$out/bin/${bin}" \
+          --add-flags "$out/lib/${pname}/mcp_server.py"
+        runHook postInstall
+      '';
+
+      meta = with final.lib; {
+        inherit description;
+        mainProgram = bin;
+        platforms = platforms.all;
+      };
+    };
+
 in
 {
+  mcp-searxng-enhanced = buildPythonMcpServer {
+    pname = "mcp-searxng-enhanced";
+    version = "0.1.0";
+    src = final.fetchFromGitHub {
+      owner = "OvertliDS";
+      repo = "mcp-searxng-enhanced";
+      rev = "master";
+      hash = "sha256-a+pV5+VMiN9QNx2t24OeEvIRGt0rGGvyK8EisswGBQY=";
+    };
+    pythonDeps = ps: with ps; [
+      fastmcp
+      httpx
+      beautifulsoup4
+      pydantic
+      tzdata
+      trafilatura
+      python-dateutil
+      cachetools
+      filetype
+      pymupdf
+      pymupdf4llm
+      lxml
+    ];
+    bin = "mcp-searxng-enhanced";
+    description = "Enhanced MCP server for SearXNG: category-aware web search, scraping, and date/time";
+  };
+
   mcp-server-sequential-thinking = buildMcpServer {
     pname = "mcp-server-sequential-thinking";
     version = "2025.12.18";

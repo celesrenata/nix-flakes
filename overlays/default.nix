@@ -19,6 +19,7 @@
     (import ./comfyui.nix)
     (import ./mkvtoolnix.nix)
     (import ./tidal-hifi.nix)
+    (import ./xdph-libstdcxx-fix.nix)
   ];
 
   # Desktop environment overlays: theming, emoji picker, calculator, DP-3 filter
@@ -39,10 +40,11 @@
     (import ./mcp-servers.nix)
   ];
 
-  # Gaming overlays: Proton tweaks, VR
+  # Gaming overlays: Proton tweaks, VR, real SDL2
   gaming = [
     inputs.protontweaks.overlay
     (import ./wivrn-fix.nix)
+    (import ./sdl2-real.nix { inherit inputs; })
   ];
 
   # AI/ML overlays: ComfyUI, vLLM, TensorRT, xformers binary, bitsandbytes

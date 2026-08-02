@@ -6,6 +6,11 @@
   inputs = {
     # Core NixOS packages - unstable as main, old stable for compatibility
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";           # Main channel (unstable)
+    nixpkgs-24_11.url = "github:nixos/nixpkgs/nixos-24.11";       # Real SDL2 (pre sdl2-compat)
+
+    # m5max MacBook Pro M5 Max darwin configuration (re-exported)
+    m5max-darwin-flake.url = "path:/home/celes/sources/m5max-darwin-flake";
+    m5max-darwin-flake.inputs.nixpkgs.follows = "nixpkgs";
 
     # Home Manager for user environment management
     home-manager.url = "github:nix-community/home-manager/master";
@@ -168,7 +173,8 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
+            home-manager.backupFileExtension = "hm-bak";
+            home-manager.backupCommand = "rm -f $1.hm-bak; mv $1 $1.hm-bak";
             home-manager.verbose = true;
 
             home-manager.extraSpecialArgs = {
@@ -360,5 +366,8 @@
 
     # NixOS system configurations generated from host matrix
     nixosConfigurations = builtins.mapAttrs (name: cfg: mkHost (cfg // { hostname = name; })) hosts;
+
+    # Re-export darwin configuration for M5 Max MacBook Pro from m5max-darwin-flake
+    darwinConfigurations.stabulous = inputs.m5max-darwin-flake.darwinConfigurations.stabulous;
   };
 }

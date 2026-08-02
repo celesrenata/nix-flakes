@@ -35,6 +35,8 @@
         mesa-demos
         qt6.qtwayland
         nss
+        sdl2-real
+        openal
         libxkbfile
         kdePackages.qtwayland
         #libsForQt5.qt5.qtwayland

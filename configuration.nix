@@ -19,7 +19,21 @@
   environment.localBinInPath = true;
 
   # Enable nix-ld for dynamically linked binaries (kiro-cli bun, etc.)
-  programs.nix-ld.enable = true;
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      zlib
+      openssl
+      sdl2-real
+      openal
+      libGL
+      stdenv.cc.cc.lib
+      libx11
+      libxrandr
+      libxcursor
+      libxi
+    ];
+  };
   # Enable Flakes.
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];

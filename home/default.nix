@@ -25,6 +25,7 @@
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools
     ./programs/mcp.nix              # MCP server configuration for Kiro CLI
+    ./programs/toolhive.nix         # ToolHive MCP server container management
     
     # Shell Environment Configuration
     ./shell/fish.nix                # Fish shell configuration and integration

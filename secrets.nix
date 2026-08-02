@@ -8,13 +8,21 @@
   sops = {
     defaultSopsFile = ./secrets/secrets.yaml;
     validateSopsFiles = false;
-    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
     secrets = {
       github_token = {
         mode = "0440";
         group = "wheel";
       };
+      input-leap-stabulous-fingerprint = {
+        mode = "0400";
+        owner = "celes";
+        group = "users";
+      };
       openai_api_key = {
+        mode = "0440";
+        group = "wheel";
+      };
+      grafana_service_account_token = {
         mode = "0440";
         group = "wheel";
       };

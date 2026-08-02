@@ -1,97 +1,90 @@
 # MCP (Model Context Protocol) Server Configuration
-# Generates ~/.kiro/settings/mcp.json declaratively and wraps servers
-# that need runtime secrets via sops-nix.
+# Generates ~/.kiro/settings/mcp.json and Zoo Code MCP settings declaratively.
+#
+# Architecture:
+#   - ToolHive-managed servers: referenced by URL (container-isolated, see toolhive.nix)
+#   - Native servers: referenced by command (need local system access)
 { inputs, lib, pkgs, config, ... }:
 
 let
-  # ── Secret Paths ──────────────────────────────────────────────────────────
-  openAISecretPath = "/run/secrets/openai_api_key";
-  githubTokenPath = "/run/secrets/github_token";
+  # ── ToolHive Proxy Ports (must match toolhive.nix) ────────────────────────
+  thvPort = name: {
+    github = 19100;
+    memory = 19101;
+    sequentialthinking = 19102;
+    fetch = 19103;
+    searxng-enhanced = 19104;
+    chat-codex = 19106;
+    k8s = 19107;
+    context7 = 19108;
+    postgres = 19110;
+    redis = 19111;
+    grafana = 19112;
+    hass = 19113;
+  }.${name};
 
-  # ── Wrapped Servers (secrets injected at runtime) ─────────────────────────
-  chatGpt52Wrapped = pkgs.writeShellApplication {
-    name = "mcp-chat-gpt52";
-    runtimeInputs = [ pkgs.coreutils ];
-    text = ''
-      AI_CHAT_KEY="$(cat ${openAISecretPath})"
-      export AI_CHAT_KEY
-      export AI_CHAT_NAME="GPT-5.2"
-      export AI_CHAT_MODEL="gpt-5.2"
-      export AI_CHAT_BASE_URL="https://api.openai.com/v1"
-      export AI_CHAT_TIMEOUT="300000"
-      exec ${lib.getExe pkgs.any-chat-completions-mcp} "$@"
-    '';
-  };
-
-  chatCodexWrapped = pkgs.writeShellApplication {
-    name = "mcp-chat-codex";
-    runtimeInputs = [ pkgs.coreutils ];
-    text = ''
-      AI_CHAT_KEY="$(cat ${openAISecretPath})"
-      export AI_CHAT_KEY
-      export AI_CHAT_NAME="GPT-5.5"
-      export AI_CHAT_MODEL="gpt-5.5"
-      export AI_CHAT_BASE_URL="https://api.openai.com/v1"
-      export AI_CHAT_TIMEOUT="300000"
-      exec ${lib.getExe pkgs.any-chat-completions-mcp} "$@"
-    '';
-  };
-
-  githubWrapped = pkgs.writeShellApplication {
-    name = "mcp-server-github-wrapped";
-    runtimeInputs = [ pkgs.coreutils ];
-    text = ''
-      GITHUB_PERSONAL_ACCESS_TOKEN="$(cat ${githubTokenPath})"
-      export GITHUB_PERSONAL_ACCESS_TOKEN
-      exec ${lib.getExe pkgs.mcp-server-github} "$@"
-    '';
-  };
+  thvUrl = name: "http://localhost:${toString (thvPort name)}/mcp";
 
   # ── MCP Client Configuration ─────────────────────────────────────────────
   mcpConfig = {
     mcpServers = {
-      sequential-thinking = {
-        command = lib.getExe pkgs.mcp-server-sequential-thinking;
-        args = [ ];
-        env = { };
-        autoApprove = [ "sequentialthinking" ];
-      };
-
-      memory = {
-        command = lib.getExe pkgs.mcp-server-memory;
-        args = [ ];
-        env = { };
-      };
-
+      # ── ToolHive-managed (container-isolated) ──────────────────────────
       github = {
-        command = lib.getExe githubWrapped;
-        args = [ ];
-        env = { };
+        url = thvUrl "github";
         autoApprove = [ "get_file_contents" ];
       };
 
-      chat-gpt52 = {
-        command = lib.getExe chatGpt52Wrapped;
-        args = [ ];
-        env = { };
-        autoApprove = [ "chat-with-gpt-5.2" ];
-        timeout = 120000;
+      memory = {
+        url = thvUrl "memory";
       };
 
-      chat-codex = {
-        command = lib.getExe chatCodexWrapped;
-        args = [ ];
-        env = { };
-        autoApprove = [ "chat-with-gpt-5.5" ];
-        timeout = 120000;
+      sequential-thinking = {
+        url = thvUrl "sequentialthinking";
+        autoApprove = [ "sequentialthinking" ];
       };
 
       fetch = {
-        command = "${pkgs.uv}/bin/uvx";
-        args = [ "mcp-server-fetch" ];
-        env = { };
+        url = thvUrl "fetch";
       };
 
+      searxng-enhanced = {
+        url = thvUrl "searxng-enhanced";
+        autoApprove = [ "search_web" "get_website" "get_current_datetime" ];
+      };
+
+      chat-codex = {
+        url = thvUrl "chat-codex";
+        autoApprove = [ "chat-with-gpt-5.5" ];
+      };
+
+      k8s = {
+        url = thvUrl "k8s";
+      };
+
+      context7 = {
+        url = thvUrl "context7";
+        autoApprove = [ "resolve-library-id" "get-library-docs" ];
+      };
+
+      postgres = {
+        url = thvUrl "postgres";
+      };
+
+      redis = {
+        url = thvUrl "redis";
+        autoApprove = [ "get" "keys" "info" ];
+      };
+
+      grafana = {
+        url = thvUrl "grafana";
+        autoApprove = [ "search_dashboards" "list_datasources" ];
+      };
+
+      hass = {
+        url = thvUrl "hass";
+      };
+
+      # ── Native servers (need local system access) ──────────────────────
       nixos = {
         command = lib.getExe pkgs.mcp-nixos;
         args = [ ];
@@ -129,13 +122,14 @@ let
   };
 
   # ── ZooCode/VSCode MCP Configuration ────────────────────────────────────
-  # Generates the ZooCode MCP settings that mirrors kiro's config
   zooCodeMcpConfig = {
-    mcpServers = builtins.mapAttrs (name: server: {
-      command = server.command;
-      args = server.args or [ ];
-      env = server.env or { };
-    } // (if server ? autoApprove then { alwaysAllow = server.autoApprove; } else { })
+    mcpServers = builtins.mapAttrs (name: server:
+      (if server ? url then { url = server.url; } else {
+        command = server.command;
+        args = server.args or [ ];
+        env = server.env or { };
+      })
+      // (if server ? autoApprove then { alwaysAllow = server.autoApprove; } else { })
       // (if server ? timeout then { timeout = server.timeout / 1000; } else { })
     ) mcpConfig.mcpServers;
   };
@@ -150,7 +144,7 @@ in
     text = builtins.toJSON kiroDefaultAgent;
   };
 
-  # ZooCode MCP settings
+  # ZooCode MCP settings (VS Code)
   xdg.configFile."Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" = {
     text = builtins.toJSON zooCodeMcpConfig;
   };
