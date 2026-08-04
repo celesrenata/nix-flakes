@@ -105,7 +105,7 @@ let
       };
 
       ii-desktop = {
-        command = lib.getExe inputs.ii-desktop-mcp.packages.${pkgs.system}.default;
+        command = lib.getExe pkgs.ii-desktop-mcp;
         args = [ ];
         env = {
           HYPRLAND_INSTANCE_SIGNATURE = "$(hyprctl instances -j | jq -r '.[0].instance')";

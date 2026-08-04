@@ -12,6 +12,8 @@
   # Overlays needed by all hosts: OpenGL, Hyprland desktop base, keyboard visualizer, debugpy
   common = [
     (import ./inline-snapshot-fix.nix)
+    (import ./hyprland-glaze-fix.nix)
+    (import ./ii-desktop-mcp.nix inputs)
     inputs.nixgl.overlay
     inputs.dots-hyprland.overlays.default
     (import ./keyboard-visualizer.nix)

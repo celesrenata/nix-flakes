@@ -22,7 +22,6 @@
     # Themes
     adw-gtk3
     libsForQt5.qt5ct
-    yaru-theme
     
     # Cursors and icons
     bibata-cursors

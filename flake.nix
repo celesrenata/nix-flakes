@@ -8,10 +8,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";           # Main channel (unstable)
     nixpkgs-24_11.url = "github:nixos/nixpkgs/nixos-24.11";       # Real SDL2 (pre sdl2-compat)
 
-    # m5max MacBook Pro M5 Max darwin configuration (re-exported)
-    m5max-darwin-flake.url = "path:/home/celes/sources/m5max-darwin-flake";
-    m5max-darwin-flake.inputs.nixpkgs.follows = "nixpkgs";
-
     # Home Manager for user environment management
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";  # Use same nixpkgs version
