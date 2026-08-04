@@ -77,8 +77,5 @@ in
         "PATH=${venvDir}/bin:${pkgs.uv}/bin:/run/current-system/sw/bin"
       ];
     };
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
   };
 }
