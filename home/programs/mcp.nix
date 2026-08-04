@@ -130,9 +130,13 @@ let
   };
 
   # ── ZooCode/VSCode MCP Configuration ────────────────────────────────────
+  # ZooCode supports: "streamable-http", "sse", or "stdio" (implicit for command-based)
   zooCodeMcpConfig = {
     mcpServers = builtins.mapAttrs (name: server:
-      (if server ? url then { url = server.url; } else {
+      (if server ? url then {
+        url = server.url;
+        type = server.transport or "streamable-http";
+      } else {
         command = server.command;
         args = server.args or [ ];
         env = server.env or { };
