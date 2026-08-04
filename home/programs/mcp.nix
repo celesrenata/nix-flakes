@@ -163,6 +163,7 @@ let
 in
 {
   # Seed ~/.kiro/settings/mcp.json only if it doesn't exist (user/Kiro manages it at runtime)
+  # Also removes duplicate 'sequentialthinking' that Kiro auto-discovers from ToolHive
   home.activation.seedKiroMcp = let
     mcpJsonFile = pkgs.writeText "mcp.json" (builtins.toJSON mcpConfig);
   in lib.hm.dag.entryAfter ["writeBoundary"] ''
@@ -170,6 +171,11 @@ in
       mkdir -p "$HOME/.kiro/settings"
       cp ${mcpJsonFile} "$HOME/.kiro/settings/mcp.json"
       chmod 644 "$HOME/.kiro/settings/mcp.json"
+    fi
+    # Remove duplicate sequentialthinking (Kiro auto-adds it; we define sequential-thinking)
+    if [ -f "$HOME/.kiro/settings/mcp.json" ] && ${pkgs.jq}/bin/jq -e '.mcpServers.sequentialthinking' "$HOME/.kiro/settings/mcp.json" &>/dev/null; then
+      ${pkgs.jq}/bin/jq 'del(.mcpServers.sequentialthinking)' "$HOME/.kiro/settings/mcp.json" > "$HOME/.kiro/settings/mcp.json.tmp" \
+        && mv "$HOME/.kiro/settings/mcp.json.tmp" "$HOME/.kiro/settings/mcp.json"
     fi
   '';
 
@@ -191,6 +197,7 @@ in
   '';
 
   # Seed VS Code native MCP only if missing
+  # Also removes duplicate sequentialthinking on existing files
   home.activation.seedVscodeMcp = let
     vscodeJson = pkgs.writeText "mcp.json" (builtins.toJSON vscodeMcpConfig);
   in lib.hm.dag.entryAfter ["writeBoundary"] ''
@@ -198,6 +205,11 @@ in
       mkdir -p "$HOME/.config/Code/User"
       cp ${vscodeJson} "$HOME/.config/Code/User/mcp.json"
       chmod 644 "$HOME/.config/Code/User/mcp.json"
+    fi
+    # Remove duplicate sequentialthinking from VS Code config
+    if [ -f "$HOME/.config/Code/User/mcp.json" ] && ${pkgs.jq}/bin/jq -e '.servers.sequentialthinking' "$HOME/.config/Code/User/mcp.json" &>/dev/null; then
+      ${pkgs.jq}/bin/jq 'del(.servers.sequentialthinking)' "$HOME/.config/Code/User/mcp.json" > "$HOME/.config/Code/User/mcp.json.tmp" \
+        && mv "$HOME/.config/Code/User/mcp.json.tmp" "$HOME/.config/Code/User/mcp.json"
     fi
   '';
 
