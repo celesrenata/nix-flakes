@@ -179,6 +179,7 @@ let
     run_if_needed grafana \
       --name grafana \
       --proxy-port ${toString ports.grafana} \
+      --session-ttl 2h \
       -v "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro" \
       -e "GRAFANA_URL=https://grafana.celestium.life" \
       -e "GRAFANA_SERVICE_ACCOUNT_TOKEN=$GRAFANA_TOKEN" \
