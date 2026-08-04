@@ -123,7 +123,7 @@ let
       --isolate-network=false \
       -e "SEARXNG_ENGINE_API_BASE_URL=http://10.1.1.12:30888/search" \
       -e "DESIRED_TIMEZONE=America/Los_Angeles" \
-      overtlids/mcp-searxng-enhanced:latest
+      ghcr.io/celesrenata/mcp-searxng-enhanced:latest
 
     # ── Kubernetes ───────────────────────────────────────────────────
     # Container runs as UID 65532 (nonroot), so we need a readable copy
