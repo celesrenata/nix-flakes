@@ -25,6 +25,7 @@ let
   }.${name};
 
   thvUrl = name: "http://localhost:${toString (thvPort name)}/mcp";
+  thvSseUrl = name: "http://localhost:${toString (thvPort name)}/sse";
 
   # ── MCP Client Configuration ─────────────────────────────────────────────
   mcpConfig = {
@@ -72,7 +73,8 @@ let
       };
 
       postgres = {
-        url = thvUrl "postgres";
+        url = thvSseUrl "postgres";
+        transport = "sse";
       };
 
       redis = {
@@ -81,7 +83,8 @@ let
       };
 
       grafana = {
-        url = thvUrl "grafana";
+        url = thvSseUrl "grafana";
+        transport = "sse";
         autoApprove = [ "search_dashboards" "list_datasources" ];
       };
 
@@ -145,7 +148,7 @@ let
     servers = builtins.mapAttrs (name: server:
       if server ? url then {
         url = server.url;
-        type = "http";
+        type = server.transport or "http";
       } else {
         command = server.command;
         args = server.args or [ ];

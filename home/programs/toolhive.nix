@@ -157,6 +157,7 @@ let
       --target-port 8001 \
       --network host \
       --isolate-network=false \
+      -v "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro" \
       -e "DATABASE_URI=postgresql://celes:PSCh4ng3me!@10.1.1.12:30217/postgres" \
       postgres-mcp-pro -- --transport=sse --sse-port=8001 --sse-host=0.0.0.0
 
@@ -178,6 +179,7 @@ let
     run_if_needed grafana \
       --name grafana \
       --proxy-port ${toString ports.grafana} \
+      -v "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro" \
       -e "GRAFANA_URL=https://grafana.celestium.life" \
       -e "GRAFANA_SERVICE_ACCOUNT_TOKEN=$GRAFANA_TOKEN" \
       grafana
@@ -189,6 +191,7 @@ let
       --transport stdio \
       --network host \
       --isolate-network=false \
+      -v "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro" \
       hass-mcp
 
     # ── Chat Completions (GPT-5.5/Codex via any-chat-completions-mcp)
