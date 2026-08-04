@@ -14,6 +14,7 @@ let
     sequentialthinking = 19102;
     fetch = 19103;
     searxng-enhanced = 19104;
+    playwright = 19105;
     chat-codex = 19106;
     k8s = 19107;
     context7 = 19108;
@@ -45,6 +46,10 @@ let
 
       fetch = {
         url = thvUrl "fetch";
+      };
+
+      playwright = {
+        url = thvUrl "playwright";
       };
 
       searxng-enhanced = {
@@ -134,18 +139,49 @@ let
     ) mcpConfig.mcpServers;
   };
 
+  # ── VSCode Native MCP Configuration ────────────────────────────────────
+  # Format: { "servers": { name: { "url": "...", "type": "http"|"sse" } | { "command": "...", "args": [...] } } }
+  vscodeMcpConfig = {
+    servers = builtins.mapAttrs (name: server:
+      if server ? url then {
+        url = server.url;
+        type = "http";
+      } else {
+        command = server.command;
+        args = server.args or [ ];
+      }
+    ) mcpConfig.mcpServers;
+  };
+
 in
 {
-  home.file.".kiro/settings/mcp.json" = {
-    text = builtins.toJSON mcpConfig;
-  };
+  # Seed ~/.kiro/settings/mcp.json only if it doesn't exist (user/Kiro manages it at runtime)
+  home.activation.seedKiroMcp = let
+    mcpJsonFile = pkgs.writeText "mcp.json" (builtins.toJSON mcpConfig);
+  in lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [ ! -f "$HOME/.kiro/settings/mcp.json" ]; then
+      mkdir -p "$HOME/.kiro/settings"
+      cp ${mcpJsonFile} "$HOME/.kiro/settings/mcp.json"
+      chmod 644 "$HOME/.kiro/settings/mcp.json"
+    fi
+  '';
 
   home.file.".kiro/agents/kiro_default.json" = {
     text = builtins.toJSON kiroDefaultAgent;
   };
 
-  # ZooCode MCP settings (VS Code)
+  # ZooCode MCP settings (VS Code extension)
   xdg.configFile."Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" = {
     text = builtins.toJSON zooCodeMcpConfig;
+  };
+
+  # VSCode native MCP (Copilot/built-in MCP support)
+  xdg.configFile."Code/User/mcp.json" = {
+    text = builtins.toJSON vscodeMcpConfig;
+  };
+
+  # ~/ai/mcp.json — generic MCP config for quickshell sidebar and other tools
+  home.file."ai/mcp.json" = {
+    text = builtins.toJSON mcpConfig;
   };
 }
