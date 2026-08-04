@@ -183,6 +183,11 @@ in
     text = builtins.toJSON kiroDefaultAgent;
   };
 
+  # Quickshell's own MCP config — written fresh on every rebuild, never touched by Kiro
+  home.file.".local/share/quickshell/mcp.json" = {
+    text = builtins.toJSON mcpConfig;
+  };
+
   # ZooCode MCP settings (VS Code extension)
   # Seed Zoo Code MCP settings only if missing
   home.activation.seedZooCodeMcp = let
