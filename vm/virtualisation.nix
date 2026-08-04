@@ -5,6 +5,12 @@
 
 {
   config = {
+    # Docker for ToolHive MCP server containers
+    virtualisation.docker = {
+      enable = true;
+      autoPrune.enable = true;
+    };
+
     services.spice-webdavd.enable = true;
     services.qemuGuest.enable = true;
 
