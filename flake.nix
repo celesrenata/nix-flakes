@@ -331,7 +331,9 @@
         ];
         homeImports = [
           ./home/default.nix
+          ./home/programs/ii-desktop-mcp.nix
           ./vm/hyprland.nix
+          ii-desktop-mcp.homeManagerModules.default
         ];
       };
     };
