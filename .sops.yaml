@@ -2,13 +2,16 @@
 keys:
   # User SSH key converted to age
   - &user_key age1mpdp73dg6ndc8vq55qmnsfzu7qz6dkaft6awg475pgr6lr7kevyqj9hlgc
-  # System SSH host key converted to age
+  # System SSH host key converted to age (esnixi)
   - &system_key age1dl2r8z2u62qaa49n48mj48gx4c7u4acrj7065e4nkaujuxwvgq6swr20dx
+  # System SSH host key converted to age (nixberry)
+  - &nixberry_key age1rny5s5ympw6ef4pgdclfucaazdpxq8ztrldweym4w9n249hqv5qqhf0ztp
 
 creation_rules:
-  # Default rule for all secrets using both keys
+  # Default rule for all secrets using all keys
   - path_regex: .*\.yaml$
     key_groups:
       - age:
           - *user_key
           - *system_key
+          - *nixberry_key
