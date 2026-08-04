@@ -110,7 +110,7 @@ in
 
     # Sync staging configs → mutable config (--update = don't clobber user edits)
     chmod -R u+w "$HOME/.config/" "$HOME/.local/state/quickshell/" 2>/dev/null || true
-    ${pkgs.rsync}/bin/rsync -azL --update --no-perms "$HOME/.configstaging/" "$HOME/.config" 2>/dev/null || true
+    ${pkgs.rsync}/bin/rsync -azL --no-perms "$HOME/.configstaging/" "$HOME/.config" 2>/dev/null || true
     chmod -R u+w "$HOME/.local/state/quickshell/user/generated/" \
       "$HOME/.config/fuzzel/" "$HOME/.config/foot/" "$HOME/.config/gtk-4.0/" \
       "$HOME/.config/hypr/hyprland/" "$HOME/.config/matugen/" 2>/dev/null || true
