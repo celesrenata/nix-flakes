@@ -171,17 +171,37 @@ in
   };
 
   # ZooCode MCP settings (VS Code extension)
-  xdg.configFile."Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" = {
-    text = builtins.toJSON zooCodeMcpConfig;
-  };
+  # Seed Zoo Code MCP settings only if missing
+  home.activation.seedZooCodeMcp = let
+    zooJson = pkgs.writeText "mcp_settings.json" (builtins.toJSON zooCodeMcpConfig);
+  in lib.hm.dag.entryAfter ["writeBoundary"] ''
+    target="$HOME/.config/Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json"
+    if [ ! -f "$target" ]; then
+      mkdir -p "$(dirname "$target")"
+      cp ${zooJson} "$target"
+      chmod 644 "$target"
+    fi
+  '';
 
-  # VSCode native MCP (Copilot/built-in MCP support)
-  xdg.configFile."Code/User/mcp.json" = {
-    text = builtins.toJSON vscodeMcpConfig;
-  };
+  # Seed VS Code native MCP only if missing
+  home.activation.seedVscodeMcp = let
+    vscodeJson = pkgs.writeText "mcp.json" (builtins.toJSON vscodeMcpConfig);
+  in lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [ ! -f "$HOME/.config/Code/User/mcp.json" ]; then
+      mkdir -p "$HOME/.config/Code/User"
+      cp ${vscodeJson} "$HOME/.config/Code/User/mcp.json"
+      chmod 644 "$HOME/.config/Code/User/mcp.json"
+    fi
+  '';
 
-  # ~/ai/mcp.json — generic MCP config for quickshell sidebar and other tools
-  home.file."ai/mcp.json" = {
-    text = builtins.toJSON mcpConfig;
-  };
+  # Seed ~/ai/mcp.json only if missing
+  home.activation.seedAiMcp = let
+    aiJson = pkgs.writeText "ai-mcp.json" (builtins.toJSON mcpConfig);
+  in lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [ ! -f "$HOME/ai/mcp.json" ]; then
+      mkdir -p "$HOME/ai"
+      cp ${aiJson} "$HOME/ai/mcp.json"
+      chmod 644 "$HOME/ai/mcp.json"
+    fi
+  '';
 }
