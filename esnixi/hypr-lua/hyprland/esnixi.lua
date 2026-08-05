@@ -444,7 +444,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hypridle")
 
     -- Touchpad gestures
-    hl.exec_cmd("touchegg") -- client connects to system daemon
+    -- touchegg client managed by touchegg-client.service (module)
 
     -- D-Bus environment
     hl.exec_cmd("dbus-update-activation-environment --all")
