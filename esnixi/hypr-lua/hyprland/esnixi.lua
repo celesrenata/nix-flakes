@@ -218,43 +218,43 @@ hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO
 -------------------------------------------------------------------------------
 
 -- Music
-hl.bind("Ctrl + Shift + Super + M", hl.dsp.exec_cmd("tidal-hifi"), { description = "Tidal HiFi" })
-hl.bind("Ctrl + Shift + Alt + Super + M", hl.dsp.exec_cmd("env -u NIXOS_OZONE_WL cider --use-gl=desktop"), { description = "Cider" })
+hl.bind("Ctrl + Super + M", hl.dsp.exec_cmd("tidal-hifi"), { description = "Tidal HiFi" })
+hl.bind("Ctrl + Shift + Super + M", hl.dsp.exec_cmd("env -u NIXOS_OZONE_WL cider --use-gl=desktop"), { description = "Cider" })
 hl.bind("Ctrl + Alt + Super + M", hl.dsp.exec_cmd("spotify"), { description = "Spotify" })
 
 -- Discord
-hl.bind("Ctrl + Shift + Super + I", hl.dsp.exec_cmd("discord"), { description = "Discord" })
+hl.bind("Ctrl + Super + I", hl.dsp.exec_cmd("discord"), { description = "Discord" })
 
 -- Terminal (Foot)
-hl.bind("Ctrl + Shift + Super + G", hl.dsp.exec_cmd("foot"), { description = "Foot terminal" })
-hl.bind("Ctrl + Shift + Alt + Super + T", hl.dsp.exec_cmd("foot sleep 0.01 && nmtui"), { description = "Network manager TUI" })
+hl.bind("Ctrl + Super + G", hl.dsp.exec_cmd("foot"), { description = "Foot terminal" })
+hl.bind("Ctrl + Shift + Super + T", hl.dsp.exec_cmd("foot sleep 0.01 && nmtui"), { description = "Network manager TUI" })
 
 -- File managers
-hl.bind("Ctrl + Shift + Super + J", hl.dsp.exec_cmd("thunar"), { description = "Thunar" })
-hl.bind("Ctrl + Shift + Alt + Super + J", hl.dsp.exec_cmd("nautilus"), { description = "Nautilus" })
+hl.bind("Ctrl + Super + J", hl.dsp.exec_cmd("thunar"), { description = "Thunar" })
+hl.bind("Ctrl + Shift + Super + J", hl.dsp.exec_cmd("nautilus"), { description = "Nautilus" })
 
 -- Browsers
-hl.bind("Ctrl + Shift + Super + B", hl.dsp.exec_cmd("firefox"), { description = "Firefox" })
-hl.bind("Ctrl + Shift + Alt + Super + B", hl.dsp.exec_cmd("chromium"), { description = "Chromium" })
+hl.bind("Ctrl + Super + B", hl.dsp.exec_cmd("firefox"), { description = "Firefox" })
+hl.bind("Ctrl + Shift + Super + B", hl.dsp.exec_cmd("chromium"), { description = "Chromium" })
 
 -- Code editors
-hl.bind("Ctrl + Shift + Super + U", hl.dsp.exec_cmd("code"), { description = "VS Code" })
-hl.bind("Ctrl + Shift + Super + X", hl.dsp.exec_cmd("subl"), { description = "Sublime Text" })
-hl.bind("Ctrl + Shift + Super + C", hl.dsp.exec_cmd("code"), { description = "VS Code (alt)" })
+hl.bind("Ctrl + Super + U", hl.dsp.exec_cmd("code"), { description = "VS Code" })
+hl.bind("Ctrl + Super + X", hl.dsp.exec_cmd("subl"), { description = "Sublime Text" })
+hl.bind("Ctrl + Shift + Super + C", hl.dsp.exec_cmd("jetbrains-toolbox"), { description = "JetBrains Toolbox" })
 hl.bind("Ctrl + Shift + Alt + Super + C", hl.dsp.exec_cmd("jetbrains-toolbox"), { description = "JetBrains Toolbox" })
 
 -- Calculator
-hl.bind("Ctrl + Shift + Super + 3", hl.dsp.exec_cmd("~/.local/bin/wofi-calc"), { description = "Calculator" })
+hl.bind("Ctrl + Super + 3", hl.dsp.exec_cmd("~/.local/bin/wofi-calc"), { description = "Calculator" })
 hl.bind("XF86Calculator", hl.dsp.exec_cmd("~/.local/bin/wofi-calc"), { description = "Calculator" })
 
 -- Settings
-hl.bind("Ctrl + Shift + Super + comma", hl.dsp.exec_cmd("quickshell -p ~/.config/quickshell/ii/settings.qml"), { description = "QuickShell settings" })
+hl.bind("Ctrl + Super + comma", hl.dsp.exec_cmd("quickshell -p ~/.config/quickshell/ii/settings.qml"), { description = "QuickShell settings" })
 
 -------------------------------------------------------------------------------
 -- KEYBINDS: Window Actions
 -------------------------------------------------------------------------------
 
-hl.bind("Ctrl + Shift + Super + Period", hl.dsp.exec_cmd("pkill fuzzel || ~/.local/bin/fuzzel-emoji"), { description = "Emoji picker" })
+hl.bind("Ctrl + Super + Period", hl.dsp.exec_cmd("pkill fuzzel || ~/.local/bin/fuzzel-emoji"), { description = "Emoji picker" })
 hl.bind("Alt + F4", hl.dsp.window.close(), { description = "Kill active window" })
 hl.bind("Ctrl + Alt + Space", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
 hl.bind("Ctrl + Alt + Q", hl.dsp.exec_cmd("hyprctl kill"), { description = "Hyprctl kill" })
@@ -295,14 +295,14 @@ hl.bind("Ctrl + Shift + P", hl.dsp.exec_cmd("playerctl play-pause"), { descripti
 -- KEYBINDS: System Actions
 -------------------------------------------------------------------------------
 
-hl.bind("Ctrl + Shift + Super + L", hl.dsp.exec_cmd("hyprlock"), { description = "Lock screen" })
+hl.bind("Ctrl + Super + L", hl.dsp.exec_cmd("hyprlock"), { description = "Lock screen" })
 
 -------------------------------------------------------------------------------
 -- KEYBINDS: Quickshell Interface
 -------------------------------------------------------------------------------
 
 -- Quickshell restart
-hl.bind("Ctrl + Shift + Super + R", hl.dsp.exec_cmd("systemctl --user reload quickshell.service"), { release = true, description = "Reload QuickShell" })
+hl.bind("Ctrl + Super + R", hl.dsp.exec_cmd("systemctl --user reload quickshell.service"), { release = true, description = "Reload QuickShell" })
 
 -- Wallpaper
 hl.bind("Ctrl + Super + T", hl.dsp.exec_cmd("~/.config/quickshell/ii/scripts/colors/switchwall.sh --choose"), { description = "Choose wallpaper" })
@@ -339,18 +339,18 @@ hl.bind("Ctrl + BracketRight", hl.dsp.focus({ direction = "r" })) -- [hidden]
 -- KEYBINDS: Workspace Navigation
 -------------------------------------------------------------------------------
 
-hl.bind("Ctrl + Shift + Super + Right", hl.dsp.focus({ workspace = "+1" }), { description = "Next workspace" })
-hl.bind("Ctrl + Shift + Super + Left", hl.dsp.focus({ workspace = "-1" }), { description = "Previous workspace" })
-hl.bind("Ctrl + Shift + Super + BracketLeft", hl.dsp.focus({ workspace = "-1" })) -- [hidden]
-hl.bind("Ctrl + Shift + Super + BracketRight", hl.dsp.focus({ workspace = "+1" })) -- [hidden]
-hl.bind("Ctrl + Shift + Super + Up", hl.dsp.focus({ workspace = "-5" }), { description = "Jump 5 workspaces back" })
-hl.bind("Ctrl + Shift + Super + Down", hl.dsp.focus({ workspace = "+5" }), { description = "Jump 5 workspaces forward" })
+hl.bind("Ctrl + Super + Right", hl.dsp.focus({ workspace = "+1" }), { description = "Next workspace" })
+hl.bind("Ctrl + Super + Left", hl.dsp.focus({ workspace = "-1" }), { description = "Previous workspace" })
+hl.bind("Ctrl + Super + BracketLeft", hl.dsp.focus({ workspace = "-1" })) -- [hidden]
+hl.bind("Ctrl + Super + BracketRight", hl.dsp.focus({ workspace = "+1" })) -- [hidden]
+hl.bind("Ctrl + Super + Up", hl.dsp.focus({ workspace = "-5" }), { description = "Jump 5 workspaces back" })
+hl.bind("Ctrl + Super + Down", hl.dsp.focus({ workspace = "+5" }), { description = "Jump 5 workspaces forward" })
 hl.bind("Ctrl + Page_Down", hl.dsp.focus({ workspace = "+1" }), { description = "Next workspace (PageDown)" })
 hl.bind("Ctrl + Page_Up", hl.dsp.focus({ workspace = "-1" }), { description = "Previous workspace (PageUp)" })
 
 -- Split ratio
-hl.bind("Ctrl + Shift + Super + Minus", hl.dsp.layout("splitratio", -0.1), { repeating = true, description = "Decrease split ratio" })
-hl.bind("Ctrl + Shift + Super + Equal", hl.dsp.layout("splitratio", 0.1), { repeating = true, description = "Increase split ratio" })
+hl.bind("Ctrl + Super + Minus", hl.dsp.layout("splitratio", -0.1), { repeating = true, description = "Decrease split ratio" })
+hl.bind("Ctrl + Super + Equal", hl.dsp.layout("splitratio", 0.1), { repeating = true, description = "Increase split ratio" })
 hl.bind("Ctrl + Semicolon", hl.dsp.layout("splitratio", -0.1), { repeating = true }) -- [hidden]
 hl.bind("Ctrl + Apostrophe", hl.dsp.layout("splitratio", 0.1), { repeating = true }) -- [hidden]
 
@@ -358,8 +358,8 @@ hl.bind("Ctrl + Apostrophe", hl.dsp.layout("splitratio", 0.1), { repeating = tru
 -- KEYBINDS: Window States
 -------------------------------------------------------------------------------
 
-hl.bind("Ctrl + Shift + Super + F", hl.dsp.window.fullscreen(0), { description = "Fullscreen (real)" })
-hl.bind("Ctrl + Shift + Super + D", hl.dsp.window.fullscreen(1), { description = "Fullscreen (maximize)" })
+hl.bind("Ctrl + Super + F", hl.dsp.window.fullscreen(0), { description = "Fullscreen (real)" })
+hl.bind("Ctrl + Super + D", hl.dsp.window.fullscreen(1), { description = "Fullscreen (maximize)" })
 hl.bind("Ctrl + Alt + F", hl.dsp.window.fullscreen_state({ internal = 0, client = 3 }), { description = "Fullscreen state toggle" })
 
 -------------------------------------------------------------------------------
@@ -376,7 +376,7 @@ hl.bind("Ctrl + 7", hl.dsp.focus({ workspace = "7" }), { description = "Workspac
 hl.bind("Ctrl + 8", hl.dsp.focus({ workspace = "8" }), { description = "Workspace 8" })
 hl.bind("Ctrl + 9", hl.dsp.focus({ workspace = "9" }), { description = "Workspace 9" })
 hl.bind("Ctrl + 0", hl.dsp.focus({ workspace = "10" }), { description = "Workspace 10" })
-hl.bind("Ctrl + Shift + Super + S", hl.dsp.workspace.toggle_special(""), { description = "Toggle special workspace" })
+hl.bind("Ctrl + Super + S", hl.dsp.workspace.toggle_special(""), { description = "Toggle special workspace" })
 hl.bind("Alt + Tab", hl.dsp.window.cycle_next()) -- [hidden]
 hl.bind("Alt + Tab", hl.dsp.window.bring_to_top()) -- [hidden]
 
@@ -403,15 +403,15 @@ hl.bind("Ctrl + Alt + S", hl.dsp.window.move({ workspace = "special", silent = t
 -- Mouse workspace scrolling
 hl.bind("Ctrl + mouse_up", hl.dsp.focus({ workspace = "+1" })) -- [hidden]
 hl.bind("Ctrl + mouse_down", hl.dsp.focus({ workspace = "-1" })) -- [hidden]
-hl.bind("Ctrl + Shift + Super + mouse_up", hl.dsp.focus({ workspace = "+1" })) -- [hidden]
-hl.bind("Ctrl + Shift + Super + mouse_down", hl.dsp.focus({ workspace = "-1" })) -- [hidden]
+hl.bind("Ctrl + Super + mouse_up", hl.dsp.focus({ workspace = "+1" })) -- [hidden]
+hl.bind("Ctrl + Super + mouse_down", hl.dsp.focus({ workspace = "-1" })) -- [hidden]
 
 -- Mouse window controls
 hl.bind("Ctrl + mouse:273", hl.dsp.window.resize(), { mouse = true }) -- [hidden]
-hl.bind("Ctrl + Shift + Super + mouse:273", hl.dsp.window.resize(), { mouse = true }) -- [hidden]
+hl.bind("Ctrl + Super + mouse:273", hl.dsp.window.resize(), { mouse = true }) -- [hidden]
 hl.bind("mouse:274", hl.dsp.window.drag(), { mouse = true }) -- [hidden]
-hl.bind("Ctrl + Shift + Super + Z", hl.dsp.window.drag(), { mouse = true, description = "Move window (keyboard)" })
-hl.bind("Ctrl + Shift + Super + Backslash", hl.dsp.window.resize({ x = 640, y = 480, exact = true }), { description = "Resize to 640x480" })
+hl.bind("Ctrl + Super + Z", hl.dsp.window.drag(), { mouse = true, description = "Move window (keyboard)" })
+hl.bind("Ctrl + Super + Backslash", hl.dsp.window.resize({ x = 640, y = 480, exact = true }), { description = "Resize to 640x480" })
 
 -------------------------------------------------------------------------------
 -- EXEC-ONCE: Autostart (esnixi-specific)
