@@ -157,13 +157,13 @@ hl.config({
 -------------------------------------------------------------------------------
 
 -- 3-finger horizontal workspace gesture already defined in general.lua
--- Custom gesture actions not supported in 0.55+ gesture API (use keybinds instead)
--- hl.gesture({ fingers = 4, direction = "pinchin", action = "fullscreen 1" })
--- hl.gesture({ fingers = 4, direction = "pinchout", action = "fullscreen 1" })
--- hl.gesture({ fingers = 4, direction = "left", action = "exec ~/.local/bin/gesture-toggle.sh left" })
--- hl.gesture({ fingers = 4, direction = "right", action = "exec ~/.local/bin/gesture-toggle.sh right" })
--- hl.gesture({ fingers = 4, direction = "up", action = "exec ~/.local/bin/gesture-toggle.sh up" })
--- hl.gesture({ fingers = 4, direction = "down", action = "exec ~/.local/bin/gesture-toggle.sh down" })
+-- 4-finger gestures
+hl.gesture({ fingers = 4, direction = "pinchin", action = "fullscreen" })
+hl.gesture({ fingers = 4, direction = "pinchout", action = "fullscreen", mode = "maximize" })
+hl.gesture({ fingers = 4, direction = "left", action = function() hl.exec_cmd("~/.local/bin/gesture-toggle.sh left") end })
+hl.gesture({ fingers = 4, direction = "right", action = function() hl.exec_cmd("~/.local/bin/gesture-toggle.sh right") end })
+hl.gesture({ fingers = 4, direction = "up", action = function() hl.exec_cmd("~/.local/bin/gesture-toggle.sh up") end })
+hl.gesture({ fingers = 4, direction = "down", action = function() hl.exec_cmd("~/.local/bin/gesture-toggle.sh down") end })
 
 -------------------------------------------------------------------------------
 -- MISC
