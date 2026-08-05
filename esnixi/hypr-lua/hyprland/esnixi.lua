@@ -311,7 +311,6 @@ hl.bind("Ctrl + Super + Shift + T", hl.dsp.exec_cmd("~/.config/quickshell/ii/scr
 -- Desktop environment controls
 hl.bind("Alt + Tab", hl.dsp.global("quickshell:overviewToggle"), { description = "Toggle overview" })
 hl.bind("Ctrl + Space", hl.dsp.global("quickshell:overviewToggle")) -- [hidden]
-hl.bind("Super + Space", hl.dsp.global("quickshell:overviewToggle")) -- [hidden]
 hl.bind("Ctrl + B", hl.dsp.global("quickshell:sidebarLeftToggle"), { description = "Toggle left sidebar" })
 hl.bind("Ctrl + N", hl.dsp.global("quickshell:sidebarRightToggle"), { description = "Toggle right sidebar" })
 hl.bind("Ctrl + M", hl.dsp.global("quickshell:mediaControlsToggle"), { description = "Toggle media controls" })
