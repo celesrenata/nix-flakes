@@ -36,6 +36,10 @@
     onetrainer-flake.inputs.nixpkgs.follows = "nixpkgs";
 
     # Window managers and desktop environments
+    hyprland.url = "github:hyprwm/Hyprland";                     # Official Hyprland flake (0.56)
+    # NOTE: not following nixpkgs — hyprland needs its own pinned nixpkgs for glaze compat
+    hyprland-plugins.url = "github:hyprwm/hyprland-plugins";     # Official Hyprland plugins (hyprbars, etc.)
+    hyprland-plugins.inputs.hyprland.follows = "hyprland";
     niri.url = "github:sodiboo/niri-flake";                       # Niri wayland compositor (experimental)
     dots-hyprland.url = "github:celesrenata/end-4-flakes/upstream-sync-2026";
     dots-hyprland.inputs.nixpkgs.follows = "nixpkgs";
@@ -77,7 +81,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ii-desktop-mcp, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ii-desktop-mcp, hyprland, hyprland-plugins, ... }:
   let
     lib = nixpkgs.lib;
 

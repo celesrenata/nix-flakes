@@ -12,7 +12,8 @@
   # Overlays needed by all hosts: OpenGL, Hyprland desktop base, keyboard visualizer, debugpy
   common = [
     (import ./inline-snapshot-fix.nix)
-    (import ./hyprland-glaze-fix.nix)
+    inputs.hyprland.overlays.hyprland-packages
+    inputs.hyprland.overlays.hyprland-extras
     (import ./ii-desktop-mcp.nix inputs)
     inputs.nixgl.overlay
     inputs.dots-hyprland.overlays.default
@@ -21,7 +22,6 @@
     (import ./comfyui.nix)
     (import ./mkvtoolnix.nix)
     (import ./tidal-hifi.nix)
-    (import ./xdph-libstdcxx-fix.nix)
   ];
 
   # Desktop environment overlays: theming, emoji picker, calculator, DP-3 filter

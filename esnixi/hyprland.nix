@@ -413,4 +413,9 @@
 
   # Prevent HM from managing icons dir — Steam needs to write here
   home.file.".local/share/icons".enable = false;
+
+  # Hyprland plugins (disabled until hyprland-plugins is updated for 0.56)
+  # wayland.windowManager.hyprland.plugins = [
+  #   inputs.hyprland-plugins.packages.${pkgs.system}.hyprbars
+  # ];
 }
