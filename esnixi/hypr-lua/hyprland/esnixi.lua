@@ -238,10 +238,9 @@ hl.bind("Ctrl + Super + B", hl.dsp.exec_cmd("firefox"), { description = "Apps: F
 hl.bind("Ctrl + Shift + Super + B", hl.dsp.exec_cmd("chromium"), { description = "Apps: Chromium" })
 
 -- Code editors
-hl.bind("Ctrl + Super + U", hl.dsp.exec_cmd("code"), { description = "Apps: VS Code" })
+hl.bind("Ctrl + Super + C", hl.dsp.exec_cmd("code"), { description = "Apps: VS Code" })
 hl.bind("Ctrl + Super + X", hl.dsp.exec_cmd("subl"), { description = "Apps: Sublime Text" })
 hl.bind("Ctrl + Shift + Super + C", hl.dsp.exec_cmd("jetbrains-toolbox"), { description = "Apps: JetBrains Toolbox" })
-hl.bind("Ctrl + Shift + Alt + Super + C", hl.dsp.exec_cmd("jetbrains-toolbox"), { description = "Apps: JetBrains Toolbox" })
 
 -- Calculator
 hl.bind("Ctrl + Super + 3", hl.dsp.exec_cmd("~/.local/bin/wofi-calc"), { description = "Apps: Calculator" })
