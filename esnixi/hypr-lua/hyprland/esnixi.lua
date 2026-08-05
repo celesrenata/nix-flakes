@@ -4,6 +4,13 @@
 -- custom keybinds, environment overrides, and autostart commands.
 
 -------------------------------------------------------------------------------
+-- MONITORS
+-------------------------------------------------------------------------------
+
+hl.monitor({ output = "DP-2", mode = "preferred", position = "0x0", scale = "1" })
+hl.monitor({ output = "DP-3", mode = "preferred", position = "0x2160", scale = "1", transform = 3 })
+
+-------------------------------------------------------------------------------
 -- MONITOR: DP-3 Hyte Touch Display
 -------------------------------------------------------------------------------
 
