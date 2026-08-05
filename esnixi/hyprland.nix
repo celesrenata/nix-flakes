@@ -16,7 +16,7 @@
     packageSet = "essential";
     mode = "hybrid";
     
-    touchegg.enable = lib.mkForce false;
+    touchegg.enable = lib.mkForce true;
     configuration.copyMiscConfig = lib.mkForce true;
     configuration.applications.foot.enable = lib.mkForce false;
     configuration.applications.kitty.enable = lib.mkForce false;
