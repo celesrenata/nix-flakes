@@ -31,11 +31,8 @@
   home.file.".local/share/icons".enable = false;
 
   # esnixi host config — provides keybinds + DP-3/Hyte touch + custom autostart
-  # Override default keybinds (esnixi uses its own Ctrl+Shift+Super scheme)
-  xdg.configFile."hypr/hyprland/keybinds.lua" = {
-    text = "-- esnixi: keybinds provided by host.lua\n";
-    source = null;
-  };
+  # Override default keybinds (esnixi uses its own Ctrl+Shift+Super scheme in host.lua)
+  xdg.configFile."hypr/hyprland/keybinds.lua".source = lib.mkForce ../esnixi/hypr-lua/hyprland/keybinds-stub.lua;
   # Host-specific config (loaded last via pcall in hyprland.lua)
   home.file.".config/hypr/hyprland/host.lua".source = ../esnixi/hypr-lua/hyprland/esnixi.lua;
 

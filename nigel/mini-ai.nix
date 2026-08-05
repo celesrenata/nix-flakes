@@ -22,7 +22,7 @@
       package = lib.mkForce pkgs.ollama;
       host = "0.0.0.0";
       port = 11434;
-      models = "/var/lib/ollama/models";
+      modelsDir = "/var/lib/ollama/models";
       syncModels = false;
       # Load small models suitable for 4GB VRAM
       loadModels = [

@@ -197,4 +197,15 @@ in
       else "sha256-gKJW3FPL7C8ocgqiSw+69GyQCM+JKhI+hE56pAtOcQM=";
     description = "MCP server bridging to any OpenAI-compatible chat completions API";
   };
+
+  # Override fastmcp to exclude flaky supabase integration test (needs network in sandbox)
+  pythonPackagesExtensions = (prev.pythonPackagesExtensions or []) ++ [
+    (pyfinal: pyprev: {
+      fastmcp = pyprev.fastmcp.overrideAttrs (old: {
+        disabledTestPaths = (old.disabledTestPaths or []) ++ [
+          "tests/server/auth/providers/test_supabase.py"
+        ];
+      });
+    })
+  ];
 }

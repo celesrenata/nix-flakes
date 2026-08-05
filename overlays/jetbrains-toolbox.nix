@@ -26,7 +26,7 @@ let
     };
 
     nativeBuildInputs = [ prev.makeWrapper prev.autoPatchelfHook prev.copyDesktopItems ];
-    buildInputs = with prev; [ stdenv.cc.cc.lib libGL xorg.libX11 xorg.libXi xorg.libXrender xorg.libXtst fontconfig freetype icu libXScrnSaver libxcb ];
+    buildInputs = with prev; [ stdenv.cc.cc.lib libGL libx11 libxi libxrender libxtst fontconfig freetype icu libXScrnSaver libxcb ];
 
     installPhase = ''
       runHook preInstall
@@ -43,7 +43,7 @@ let
       # Wrapper
       makeWrapper $out/bin/${pname}-unwrapped $out/bin/${pname} \
         --append-flags "--update-failed" \
-        --prefix LD_LIBRARY_PATH : "$out/lib:${prev.lib.makeLibraryPath [ prev.icu prev.libGL prev.xorg.libX11 prev.libXScrnSaver prev.libxcb ]}" \
+        --prefix LD_LIBRARY_PATH : "$out/lib:${prev.lib.makeLibraryPath [ prev.icu prev.libGL prev.libx11 prev.libXScrnSaver prev.libxcb ]}" \
         --prefix MESA_EXTENSION_OVERRIDE : "-GL_ARB_invalidate_subdata" \
         --set TOOLBOX_JDK "${prev.pkgs.jetbrains.jdk}" \
         --set JETBRAINSCLIENT_JDK "${prev.pkgs.jetbrains.jdk.home}"
@@ -84,7 +84,7 @@ let
     };
 
     nativeBuildInputs = [ prev.makeWrapper prev.autoPatchelfHook prev.copyDesktopItems ];
-    buildInputs = with prev; [ stdenv.cc.cc.lib libGL xorg.libX11 xorg.libXi xorg.libXrender xorg.libXtst fontconfig freetype icu ];
+    buildInputs = with prev; [ stdenv.cc.cc.lib libGL libx11 libxi libxrender libxtst fontconfig freetype icu ];
 
     installPhase = ''
       runHook preInstall
@@ -103,7 +103,7 @@ let
       # Wrapper
       makeWrapper $out/bin/${pname}-unwrapped $out/bin/${pname} \
         --append-flags "--update-failed" \
-        --prefix LD_LIBRARY_PATH : "$out/lib:${prev.lib.makeLibraryPath [ prev.icu prev.libGL prev.xorg.libX11 ]}" \
+        --prefix LD_LIBRARY_PATH : "$out/lib:${prev.lib.makeLibraryPath [ prev.icu prev.libGL prev.libx11 ]}" \
         --prefix MESA_EXTENSION_OVERRIDE : "-GL_ARB_invalidate_subdata"
 
       runHook postInstall

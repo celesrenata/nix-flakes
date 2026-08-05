@@ -16,7 +16,7 @@
       package = pkgsAccel.ollama;
       host = "0.0.0.0";
       port = 11434;
-      models = config.my.paths.ollamaModels;
+      modelsDir = config.my.paths.ollamaModels;
       syncModels = false;
       loadModels = [
         "nutboy02/Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-uncenfull:Q2_K_MTX"

@@ -14,6 +14,7 @@
     (import ./inline-snapshot-fix.nix)
     inputs.hyprland.overlays.hyprland-packages
     inputs.hyprland.overlays.hyprland-extras
+    (import ./xdph-libstdcxx-fix.nix)
     (import ./ii-desktop-mcp.nix inputs)
     inputs.nixgl.overlay
     inputs.dots-hyprland.overlays.default

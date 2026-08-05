@@ -32,6 +32,6 @@
   # Required packages for touch interface
   environment.systemPackages = with pkgs; [
     cage
-    inputs.hyte-touch-infinite-flakes.packages.${pkgs.system}.start-hyte-touch
+    inputs.hyte-touch-infinite-flakes.packages.${pkgs.stdenv.hostPlatform.system}.start-hyte-touch
   ];
 }

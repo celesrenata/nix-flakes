@@ -15,10 +15,5 @@ rec {
     pname = name;
     tlType = "run";
   };
-  tex = prev.texlive.combine {
-    inherit (prev.texlive) scheme-full;
-    latexRes-package = {
-      pkgs = [ latexRes-package ];
-    };
-  };
+  tex = prev.texliveFull.withPackages (_: [ latexRes-package ]);
 }

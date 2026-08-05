@@ -16,5 +16,8 @@ in {
       wrapProgram $out/bin/wivrn-server \
         --prefix LD_LIBRARY_PATH : ${prev.gcc15Stdenv.cc.cc.lib}/lib
     '';
+    meta = (wivrn-patched.meta or {}) // {
+      mainProgram = "wivrn-server";
+    };
   };
 }
