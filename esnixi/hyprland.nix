@@ -414,6 +414,16 @@
   # Prevent HM from managing icons dir — Steam needs to write here
   home.file.".local/share/icons".enable = false;
 
+  # Hyprland Lua configuration (0.55+ native Lua config)
+  home.file.".config/hypr/hyprland.lua".source = ../esnixi/hypr-lua/hyprland.lua;
+  home.file.".config/hypr/hyprland/env.lua".source = ../esnixi/hypr-lua/hyprland/env.lua;
+  home.file.".config/hypr/hyprland/general.lua".source = ../esnixi/hypr-lua/hyprland/general.lua;
+  home.file.".config/hypr/hyprland/colors.lua".source = ../esnixi/hypr-lua/hyprland/colors.lua;
+  home.file.".config/hypr/hyprland/rules.lua".source = ../esnixi/hypr-lua/hyprland/rules.lua;
+  home.file.".config/hypr/hyprland/execs.lua".source = ../esnixi/hypr-lua/hyprland/execs.lua;
+  home.file.".config/hypr/hyprland/keybinds.lua".source = ../esnixi/hypr-lua/hyprland/keybinds.lua;
+  home.file.".config/hypr/hyprland/esnixi.lua".source = ../esnixi/hypr-lua/hyprland/esnixi.lua;
+
   # Hyprland plugins (disabled until hyprland-plugins is updated for 0.56)
   # wayland.windowManager.hyprland.plugins = [
   #   inputs.hyprland-plugins.packages.${pkgs.system}.hyprbars
