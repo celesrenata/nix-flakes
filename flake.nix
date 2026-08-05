@@ -37,7 +37,7 @@
 
     # Window managers and desktop environments
     hyprland.url = "github:hyprwm/Hyprland";                     # Official Hyprland flake (0.56)
-    # NOTE: not following nixpkgs — hyprland needs its own pinned nixpkgs for glaze compat
+    hyprland.inputs.nixpkgs.follows = "nixpkgs";
     hyprland-plugins.url = "github:hyprwm/hyprland-plugins";     # Official Hyprland plugins (hyprbars, etc.)
     hyprland-plugins.inputs.hyprland.follows = "hyprland";
     niri.url = "github:sodiboo/niri-flake";                       # Niri wayland compositor (experimental)
