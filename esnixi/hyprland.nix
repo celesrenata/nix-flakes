@@ -30,8 +30,11 @@
   # Prevent HM from managing icons dir — Steam needs to write here
   home.file.".local/share/icons".enable = false;
 
-  # esnixi-specific Lua overrides (DP-3/Hyte touch, custom keybinds, autostart)
-  home.file.".config/hypr/hyprland/esnixi.lua".source = ../esnixi/hypr-lua/hyprland/esnixi.lua;
+  # esnixi host config — provides keybinds + DP-3/Hyte touch + custom autostart
+  # Override default keybinds (esnixi uses its own Ctrl+Shift+Super scheme)
+  home.file.".config/hypr/hyprland/keybinds.lua" = { text = "-- esnixi: keybinds provided by host.lua\n"; force = true; };
+  # Host-specific config (loaded last via pcall in hyprland.lua)
+  home.file.".config/hypr/hyprland/host.lua".source = ../esnixi/hypr-lua/hyprland/esnixi.lua;
 
   # Hyprland plugins (disabled until hyprland-plugins is updated for 0.56)
   # wayland.windowManager.hyprland.plugins = [
