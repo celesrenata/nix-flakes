@@ -27,7 +27,10 @@
       sdl2-real
       openal
       libGL
-      stdenv.cc.cc.lib
+      # Use GCC 16 libstdc++ (not default stdenv's GCC 15) to avoid GLIBCXX_3.4.35
+      # mismatch with hyprland/hyprctl which are built with GCC 16.
+      # GCC 16 is backward-compatible with binaries expecting GCC 15.
+      gcc16Stdenv.cc.cc.lib
       libx11
       libxrandr
       libxcursor
@@ -583,8 +586,7 @@
     tk
 
     # Latex
-    texliveFull
-    texlive.combined.scheme-full
+    tex
     latexRes-package
 
     # Terminals.
