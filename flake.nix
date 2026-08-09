@@ -98,6 +98,7 @@
           allowUnfree = true;
           nvidia.acceptLicense = true;
           cudaSupport = (backend == "cuda");
+          cudaPackages = "cudaPackages_13";
           rocmSupport = (backend == "rocm");
           permittedInsecurePackages = [
             #"python-2.7.18.7"

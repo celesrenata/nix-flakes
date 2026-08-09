@@ -71,6 +71,14 @@ let
     hash = "sha256-TFW3THDfTn8Uf91+BhcY6ApU1jxxvzs5m0oxJ+kzgdM=";
     fetchSubmodules = true;
   };
+
+  tml-fa4 = prev.fetchFromGitHub {
+    name = "tml-fa4-source";
+    owner = "vllm-project";
+    repo = "tml-fa4";
+    rev = "b206834606ed5b5f21f8eed6b0683f528ea9cf7d";
+    hash = "sha256-LDA5bW4Bf5+w41K9aJ5flz372hy+Ukm//RT55L7nbbU=";
+  };
 in 
 let
   python3-for-vllm = prev.python3.override {
@@ -125,15 +133,40 @@ let
       });
 
       flashinfer = pyprev.flashinfer.overridePythonAttrs (old: {
-        # flashinfer 0.6.4 added requests as a runtime dep but nixpkgs missed it
-        # metadata check fails because installed name doesn't match pname
+        version = "0.6.14";
+        src = prev.fetchFromGitHub {
+          owner = "flashinfer-ai";
+          repo = "flashinfer";
+          tag = "v0.6.14";
+          fetchSubmodules = true;
+          hash = "sha256-wqNtO/sDaMzFlxcIp43WGwsYJDGGOAqwbeFwwuUw6KY=";
+        };
         dependencies = (old.dependencies or []) ++ [ pyprev.requests ];
+        pythonRemoveDeps = (old.pythonRemoveDeps or []) ++ [
+          "cuda-tile"
+          "tilelang"
+        ];
         dontCheckPythonMetadata = true;
       });
 
       outlines = pyprev.outlines.overridePythonAttrs (old: {
         # outlines 1.2.12 added pillow as a runtime dep but nixpkgs missed it
         dependencies = (old.dependencies or []) ++ [ pyprev.pillow ];
+      });
+
+      xgrammar = pyprev.xgrammar.overridePythonAttrs (old: {
+        version = "0.2.1";
+        src = prev.fetchFromGitHub {
+          owner = "mlc-ai";
+          repo = "xgrammar";
+          tag = "v0.2.1";
+          fetchSubmodules = true;
+          hash = "sha256-h9ovM/HbbkrxHGlJNn8eEisD5fnfRGCwoSOwc6HgpVQ=";
+        };
+        patches = [];
+        build-system = (old.build-system or []) ++ [ pyprev.apache-tvm-ffi ];
+        doCheck = false;
+        dontCheckPythonMetadata = true;
       });
 
       # nixpkgs sets doCheck = false for this package, but our python override scope
@@ -151,15 +184,15 @@ let
   };
 in {
   vllm = python3-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
-    version = "0.25.1";
+    version = "0.26.0";
     src = prev.fetchFromGitHub {
       owner = "vllm-project";
       repo = "vllm";
-      tag = "v0.25.1";
-      hash = "sha256-a2OoTfQOJyB8iKBfkfCC23MMBMOHEBjAZ0WGag8hcTQ=";
+      tag = "v0.26.0";
+      hash = "sha256-jFzV6vQX88FhemF98HmT5j3t6Trj5lXVlym4WD/X+Kw=";
     };
     
-    patches = [];
+    patches = [ ../patches/vllm-sm120-fp4-support.patch ];
     postPatch = ''
       sed -i 's/torch == 2.11.0/torch >= 2.11.0/' pyproject.toml
       find . -path '*/requirements*' -name '*.txt' -exec sed -i 's/torch==2.11.0/torch>=2.11.0/' {} +
@@ -203,6 +236,7 @@ in {
       python3-for-vllm.pkgs.mcp
       python3-for-vllm.pkgs.grpcio-reflection
       python3-for-vllm.pkgs.tvm-ffi
+      python3-for-vllm.pkgs.nvidia-cudnn-frontend
     ];
     
     preBuild = (old.preBuild or "") + ''
@@ -213,6 +247,7 @@ in {
       export QUTLASS_SRC_DIR="${qutlass}"
       export DEEPGEMM_SRC_DIR="${deepgemm}"
       export FMHA_SM100_SRC_DIR="${fmha-sm100}"
+      export TML_FA4_SRC_DIR="${tml-fa4}"
     '';
     
     env = (old.env or {}) // {

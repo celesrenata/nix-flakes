@@ -72,7 +72,7 @@ in
       Type = "simple";
       User = "vllm";
       Group = "vllm";
-      ExecStart = "${pkgs.vllm}/bin/vllm serve numind/NuExtract3 --served-model-name numind/NuExtract3 --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.45 --max-model-len 8192 --max-num-seqs 8";
+      ExecStart = "${pkgs.vllm}/bin/vllm serve nvidia/Qwen3.6-35B-A3B-NVFP4 --served-model-name nvidia/Qwen3.6-35B-A3B-NVFP4 --host 0.0.0.0 --port 8010 --gpu-memory-utilization 0.90 --max-model-len 262144 --max-num-seqs 2";
       Restart = "on-failure";
       RestartSec = "10s";
     };

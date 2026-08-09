@@ -18,10 +18,7 @@
       port = 11434;
       modelsDir = config.my.paths.ollamaModels;
       syncModels = false;
-      loadModels = [
-        "nutboy02/Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-uncenfull:Q2_K_MTX"
-        "snowflake-arctic-embed2"
-      ];
+      loadModels = [];
       environmentVariables = {
         OLLAMA_FLASH_ATTENTION = "1";
         OLLAMA_KV_CACHE_TYPE = "q4_0";
@@ -29,7 +26,7 @@
         OLLAMA_MAX_LOADED_MODELS = "1";
         OLLAMA_CONTEXT_LENGTH = "262144";
         OLLAMA_NUM_PREDICT = "-1";
-        OLLAMA_KEEP_ALIVE = "-1";
+        OLLAMA_KEEP_ALIVE = "300";
         OLLAMA_MAX_QUEUE = "32";
       };
     };
@@ -233,8 +230,8 @@
         buildInputs = [ pkgs.stdenv.cc.cc.lib ];
         unpackPhase = "unzip $src -d .";
         installPhase = ''
-          mkdir -p $out/lib/python3.13/site-packages
-          cp -r tvm_ffi apache_tvm_ffi-0.1.10.dist-info $out/lib/python3.13/site-packages/
+          mkdir -p $out/lib/python3.14/site-packages
+          cp -r tvm_ffi apache_tvm_ffi-0.1.10.dist-info $out/lib/python3.14/site-packages/
         '';
       };
     in {
@@ -274,13 +271,16 @@
         User = "vllm";
         Group = "vllm";
         ExecStart = ''
-          ${vllmWrapper} serve AxionML/Qwen3.5-9B-NVFP4 \
+          ${vllmWrapper} serve nvidia/Qwen3.6-35B-A3B-NVFP4 \
             --host 0.0.0.0 \
-            --port 8000 \
-            --max-model-len 8192 \
+            --port 8010 \
+            --max-model-len 131072 \
+            --max-num-batched-tokens 8192 \
             --gpu-memory-utilization 0.85 \
-            --max-num-seqs 8 \
+            --max-num-seqs 2 \
             --enable-prefix-caching \
+            --enable-auto-tool-choice \
+            --tool-call-parser hermes \
             --dtype auto \
             --reasoning-parser qwen3 \
             --default-chat-template-kwargs '{"enable_thinking": false}'

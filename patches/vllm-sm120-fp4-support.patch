@@ -1,0 +1,24 @@
+diff --git a/vllm/platforms/interface.py b/vllm/platforms/interface.py
+index 1234567..abcdefg 100644
+--- a/vllm/platforms/interface.py
++++ b/vllm/platforms/interface.py
+@@ -485,9 +485,15 @@ class Platform:
+     ) -> bool:
+         """
+         Returns True if the device capability is any <major>.x.
+-        Mirrors CUDA 13 'family' architecture semantics (e.g. 10.x, 11.x, 12.x).
++        Mirrors CUDA 13 'family' architecture semantics.
++
++        SM120 (RTX 5090/6000 Blackwell) shares the same FP4/FP8 tensor core
++        capabilities as SM100 (B100/B200 datacenter Blackwell), so family 120
++        is treated as also matching family 100 queries.
+         """
+         current_capability = cls.get_device_capability(device_id=device_id)
+         if current_capability is None:
+             return False
+-        return (current_capability.to_int() // 10) == (capability // 10)
++        current_family = current_capability.to_int() // 10
++        target_family = capability // 10
++        if target_family == 10 and current_family == 12:
++            return True
++        return current_family == target_family

@@ -10,9 +10,9 @@ let
 
     section: links
       esnixi:
-        right = stabulous
+        right (0, 38) = stabulous
       stabulous:
-        left = esnixi
+        left = esnixi (0, 38)
     end
 
     section: options
@@ -40,7 +40,7 @@ in
     after = [ "graphical-session.target" ];
     serviceConfig = {
       ExecStartPre = "${preStart}";
-      ExecStart = "${pkgs.input-leap}/bin/input-leaps --no-daemon --use-ei --config ${serverConfig} --address 0.0.0.0:24800";
+      ExecStart = "${pkgs.input-leap}/bin/input-leaps --no-daemon --config ${serverConfig} --address 0.0.0.0:24800";
       Environment = [ "DISPLAY=:0" ];
       Restart = "on-failure";
       RestartSec = 5;
