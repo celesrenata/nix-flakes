@@ -55,3 +55,11 @@ hl.config({
 
 -- Suppress maximize for all windows
 hl.window_rule({ name = "suppress-maximize", match = { class = ".*" }, suppress_event = "maximize" })
+
+-------------------------------------------------------------------------------
+-- SESSION TARGET (ensures quickshell.service starts via systemd)
+-------------------------------------------------------------------------------
+
+hl.on("hyprland.start", function()
+    hl.exec_cmd("systemctl --user start hyprland-session.target")
+end)
