@@ -1,5 +1,6 @@
 -- nixberry host-specific Hyprland overrides
 -- Parallels Desktop aarch64 VM — single monitor, no HYTE display, no WinApps
+-- Autostart is handled by execs.lua (from dots-hyprland)
 
 -------------------------------------------------------------------------------
 -- MONITORS
@@ -54,19 +55,3 @@ hl.config({
 
 -- Suppress maximize for all windows
 hl.window_rule({ name = "suppress-maximize", match = { class = ".*" }, suppress_event = "maximize" })
-
--------------------------------------------------------------------------------
--- AUTOSTART (nixberry-specific)
--------------------------------------------------------------------------------
-
-hl.on("hyprland.start", function()
-    hl.exec_cmd("systemctl --user start quickshell.service")
-    hl.exec_cmd("wl-paste --type text --watch cliphist store")
-    hl.exec_cmd("wl-paste --type image --watch cliphist store")
-    hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
-    hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 || /usr/libexec/polkit-gnome-authentication-agent-1")
-    hl.exec_cmd("hypridle")
-    hl.exec_cmd("dbus-update-activation-environment --all")
-    hl.exec_cmd("sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
-    hl.exec_cmd("hyprctl setcursor Bibata-Modern-Classic 24")
-end)
