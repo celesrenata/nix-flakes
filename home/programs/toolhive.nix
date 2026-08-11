@@ -109,10 +109,12 @@ let
       fetch
 
     # ── Custom Container Servers ─────────────────────────────────────
+    mkdir -p "${config.home.homeDirectory}/.local/share/playwright-mcp"
     run_if_needed playwright \
       --name playwright \
       --proxy-port ${toString ports.playwright} \
       --transport stdio \
+      -v "${config.home.homeDirectory}/.local/share/playwright-mcp:/home/node/.playwright-mcp" \
       playwright
 
     run_if_needed searxng-enhanced \
