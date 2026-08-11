@@ -1,5 +1,6 @@
 # Virtualisation / Guest services for nixberry (Parallels Desktop aarch64 VM)
-# These are guest-side services, not hypervisor services.
+# Parallels Tools are enabled via hardware.parallels.enable in hardware-configuration.nix
+# This file handles Docker (for ToolHive MCP) and Parallels-specific tweaks.
 
 { config, lib, pkgs, ... }:
 
@@ -11,24 +12,10 @@
       autoPrune.enable = true;
     };
 
-    services.spice-webdavd.enable = true;
-    services.qemuGuest.enable = true;
-
-    # Shared folder access via WebDAV
-    services.davfs2 = {
-      enable = true;
-      settings = {
-        globalSection = {
-          ask_auth = "0";
-        };
-      };
-    };
-
-    # Spice tools for clipboard sharing and display resize
+    # Parallels shared folders (mounted via prl_fs FUSE)
+    # Access macOS shared folders at /media/psf/
     environment.systemPackages = with pkgs; [
-      spice
-      spice-vdagent
-      spice-gtk
+      fuse  # FUSE support for prl_fs shared folders
     ];
   };
 }

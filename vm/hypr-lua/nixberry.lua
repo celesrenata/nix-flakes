@@ -6,7 +6,10 @@
 -- MONITORS
 -------------------------------------------------------------------------------
 
--- Let Parallels auto-detect (single virtual display)
+-- Parallels virtual display — use a good resolution (Retina-equivalent)
+-- Available: up to 4096x2160, 2560x1600, 1920x1200, etc.
+hl.monitor({ output = "Virtual-1", mode = "2560x1600@60", position = "auto", scale = "1" })
+-- Fallback for any other output
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "1" })
 
 -------------------------------------------------------------------------------
