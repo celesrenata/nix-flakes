@@ -4,4 +4,4 @@ ADAPTER /var/lib/ollama/models/evocua/mmproj.gguf
 PARAMETER stop <|im_end|>
 PARAMETER stop <|endoftext|>
 PARAMETER temperature 0.6
-PARAMETER num_ctx 65536
+PARAMETER num_ctx 131072
