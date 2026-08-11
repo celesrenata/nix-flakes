@@ -52,10 +52,13 @@
 
   # AI/ML overlays: ComfyUI, vLLM, TensorRT, xformers binary, bitsandbytes
   ai = [
+    # Use CUDA 13 for Blackwell SM120 native support
+    (final: prev: { cudaPackages = prev.cudaPackages_13; })
     (import ./vllm.nix)
     (import ./tensorrt.nix)
     (import ./ollama.nix)
     (import ./xformers-bin-0_0_28_post3.nix)
     (import ./bitsandbytes.nix)
+    (import ./distcc-builds.nix)
   ];
 }

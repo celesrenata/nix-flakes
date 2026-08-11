@@ -96,6 +96,27 @@ let
         doCheck = false;
       };
 
+      # Torch builds fine with CUDA 13 but the pythonMetadataCheck hook references
+      # a python env built for a different closure. Skip the check.
+      # Use distcc to distribute C++ compilation across all 4 gremlins.
+      torch = pyprev.torch.overridePythonAttrs (old: {
+        dontCheckPythonMetadata = true;
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ prev.distcc prev.ccache ];
+        preConfigure = (old.preConfigure or "") + ''
+          export DISTCC_DIR="$TMPDIR/distcc"
+          mkdir -p "$DISTCC_DIR"
+          export DISTCC_HOSTS="localhost/16 10.1.1.12/16,lzo 10.1.1.13/16,lzo 10.1.1.14/16,lzo 10.1.1.15/16,lzo"
+          export CMAKE_CXX_COMPILER_LAUNCHER="distcc;ccache"
+          export CMAKE_C_COMPILER_LAUNCHER="distcc;ccache"
+          export CMAKE_CUDA_COMPILER_LAUNCHER=ccache
+          export CCACHE_DIR=/var/cache/ccache
+          export CCACHE_MAXSIZE=50G
+          mkdir -p /var/cache/ccache
+          export MAX_JOBS=64
+        '';
+        __noChroot = true;
+      });
+
       prometheus-fastapi-instrumentator = pyprev.prometheus-fastapi-instrumentator.overridePythonAttrs (old: rec {
         version = "8.0.2";
         src = prev.fetchPypi {
@@ -133,6 +154,8 @@ let
       });
 
       flashinfer = pyprev.flashinfer.overridePythonAttrs (old: {
+        __noChroot = true;
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ prev.distcc prev.ccache ];
         version = "0.6.14";
         src = prev.fetchFromGitHub {
           owner = "flashinfer-ai";
@@ -175,6 +198,19 @@ let
         doCheck = false;
       });
 
+      # tokenspeed-mla depends on tokenspeed-triton which fails to build with CUDA 13.
+      # vLLM lists it in pythonRemoveDeps but the env still resolves it. Stub it out.
+      tokenspeed-mla = pyprev.buildPythonPackage {
+        pname = "tokenspeed-mla";
+        version = "0.1.5";
+        format = "other";
+        dontUnpack = true;
+        installPhase = ''
+          mkdir -p $out/${pyprev.python.sitePackages}/tokenspeed_mla
+          echo "" > $out/${pyprev.python.sitePackages}/tokenspeed_mla/__init__.py
+        '';
+      };
+
       # nixpkgs gguf version (9967, llama.cpp rev) doesn't match metadata (0.19.0)
       gguf = pyprev.gguf.overridePythonAttrs (old: {
         dontCheckPythonMetadata = true;
@@ -183,7 +219,10 @@ let
     };
   };
 in {
+  python3 = python3-for-vllm;
+  python3Packages = python3-for-vllm.pkgs;
   vllm = python3-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
+    __noChroot = true;
     version = "0.26.0";
     src = prev.fetchFromGitHub {
       owner = "vllm-project";
@@ -193,6 +232,17 @@ in {
     };
     
     patches = [ ../patches/vllm-sm120-fp4-support.patch ];
+    cargoRoot = "rust";
+    cargoDeps = prev.rustPlatform.fetchCargoVendor {
+      src = prev.fetchFromGitHub {
+        owner = "vllm-project";
+        repo = "vllm";
+        tag = "v0.26.0";
+        hash = "sha256-jFzV6vQX88FhemF98HmT5j3t6Trj5lXVlym4WD/X+Kw=";
+      };
+      sourceRoot = "source/rust";
+      hash = "sha256-/kRtossDL0xuOYEzHA6xwN3P55kn6j0+eSm7j75e2ao=";
+    };
     postPatch = ''
       sed -i 's/torch == 2.11.0/torch >= 2.11.0/' pyproject.toml
       find . -path '*/requirements*' -name '*.txt' -exec sed -i 's/torch==2.11.0/torch>=2.11.0/' {} +
@@ -239,7 +289,16 @@ in {
       python3-for-vllm.pkgs.nvidia-cudnn-frontend
     ];
     
-    preBuild = (old.preBuild or "") + ''
+    preConfigure = (old.preConfigure or "") + ''
+          export DISTCC_DIR="$TMPDIR/distcc"
+          mkdir -p "$DISTCC_DIR"
+          export DISTCC_HOSTS="localhost/16 10.1.1.12/16,lzo 10.1.1.13/16,lzo 10.1.1.14/16,lzo 10.1.1.15/16,lzo"
+          export CMAKE_C_COMPILER_LAUNCHER="distcc;ccache"
+          export CMAKE_CXX_COMPILER_LAUNCHER="distcc;ccache"
+          export CMAKE_CUDA_COMPILER_LAUNCHER=ccache
+          export CCACHE_DIR=/var/cache/ccache
+          export CCACHE_MAXSIZE=50G
+          mkdir -p /var/cache/ccache
       export CMAKE_ARGS="-DFETCHCONTENT_SOURCE_DIR_CUTLASS=${cutlass} -DCMAKE_CUDA_ARCHITECTURES=120 $CMAKE_ARGS"
       export TRITON_KERNELS_SRC_DIR="${triton-kernels}/python/triton_kernels/triton_kernels"
       export FLASH_MLA_SRC_DIR="${flashmla}"

@@ -48,6 +48,14 @@
       PARAMETER num_ctx 262144
     '';
 
+    environment.etc."ollama/evocua-32b.Modelfile".text = ''
+      FROM /home/celes/Downloads/evocua/evocua-32b-q4.gguf
+      PARAMETER stop <|im_end|>
+      PARAMETER stop <|endoftext|>
+      PARAMETER temperature 0.6
+      PARAMETER num_ctx 32768
+    '';
+
     systemd.services."ollama-create-qwen3.6-tuned" = {
       after = [ "network-online.target" "ollama.service" ];
       wants = [ "network-online.target" ];
@@ -76,6 +84,37 @@
           fi
           if ! ollama show qwen3.6-tuned >/dev/null 2>&1; then
             ollama create qwen3.6-tuned -f /etc/ollama/qwen3.6-tuned.Modelfile
+          fi
+        '');
+      };
+    };
+
+    # ── EvoCUA-32B model creation oneshot ─────────────────────────────────
+    systemd.services."ollama-create-evocua-32b" = {
+      after = [ "network-online.target" "ollama.service" ];
+      wants = [ "network-online.target" ];
+      requires = [ "ollama.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "ollama";
+        Group = "ollama";
+        Environment = [
+          "OLLAMA_HOST=http://127.0.0.1:11434"
+          "OLLAMA_MODELS=${config.my.paths.ollamaModels}"
+          "PATH=${lib.makeBinPath [ pkgs.coreutils pkgs.curl pkgsAccel.ollama pkgs.bash ]}"
+        ];
+        ExecStart = (pkgs.writeShellScript "create-evocua-32b" ''
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "$OLLAMA_HOST/api/tags" || true)"
+            [ "$code" = "200" ] && break
+            sleep 1
+          done
+
+          # Only create if the GGUF source exists and model needs refresh
+          if [ -f /home/celes/Downloads/evocua/evocua-32b-q4.gguf ]; then
+            ollama create evocua-32b -f /etc/ollama/evocua-32b.Modelfile
           fi
         '');
       };

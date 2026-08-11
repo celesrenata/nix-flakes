@@ -1,0 +1,6 @@
+FROM ~/Downloads/evocua/evocua-32b-q4.gguf
+
+PARAMETER stop <|im_end|>
+PARAMETER stop <|endoftext|>
+PARAMETER temperature 0.6
+PARAMETER num_ctx 32768
