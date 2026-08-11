@@ -12,7 +12,7 @@
   # dots-hyprland configuration for nixberry
   programs.dots-hyprland = {
     enable = true;
-    source = inputs.dots-hyprland-source;
+    source = pkgs.dots-hyprland-source-filtered;  # Has Lua configs from end-4-flakes
     packageSet = "essential";
     mode = "hybrid";
 
