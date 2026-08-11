@@ -54,7 +54,7 @@
       PARAMETER stop <|im_end|>
       PARAMETER stop <|endoftext|>
       PARAMETER temperature 0.6
-      PARAMETER num_ctx 32768
+      PARAMETER num_ctx 65536
     '';
 
     systemd.services."ollama-create-qwen3.6-tuned" = {
