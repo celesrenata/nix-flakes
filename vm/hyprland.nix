@@ -30,6 +30,8 @@
   # Prevent HM from managing icons dir — Steam needs to write here
   home.file.".local/share/icons".enable = false;
 
-  # nixberry host config — uses standard keybinds from dots-hyprland + VM-specific host.lua
+  # Override default keybinds with stub (nixberry uses esnixi's Ctrl+Super scheme in host.lua)
+  xdg.configFile."hypr/hyprland/keybinds.lua".source = lib.mkForce ../vm/hypr-lua/keybinds-stub.lua;
+  # Host-specific config (loaded last via pcall in hyprland.lua)
   home.file.".config/hypr/hyprland/host.lua".source = ../vm/hypr-lua/nixberry.lua;
 }
