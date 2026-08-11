@@ -1,4 +1,5 @@
-FROM ~/Downloads/evocua/evocua-32b-q4.gguf
+FROM /var/lib/ollama/models/evocua/evocua-32b-q4.gguf
+ADAPTER /var/lib/ollama/models/evocua/mmproj.gguf
 
 PARAMETER stop <|im_end|>
 PARAMETER stop <|endoftext|>

@@ -49,7 +49,8 @@
     '';
 
     environment.etc."ollama/evocua-32b.Modelfile".text = ''
-      FROM /home/celes/Downloads/evocua/evocua-32b-q4.gguf
+      FROM /var/lib/ollama/models/evocua/evocua-32b-q4.gguf
+      ADAPTER /var/lib/ollama/models/evocua/mmproj.gguf
       PARAMETER stop <|im_end|>
       PARAMETER stop <|endoftext|>
       PARAMETER temperature 0.6
@@ -113,7 +114,7 @@
           done
 
           # Only create if the GGUF source exists and model needs refresh
-          if [ -f /home/celes/Downloads/evocua/evocua-32b-q4.gguf ]; then
+          if [ -f /var/lib/ollama/models/evocua/evocua-32b-q4.gguf ]; then
             ollama create evocua-32b -f /etc/ollama/evocua-32b.Modelfile
           fi
         '');
