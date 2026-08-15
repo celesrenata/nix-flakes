@@ -51,6 +51,13 @@ let
 
       playwright = {
         url = thvUrl "playwright";
+        autoApprove = [
+          "browser_navigate" "browser_console_messages" "browser_network_requests"
+          "browser_snapshot" "browser_run_code_unsafe" "browser_network_request"
+          "browser_click" "browser_close" "browser_resize" "browser_evaluate"
+          "browser_wait_for" "browser_tabs" "browser_fill_form" "browser_type"
+          "browser_select_option" "browser_take_screenshot"
+        ];
       };
 
       searxng-enhanced = {
@@ -69,7 +76,7 @@ let
 
       context7 = {
         url = thvUrl "context7";
-        autoApprove = [ "resolve-library-id" "get-library-docs" ];
+        autoApprove = [ "resolve-library-id" "get-library-docs" "query-docs" ];
       };
 
       postgres = {
@@ -115,6 +122,7 @@ let
           "systemd_status" "systemd_logs" "clipboard_list" "apps_search"
           "diagnostic_bundle" "shell_logs" "system_info" "list_monitors"
           "list_workspaces" "list_clients" "get_active_window" "screenshot"
+          "describe_image" "describe_images"
         ];
       };
     };

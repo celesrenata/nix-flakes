@@ -11,6 +11,7 @@
 {
   # Overlays needed by all hosts: OpenGL, Hyprland desktop base, keyboard visualizer, debugpy
   common = [
+    (import ./ffmpeg-pin-8.nix)
     (import ./inline-snapshot-fix.nix)
     inputs.hyprland.overlays.hyprland-packages
     inputs.hyprland.overlays.hyprland-extras
