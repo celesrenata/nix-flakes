@@ -129,6 +129,7 @@ let
 
     # ── Kubernetes ───────────────────────────────────────────────────
     # Container runs as UID 65532 (nonroot), so we need a readable copy
+    # Uses stdio transport to avoid port 8080 conflict with gunicorn (searxng)
     mkdir -p "${config.home.homeDirectory}/.local/share/toolhive/k8s"
     if [ -f "${config.home.homeDirectory}/.kube/config" ]; then
       cp "${config.home.homeDirectory}/.kube/config" \
@@ -139,8 +140,7 @@ let
     run_if_needed k8s \
       --name k8s \
       --proxy-port ${toString ports.k8s} \
-      --network host \
-      --isolate-network=false \
+      --transport stdio \
       -v "${config.home.homeDirectory}/.local/share/toolhive/k8s/config:/home/nonroot/.kube/config:ro" \
       k8s
 

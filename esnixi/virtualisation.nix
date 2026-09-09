@@ -6,7 +6,10 @@
       enable = true;
       enableOnBoot = true;
       storageDriver = "btrfs";
-      daemon.settings.data-root = config.my.paths.dockerData;
+      daemon.settings = {
+        data-root = config.my.paths.dockerData;
+        dns = [ "192.168.42.1" "192.168.99.42" ];
+      };
       package = pkgs.docker;
     };
 

@@ -43,6 +43,7 @@
     download-buffer-size = 8589934592; # 8gb
     cores = 20;
     max-jobs = 4;
+    sandbox = "relaxed"; # Allow __noChroot for distcc-accelerated builds
   };
   
   systemd.services.set-github-token = {

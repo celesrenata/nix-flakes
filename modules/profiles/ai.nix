@@ -311,19 +311,31 @@
         User = "vllm";
         Group = "vllm";
         ExecStart = ''
-          ${vllmWrapper} serve nvidia/Qwen3.6-35B-A3B-NVFP4 \
+          ${vllmWrapper} serve nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4 \
+            --served-model-name nemotron-3.5-lightning \
             --host 0.0.0.0 \
             --port 8010 \
-            --max-model-len 131072 \
-            --max-num-batched-tokens 8192 \
-            --gpu-memory-utilization 0.85 \
-            --max-num-seqs 2 \
+            --max-model-len 196608 \
+            --gpu-memory-utilization 0.90 \
+            --max-num-seqs 4 \
+            --max-num-batched-tokens 16384 \
+            --enable-chunked-prefill \
+            --kv-cache-dtype fp8 \
             --enable-prefix-caching \
+            --mamba-backend flashinfer \
+            --mamba-ssm-cache-dtype float16 \
+            --mamba-cache-mode align \
+            --enable-mamba-cache-stochastic-rounding \
+            --mamba-cache-philox-rounds 5 \
+            --async-scheduling \
+            --speculative_config.method dspark \
+            --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark \
+            --speculative_config.num_speculative_tokens 3 \
+            --reasoning-parser nemotron_v3 \
+            --tool-call-parser qwen3_coder \
             --enable-auto-tool-choice \
-            --tool-call-parser hermes \
-            --dtype auto \
-            --reasoning-parser qwen3 \
-            --default-chat-template-kwargs '{"enable_thinking": false}'
+            --default-chat-template-kwargs '{"enable_thinking":true,"force_nonempty_content":true}' \
+            --enforce-eager
         '';
         Restart = "on-failure";
         RestartSec = "10s";

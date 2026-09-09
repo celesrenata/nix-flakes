@@ -54,7 +54,7 @@
     tinyxml-2
     gtkmm3
     gtksourceviewmm
-    cairomm
+    cairomm_1_16
     gnumake
 
     # Other development tools

@@ -85,5 +85,8 @@
     
     # Node.js (required for various desktop components)
     nodejs_22
+
+    # Perplexity AI desktop app (Electron wrapper)
+    perplexity-desktop
   ];
 }

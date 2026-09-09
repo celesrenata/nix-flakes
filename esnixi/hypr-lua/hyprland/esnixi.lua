@@ -102,7 +102,7 @@ hl.config({
         border_size = 2,
         ["col.active_border"] = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
         ["col.inactive_border"] = "rgba(595959aa)",
-        layout = "dwindle",
+        layout = "master",
         allow_tearing = false,
     },
 })
@@ -352,6 +352,25 @@ hl.bind("Ctrl + Super + Minus", hl.dsp.layout("splitratio", -0.1), { repeating =
 hl.bind("Ctrl + Super + Equal", hl.dsp.layout("splitratio", 0.1), { repeating = true, description = "Window: Increase split ratio" })
 hl.bind("Ctrl + Semicolon", hl.dsp.layout("splitratio", -0.1), { repeating = true }) -- [hidden]
 hl.bind("Ctrl + Apostrophe", hl.dsp.layout("splitratio", 0.1), { repeating = true }) -- [hidden]
+
+-------------------------------------------------------------------------------
+-- KEYBINDS: Master Layout
+-------------------------------------------------------------------------------
+
+-- Add/remove master windows (columns with left orientation, rows with top orientation)
+hl.bind("Super + Alt + Right", hl.dsp.layout("addmaster"), { description = "Layout: Add master column" })
+hl.bind("Super + Alt + Left", hl.dsp.layout("removemaster"), { description = "Layout: Remove master column" })
+hl.bind("Super + Alt + Up", hl.dsp.layout("addmaster"), { description = "Layout: Add master row" })
+hl.bind("Super + Alt + Down", hl.dsp.layout("removemaster"), { description = "Layout: Remove master row" })
+
+-- Change orientation (Shift modifier)
+hl.bind("Super + Shift + Alt + Up", hl.dsp.layout("orientationtop"), { description = "Layout: Orientation top" })
+hl.bind("Super + Shift + Alt + Down", hl.dsp.layout("orientationbottom"), { description = "Layout: Orientation bottom" })
+hl.bind("Super + Shift + Alt + Left", hl.dsp.layout("orientationleft"), { description = "Layout: Orientation left" })
+hl.bind("Super + Shift + Alt + Right", hl.dsp.layout("orientationright"), { description = "Layout: Orientation right" })
+
+-- Swap with master
+hl.bind("Super + Alt + Return", hl.dsp.layout("swapwithmaster", "master"), { description = "Layout: Swap with master" })
 
 -------------------------------------------------------------------------------
 -- KEYBINDS: Window States

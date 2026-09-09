@@ -8,9 +8,9 @@ let
     export CMAKE_C_COMPILER_LAUNCHER="distcc;ccache"
     export CMAKE_CXX_COMPILER_LAUNCHER="distcc;ccache"
     export CMAKE_CUDA_COMPILER_LAUNCHER=ccache
-    export CCACHE_DIR=/var/cache/ccache
+    export CCACHE_DIR=$TMPDIR/ccache
     export CCACHE_MAXSIZE=50G
-    mkdir -p /var/cache/ccache
+    mkdir -p $TMPDIR/ccache
   '';
   addDistcc = pkg: pkg.overrideAttrs (old: {
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ prev.distcc prev.ccache ];

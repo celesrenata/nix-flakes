@@ -98,7 +98,6 @@
           allowUnfree = true;
           nvidia.acceptLicense = true;
           cudaSupport = (backend == "cuda");
-          cudaPackages = "cudaPackages_13";
           rocmSupport = (backend == "rocm");
           permittedInsecurePackages = [
             #"python-2.7.18.7"
@@ -108,7 +107,7 @@
             "mbedtls-2.28.10"
             "nodejs-20.20.2"
             "nodejs-slim-20.20.2"
-            "python3.13-vllm-0.20.0"
+            "python3.14-vllm-0.27.1"
           ];
         };
         overlays = builtins.concatLists (map (g: overlayGroups.${g}) groups) ++ extraOverlays;
@@ -298,6 +297,47 @@
           ./home/programs/media.nix
           ./home/programs/productivity.nix
           ./nigel/hyprland.nix
+        ];
+      };
+
+      # ── VirtualBox/VMware VM (x86_64) ─────────────────────────────────
+      nixbox = {
+        system = "x86_64-linux";
+        backend = "cpu";
+        groups = {
+          games = true;
+          development = true;
+          videoEditing = true;
+          virtualization = false;
+          ai = false;
+        };
+        extraModules = [
+          # Platform-specific VM configurations
+          ./vm-x86/hardware-configuration.nix
+          ./vm-x86/boot.nix
+          ./vm-x86/graphics.nix
+          ./vm-x86/networking.nix
+          ./vm-x86/virtualisation.nix
+
+          # Shared configuration modules
+          ./secrets.nix
+
+          # CA certificate configuration
+          {
+            security.pki.certificates = [
+              (builtins.readFile ./celestium-ca.crt)
+            ];
+          }
+
+          # External modules
+          protontweaks.nixosModules.protontweaks
+          sops-nix.nixosModules.sops
+        ];
+        homeImports = [
+          ./home/default.nix
+          ./home/programs/ii-desktop-mcp.nix
+          ./vm-x86/hyprland.nix
+          ii-desktop-mcp.homeManagerModules.default
         ];
       };
 
