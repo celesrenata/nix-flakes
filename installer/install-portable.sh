@@ -26,6 +26,14 @@ disk="${disks[$((choice - 1))]%%$'\t'*}"
 
 read -r -p 'Hostname [end4]: ' hostname; hostname="${hostname:-end4}"
 read -r -p 'Primary username [end4]: ' username; username="${username:-end4}"
+while true; do
+  read -r -s -p "Password for $username: " password; printf '\n'
+  read -r -s -p 'Confirm password: ' password_confirm; printf '\n'
+  [ -n "$password" ] || { printf 'Password cannot be empty.\n' >&2; continue; }
+  [ "$password" = "$password_confirm" ] && break
+  printf 'Passwords did not match. Try again.\n' >&2
+done
+unset password_confirm
 games=false; development=false; video=false; virtualization=false; ollama=false
 ask_bool 'Enable development tools?' && development=true
 ask_bool 'Enable gaming (Steam)?' && games=true
@@ -61,4 +69,6 @@ cat > /mnt/etc/nixos/end4/installer/features.nix <<EOF
 }; }
 EOF
 nixos-install --flake /mnt/etc/nixos/end4#portable
-printf '\nInstallation complete. Set a password with: nixos-enter --root /mnt -c "passwd %s"\n' "$username"
+printf '%s:%s\n' "$username" "$password" | nixos-enter --root /mnt -c chpasswd
+unset password
+printf '\nInstallation complete. You can reboot into %s now.\n' "$hostname"
