@@ -408,7 +408,12 @@
       };
 
     # NixOS system configurations generated from host matrix
-    nixosConfigurations = builtins.mapAttrs (name: cfg: mkHost (cfg // { hostname = name; })) hosts;
+    nixosConfigurations = (builtins.mapAttrs (name: cfg: mkHost (cfg // { hostname = name; })) hosts) // {
+      portable = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [ ./installer/portable.nix ];
+      };
+    };
 
     # Re-export darwin configuration for M5 Max MacBook Pro from m5max-darwin-flake
     darwinConfigurations.stabulous = inputs.m5max-darwin-flake.darwinConfigurations.stabulous;
