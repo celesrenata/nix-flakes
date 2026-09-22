@@ -14,7 +14,7 @@ printf '\nPortable end-4 installer\n\n'
 printf 'This installer installs the portable profile only: no remote-build, SOPS, vLLM, Arcane, Hyte, or esnixi-only services.\n\n'
 
 mapfile -t disks < <(lsblk -J -d -o NAME,PATH,SIZE,TYPE,ROTA,TRAN,MODEL | jq -r '
-  .blockdevices[] | select(.type == "disk") |
+  .blockdevices[] | select(.type == "disk" and (.name | test("^fd[0-9]+$") | not)) |
   [.path, .size, (if .rota == false then "SSD/NVMe" else "HDD" end), (.tran // ""), (.model // "")] | @tsv' |
   awk -F '\t' '{ score=($3=="SSD/NVMe" ? 0 : 1); print score "\t" $0 }' | sort -n | cut -f2-)
 [ "${#disks[@]}" -gt 0 ] || die "no installable disks found"
