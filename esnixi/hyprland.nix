@@ -15,6 +15,11 @@
     source = pkgs.dots-hyprland-source-filtered;  # Use DP-3 filtered version
     packageSet = "essential";
     mode = "hybrid";
+
+    # Keep the provisioned helper venv, but never mutate it during activation.
+    # Native PyPI builds on Python 3.14 exceed Home Manager's start timeout and
+    # otherwise leave the desktop generation half-applied.
+    python.autoSetup = lib.mkForce false;
     
     touchegg.enable = lib.mkForce true;
     configuration.copyMiscConfig = lib.mkForce true;

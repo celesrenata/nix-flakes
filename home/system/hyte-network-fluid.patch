@@ -1,0 +1,103 @@
+diff --git a/SystemMonitor.qml b/SystemMonitor.qml
+--- a/SystemMonitor.qml
++++ b/SystemMonitor.qml
+@@ -19,10 +19,21 @@ QtObject {
+     property real gpuPower: 0
+     property real netUpMBps: 0
+     property real netDownMBps: 0
+-    property var netUpHistory: []
+-    property var netDownHistory: []
++    property int networkHistoryPoints: 1200
++    function emptyNetworkHistory() { return [] }
++    property var netUpHistory: emptyNetworkHistory()
++    property var netDownHistory: emptyNetworkHistory()
+     property real totalUpBytes: 0
+     property real totalDownBytes: 0
++    property real networkScroll: 1
++    property var networkScrollAnimation: NumberAnimation {
++        target: root
++        property: "networkScroll"
++        from: 0
++        to: 1
++        duration: 900
++        easing.type: Easing.InOutSine
++    }
+     Behavior on cpuUsage { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
+ Behavior on ramUsage { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
+ Behavior on gpuUsage { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
+@@ -35,8 +51,8 @@ Behavior on moboTemp { NumberAnimation { duration: 320; easing.type: Easing.InOut
+ Behavior on chipsetTemp { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
+ Behavior on cpuPower { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
+ Behavior on gpuPower { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
+-Behavior on netUpMBps { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
+-Behavior on netDownMBps { NumberAnimation { duration: 320; easing.type: Easing.InOutSine } }
++Behavior on netUpMBps { NumberAnimation { duration: 850; easing.type: Easing.InOutSine } }
++Behavior on netDownMBps { NumberAnimation { duration: 850; easing.type: Easing.InOutSine } }
+     
+     property real prevRx: 0
+     property real prevTx: 0
+@@ -75,32 +91,39 @@ Behavior on netDownMBps { NumberAnimation { duration: 320; easing.type: Easing.In
+                 var rx = parseFloat(netStats[0]) || 0
+                 var tx = parseFloat(netStats[1]) || 0
+                 
+-                if (root.prevRx > 0) {
+-                    var rxDelta = rx - root.prevRx
+-                    var txDelta = tx - root.prevTx
+-                    var nowMs = Date.now()
+-                    var elapsed = root.prevSampleMs > 0 ? Math.max((nowMs - root.prevSampleMs) / 1000, 0.001) : 0.25
+-                    
+-                    root.netDownMBps = (rxDelta / 1048576) / elapsed
+-                    root.netUpMBps = (txDelta / 1048576) / elapsed
+-                    
+-                    root.totalDownBytes += rxDelta
+-                    root.totalUpBytes += txDelta
+-                    
+-                    var newDown = root.netDownHistory.slice()
+-                    newDown.push(root.netDownMBps)
+-                    if (newDown.length > 240) newDown.shift()
+-                    root.netDownHistory = newDown
+-                    
+-                    var newUp = root.netUpHistory.slice()
+-                    newUp.push(root.netUpMBps)
+-                    if (newUp.length > 240) newUp.shift()
+-                    root.netUpHistory = newUp
++                var nowMs = Date.now()
++                if (root.prevRx <= 0) {
++                    root.prevRx = rx
++                    root.prevTx = tx
++                    root.prevSampleMs = nowMs
++                } else {
++                    var elapsed = Math.max((nowMs - root.prevSampleMs) / 1000, 0.001)
++                    if (elapsed >= 0.9) {
++                        var rxDelta = Math.max(rx - root.prevRx, 0)
++                        var txDelta = Math.max(tx - root.prevTx, 0)
++                        var rawDown = (rxDelta / 1048576) / elapsed
++                        var rawUp = (txDelta / 1048576) / elapsed
++                        root.netDownMBps = rawDown
++                        root.netUpMBps = rawUp
++                        root.totalDownBytes += rxDelta
++                        root.totalUpBytes += txDelta
++
++                        var newDown = root.netDownHistory.slice()
++                        newDown.push(rawDown)
++                        if (newDown.length > root.networkHistoryPoints + 1) newDown.shift()
++                        root.netDownHistory = newDown
++                        var newUp = root.netUpHistory.slice()
++                        newUp.push(rawUp)
++                        if (newUp.length > root.networkHistoryPoints + 1) newUp.shift()
++                        root.netUpHistory = newUp
++
++                        root.prevRx = rx
++                        root.prevTx = tx
++                        root.prevSampleMs = nowMs
++                        if (newDown.length > root.networkHistoryPoints) root.networkScrollAnimation.restart()
++                        else root.networkScroll = 0
++                    }
+                 }
+-                
+-                root.prevRx = rx
+-                root.prevTx = tx
+-                root.prevSampleMs = Date.now()
+                 
+                 updateTimer.start()
+             }

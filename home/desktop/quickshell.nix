@@ -24,6 +24,13 @@
     };
   };
 
+  # Applied after legacy drop-ins and the upstream unit's environment entries.
+  home.file.".config/systemd/user/quickshell.service.d/zz-local.conf".text = ''
+    [Service]
+    Environment="QML_IMPORT_PATH=${pkgs.kdePackages.kirigami.unwrapped}/lib/qt-6/qml:${pkgs.kdePackages.syntax-highlighting}/lib/qt-6/qml"
+    Environment="QT_LOGGING_RULES=*.debug=false;quickshell.*.debug=false"
+  '';
+
   # Ensure dots-hyprland setup marker exists so quickshell-startup skips its broken setup check
   home.activation.ensureDotsSetupMarker = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p $HOME/.cache/dots-hyprland

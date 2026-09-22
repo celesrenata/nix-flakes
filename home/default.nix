@@ -21,6 +21,7 @@
     
     # Application and Program Configuration
     ./programs/development.nix      # Development tools (VSCode, Git, Python, etc.)
+    ./programs/omniroute-editors.nix # OmniRoute clients for local IDEs
     ./programs/media.nix            # Media applications (OBS, players, editors)
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools

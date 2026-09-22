@@ -187,7 +187,6 @@ hl.config({
 hl.window_rule({ name = "hyte-touch", match = { title = "^(hyte-touch-interface)$" }, monitor = "DP-3", fullscreen = true })
 
 -- ProjectM visualizer - on touch workspace behind QuickShell
-hl.window_rule({ name = "projectm", match = { class = "^(projectMSDL)$" }, workspace = "name:touch", monitor = "DP-3", fullscreen = true })
 
 -- OneTrainer - force decorations on Xwayland Tk windows
 hl.window_rule({ name = "onetrainer-tk", match = { class = "^(Tk)$" }, tile = true, decorate = true })

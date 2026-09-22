@@ -1,4 +1,4 @@
-{ config, lib, pkgs, pkgsAccel, ... }:
+{ config, lib, modulesPath, pkgs, pkgsAccel, ... }:
 
 {
   config = lib.mkIf config.my.profiles.ai.enable {
@@ -12,7 +12,7 @@
 
     # ── Ollama service ───────────────────────────────────────────────────
     services.ollama = {
-      enable = true;
+      enable = false;
       package = pkgsAccel.ollama;
       host = "0.0.0.0";
       port = 11434;
@@ -32,11 +32,13 @@
     };
 
     # Force the Ollama service to run as our dedicated user (not DynamicUser)
-    systemd.services.ollama.serviceConfig = {
-      DynamicUser = lib.mkForce false;
-      User = "ollama";
-      Group = "ollama";
-      ReadWritePaths = [ config.my.paths.ollamaModels ];
+    systemd.services.ollama = lib.mkIf config.services.ollama.enable {
+      serviceConfig = {
+        DynamicUser = lib.mkForce false;
+        User = "ollama";
+        Group = "ollama";
+        ReadWritePaths = [ config.my.paths.ollamaModels ];
+      };
     };
 
     # ── Ollama model creation oneshot ────────────────────────────────────
@@ -58,6 +60,7 @@
     '';
 
     systemd.services."ollama-create-qwen3.6-tuned" = {
+      enable = false;
       after = [ "network-online.target" "ollama.service" ];
       wants = [ "network-online.target" ];
       requires = [ "ollama.service" ];
@@ -92,6 +95,7 @@
 
     # ── EvoCUA-32B model creation oneshot ─────────────────────────────────
     systemd.services."ollama-create-evocua-32b" = {
+      enable = false;
       after = [ "network-online.target" "ollama.service" ];
       wants = [ "network-online.target" ];
       requires = [ "ollama.service" ];
@@ -133,6 +137,7 @@
           PARAMETER num_predict 8192
         '';
       in {
+        enable = false;
         description = "Create the Qwen 3.6 Opus 4×256K Ollama profile";
         wantedBy = [ "multi-user.target" ];
         wants = [ "network-online.target" ];
@@ -197,6 +202,7 @@
 
     # ── Preload qwen36-opus-4x-256k into VRAM ───────────────────────────
     systemd.services.ollama-preload-qwen36-opus = {
+      enable = false;
       description = "Preload qwen36-opus-4x-256k into GPU VRAM";
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ];
@@ -248,102 +254,87 @@
       group = "vllm";
     };
 
-    # ── vLLM service (CUDA-only) ─────────────────────────────────────────
-    systemd.services.vllm = lib.mkIf (config.my.acceleration.backend == "cuda")
-    (let
-      vllmPython = pkgsAccel.python3.withPackages (ps: [ pkgsAccel.vllm ]);
-      vllmWrapper = pkgs.writeShellScript "vllm-wrapper" ''
-        exec ${vllmPython}/bin/python -m vllm.entrypoints.cli.main "$@"
-      '';
-      cxxWrapper = pkgs.writeShellScriptBin "c++" ''
-        exec ${pkgs.gcc14}/bin/g++ "$@"
-      '';
-
-      # apache-tvm-ffi: full runtime + headers from PyPI (flashinfer 0.6.4+ needs it)
-      tvmFfiPkg = pkgs.stdenvNoCC.mkDerivation {
-        name = "apache-tvm-ffi-0.1.10";
-        src = pkgs.fetchurl {
-          url = "https://files.pythonhosted.org/packages/51/f7/ca3fdadc2468e8b67a2f3f13bb7aa132c584feefd8a25dbf920e4bf0a03b/apache_tvm_ffi-0.1.10-cp312-abi3-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl";
-          hash = "sha256-lraQMMciVy4T4wGCczrfotYEJY6Yiz9mMKFvOXx/kog=";
-        };
-        nativeBuildInputs = [ pkgs.unzip pkgs.autoPatchelfHook ];
-        buildInputs = [ pkgs.stdenv.cc.cc.lib ];
-        unpackPhase = "unzip $src -d .";
-        installPhase = ''
-          mkdir -p $out/lib/python3.14/site-packages
-          cp -r tvm_ffi apache_tvm_ffi-0.1.10.dist-info $out/lib/python3.14/site-packages/
-        '';
-      };
-    in {
-      description = "vLLM OpenAI-compatible API server with NVFP4 support";
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
-
-      environment = {
-        HF_HOME = config.my.paths.vllmModels;
-        HOME = config.my.paths.vllmHome;
-        VLLM_WORKER_MULTIPROC_METHOD = "spawn";
-        HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";
-        CUDA_HOME = "${pkgsAccel.cudaPackages.cudatoolkit}";
-        LD_LIBRARY_PATH = "${pkgsAccel.cudaPackages.cudatoolkit}/lib:${pkgsAccel.cudaPackages.cudnn}/lib:${config.hardware.nvidia.package}/lib";
-        PYTHONPATH = "${tvmFfiPkg}/lib/${pkgsAccel.python3.libPrefix}/site-packages:${pkgsAccel.vllm}/${pkgsAccel.python3.sitePackages}";
-        VLLM_LOGGING_LEVEL = "DEBUG";
-        CUDACXX = "${pkgsAccel.cudaPackages.cudatoolkit}/bin/nvcc";
-        CXX = "${pkgs.gcc14}/bin/g++";
-        CC = "${pkgs.gcc14}/bin/gcc";
-        LIBRARY_PATH = "${pkgsAccel.cudaPackages.cudatoolkit}/lib:${pkgsAccel.cudaPackages.cudatoolkit}/lib/stubs:${config.hardware.nvidia.package}/lib";
-      };
-
-      path = [
-        pkgs.bash
-        pkgs.coreutils
-        pkgs.gcc14
-        pkgs.binutils
-        pkgsAccel.cudaPackages.cudatoolkit
-        pkgs.ninja
-        pkgs.gnumake
-        pkgs.cmake
-        cxxWrapper
+    # ── vLLM 0.29 / RTX 5090 ─────────────────────────────────────────────
+    # Use the upstream image proven on gremlin, pinned by digest. This avoids
+    # coupling the serving runtime to the much larger custom CUDA/Python build.
+    virtualisation.oci-containers.containers.vllm-5090 = {
+      autoStart = config.my.acceleration.backend == "cuda";
+      image = "vllm/vllm-openai:v0.29.0@sha256:c2914767605584b6d8f45686b82de173ecc99e781897aa3d0a66dacd72c51ae1";
+      volumes = [
+        "${config.my.paths.vllmModels}:/root/.cache/huggingface"
+        "${config.sops.secrets.huggingface_token.path}:/run/secrets/huggingface_token:ro"
       ];
-
-      serviceConfig = {
-        Type = "simple";
-        User = "vllm";
-        Group = "vllm";
-        ExecStart = ''
-          ${vllmWrapper} serve nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4 \
-            --served-model-name nemotron-3.5-lightning \
-            --host 0.0.0.0 \
-            --port 8010 \
-            --max-model-len 196608 \
-            --gpu-memory-utilization 0.90 \
-            --max-num-seqs 4 \
-            --max-num-batched-tokens 16384 \
-            --enable-chunked-prefill \
-            --kv-cache-dtype fp8 \
-            --enable-prefix-caching \
-            --mamba-backend flashinfer \
-            --mamba-ssm-cache-dtype float16 \
-            --mamba-cache-mode align \
-            --enable-mamba-cache-stochastic-rounding \
-            --mamba-cache-philox-rounds 5 \
-            --async-scheduling \
-            --speculative_config.method dspark \
-            --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark \
-            --speculative_config.num_speculative_tokens 3 \
-            --reasoning-parser nemotron_v3 \
-            --tool-call-parser qwen3_coder \
-            --enable-auto-tool-choice \
-            --default-chat-template-kwargs '{"enable_thinking":true,"force_nonempty_content":true}' \
-            --enforce-eager
-        '';
-        Restart = "on-failure";
-        RestartSec = "10s";
+      ports = [ "0.0.0.0:8010:8000" ];
+      environment = {
+        HF_HOME = "/root/.cache/huggingface";
+        HF_TOKEN_PATH = "/run/secrets/huggingface_token";
+        PYTORCH_CUDA_ALLOC_CONF = "expandable_segments:True";
+        VLLM_WORKER_MULTIPROC_METHOD = "spawn";
       };
-    });
+      cmd = [
+        "nvidia/Qwen3.8-27B-NVFP4"
+        "--served-model-name" "qwen3.8-27b-nvfp4"
+        "--host" "0.0.0.0"
+        "--port" "8000"
+        "--language-model-only"
+        # Reserve 25% of VRAM for runtime and desktop stability. The M5
+        # backend owns contexts larger than this stability-first coding tier.
+        "--max-model-len" "16384"
+        "--gpu-memory-utilization" "0.75"
+        "--enforce-eager"
+        "--max-num-seqs" "4"
+        "--max-num-batched-tokens" "16384"
+        "--enable-chunked-prefill"
+        "--kv-cache-dtype" "fp8_e4m3"
+        "--enable-prefix-caching"
+        "--reasoning-parser" "qwen3"
+        "--tool-call-parser" "qwen3_coder"
+        "--enable-auto-tool-choice"
+      ];
+      extraOptions = [
+        "--device=nvidia.com/gpu=all"
+        "--ipc=host"
+      ];
+    };
+
+    systemd.services.vllm-nvidia-cdi =
+      let
+        generator = pkgs.callPackage
+          "${modulesPath}/services/hardware/nvidia-container-toolkit/cdi-generate.nix"
+          {
+            inherit (config.hardware.nvidia-container-toolkit)
+              csv-files
+              device-name-strategy
+              discovery-mode
+              mounts
+              disable-hooks
+              enable-hooks
+              extraArgs;
+            nvidia-container-toolkit = config.hardware.nvidia-container-toolkit.package;
+            nvidia-driver = config.hardware.nvidia.package;
+          };
+      in
+      {
+        description = "Generate NVIDIA CDI metadata for the vLLM container";
+        wantedBy = [ "multi-user.target" ];
+        before = [ "docker-vllm-5090.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RuntimeDirectory = "cdi";
+          RemainAfterExit = true;
+          ExecStartPre = "-${lib.getExe' pkgs.systemd "udevadm"} settle --timeout=180";
+          ExecStart = lib.getExe generator;
+        };
+      };
+
+    systemd.services.docker-vllm-5090 = {
+      after = [ "vllm-nvidia-cdi.service" ];
+      requires = [ "vllm-nvidia-cdi.service" ];
+      conflicts = [ "ollama.service" ];
+    };
 
     # ── Firewall for vLLM ────────────────────────────────────────────────
-    networking.firewall.allowedTCPPorts = [ 8000 ];
+    networking.firewall.allowedTCPPorts = [ 8010 ];
 
     # ── Open WebUI ───────────────────────────────────────────────────────
     services.open-webui = {
@@ -373,7 +364,6 @@
 
     # ── AI system packages (from pkgsAccel) ──────────────────────────────
     environment.systemPackages = [
-      pkgsAccel.vllm
       pkgsAccel.cudaPackages.cudatoolkit
 
       (pkgsAccel.python3.withPackages (ps: with ps; [

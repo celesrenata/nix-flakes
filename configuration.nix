@@ -31,6 +31,10 @@
       # mismatch with hyprland/hyprctl which are built with GCC 16.
       # GCC 16 is backward-compatible with binaries expecting GCC 15.
       gcc16Stdenv.cc.cc.lib
+      # JetBrains Air native desktop toolkit.
+      fontconfig
+      libxkbcommon
+      wayland
       libx11
       libxrandr
       libxcursor
@@ -579,8 +583,8 @@
     gtk4.dev
     gjs
     gjs.dev
-    gtksourceview
-    gtksourceview.dev
+    gtksourceview4
+    gtksourceview4.dev
     xdg-desktop-portal-gtk
 
     # Not GTK.

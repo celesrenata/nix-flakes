@@ -18,6 +18,20 @@ inputs: final: prev: {
       cp -r $out/configs/hypr/* $out/.config/hypr/
     fi
 
+    # Hyprland's Lua dispatcher cannot parse the old textual `exec /path ...`
+    # form used by the theme toggle. Launch the script directly from Quickshell.
+    for file in \
+      "$out/.config/quickshell/modules/bar/UtilButtons.qml" \
+      "$out/.config/quickshell/ii/modules/bar/UtilButtons.qml"; do
+      if [ -f "$file" ]; then
+        substituteInPlace "$file" \
+          --replace-fail 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode light --noswitch`);' \
+                         'Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", "light", "--noswitch"]);' \
+          --replace-fail 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode dark --noswitch`);' \
+                         'Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", "dark", "--noswitch"]);'
+      fi
+    done
+
     # Remove matugen from config (managed via staging directory)
     rm -rf $out/.config/matugen
 

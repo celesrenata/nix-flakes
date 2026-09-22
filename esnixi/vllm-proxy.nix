@@ -1,6 +1,8 @@
 { ... }:
 
 {
+  imports = [ ./vllm-idle.nix ./comfy-worker.nix ];
+
   services.nginx = {
     enable = true;
 

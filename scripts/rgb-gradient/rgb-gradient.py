@@ -38,42 +38,40 @@ def get_mtime():
     except OSError:
         return 0
 
-colors = load_colors()
-last_mtime = get_mtime()
-
-c = OpenRGBClient()
-
-for d in c.devices:
-    for m in d.modes:
-        if m.name == "Rainbow":
-            d.set_mode(m)
-            break
-time.sleep(1)
-for d in c.devices:
-    for m in d.modes:
-        if m.name == "Direct":
-            d.set_mode(m)
-            break
-
-print("Running...", flush=True)
 STEPS = 60
 DELAY = 1
 
+def run_client():
+    # OpenRGB 1.0 advertises protocol 4 but does not answer the plugin-list
+    # request made by openrgb-python. Protocol 3 supports all device/color
+    # operations we use and avoids that incompatible request.
+    client = OpenRGBClient(name="wallpaper-gradient", protocol_version=3)
+    colors = load_colors()
+    last_mtime = get_mtime()
+
+    for device in client.devices:
+        direct = next((mode for mode in device.modes if mode.name == "Direct"), None)
+        if direct is not None:
+            device.set_mode(direct)
+
+    print(f"Running on {len(client.devices)} OpenRGB devices", flush=True)
+    while True:
+        for i in range(len(colors)):
+            c1, c2 = colors[i], colors[(i + 1) % len(colors)]
+            for step in range(STEPS):
+                mtime = get_mtime()
+                if mtime != last_mtime:
+                    last_mtime = mtime
+                    colors = load_colors()
+                    break
+                color = RGBColor(*lerp(c1, c2, step / STEPS))
+                for device in client.devices:
+                    device.set_color(color)
+                time.sleep(DELAY)
+
 while True:
-    for i in range(len(colors)):
-        c1, c2 = colors[i], colors[(i+1) % len(colors)]
-        for s in range(STEPS):
-            # Check for color file changes every step
-            mtime = get_mtime()
-            if mtime != last_mtime:
-                last_mtime = mtime
-                colors = load_colors()
-                break
-            r, g, b = lerp(c1, c2, s / STEPS)
-            color = RGBColor(r, g, b)
-            for d in c.devices:
-                try:
-                    d.set_color(color)
-                except:
-                    pass
-            time.sleep(DELAY)
+    try:
+        run_client()
+    except Exception as error:
+        print(f"OpenRGB disconnected ({error!r}); reconnecting in 5s", flush=True)
+        time.sleep(5)

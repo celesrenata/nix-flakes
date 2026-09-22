@@ -36,8 +36,8 @@
     gtk4.dev
     gjs
     gjs.dev
-    gtksourceview
-    gtksourceview.dev
+    gtksourceview4
+    gtksourceview4.dev
     xdg-desktop-portal-gtk
     
     # Non-GTK GUI libraries
