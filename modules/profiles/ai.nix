@@ -1,5 +1,9 @@
 { config, lib, modulesPath, pkgs, pkgsAccel, ... }:
 
+let
+  # This is deliberately one model, for the primary text vLLM service only.
+  # The backing NVMe cache remains authoritative; /dev/shm is discarded at boot.
+in
 {
   config = lib.mkIf config.my.profiles.ai.enable {
     # ── Ollama user / group ──────────────────────────────────────────────
@@ -12,7 +16,7 @@
 
     # ── Ollama service ───────────────────────────────────────────────────
     services.ollama = {
-      enable = false;
+      enable = true;
       package = pkgsAccel.ollama;
       host = "0.0.0.0";
       port = 11434;
@@ -254,42 +258,52 @@
       group = "vllm";
     };
 
-    # ── vLLM 0.29 / RTX 5090 ─────────────────────────────────────────────
-    # Use the upstream image proven on gremlin, pinned by digest. This avoids
-    # coupling the serving runtime to the much larger custom CUDA/Python build.
-    virtualisation.oci-containers.containers.vllm-5090 = {
-      autoStart = config.my.acceleration.backend == "cuda";
+    # Vision-language lift for Arcane Atlas.  This stays on loopback: only the
+    # queue worker may submit reference images.  The shared idle middleware
+    # moves weights off the 5090 when idle and releases the same lease Comfy
+    # and the primary text vLLM service use.
+    virtualisation.oci-containers.containers.vllm-vision-5090 = {
+      autoStart = false;
       image = "vllm/vllm-openai:v0.29.0@sha256:c2914767605584b6d8f45686b82de173ecc99e781897aa3d0a66dacd72c51ae1";
+      entrypoint = "python3";
       volumes = [
         "${config.my.paths.vllmModels}:/root/.cache/huggingface"
         "${config.sops.secrets.huggingface_token.path}:/run/secrets/huggingface_token:ro"
+        "${import ../../esnixi/gpu-runtime.nix { inherit pkgs; }}:/opt/vllm-idle:ro"
+        "/run/arcane-gpu:/run/arcane-gpu"
       ];
-      ports = [ "0.0.0.0:8010:8000" ];
+      ports = [ "127.0.0.1:8011:8000" ];
       environment = {
+        PYTHONPATH = "/opt/vllm-idle";
         HF_HOME = "/root/.cache/huggingface";
         HF_TOKEN_PATH = "/run/secrets/huggingface_token";
         PYTORCH_CUDA_ALLOC_CONF = "expandable_segments:True";
         VLLM_WORKER_MULTIPROC_METHOD = "spawn";
+        # Keep the 5090 warm through normal agent turns.  A five-second sleep
+        # interval races with OmniRoute health checks and produces false
+        # network/unavailable failures.
+        VLLM_IDLE_SECONDS = "300";
+        ARCANE_GPU_LOCK = "/run/arcane-gpu/5090.lock";
       };
       cmd = [
-        "nvidia/Qwen3.8-27B-NVFP4"
-        "--served-model-name" "qwen3.8-27b-nvfp4"
+        "/opt/vllm-idle/gpu_launch.py" "vllm" "serve"
+        "Qwen/Qwen2.5-VL-7B-Instruct"
+        "--served-model-name" "qwen2.5-vl-7b-instruct"
         "--host" "0.0.0.0"
         "--port" "8000"
-        "--language-model-only"
-        # Reserve 25% of VRAM for runtime and desktop stability. The M5
-        # backend owns contexts larger than this stability-first coding tier.
-        "--max-model-len" "16384"
-        "--gpu-memory-utilization" "0.75"
+        "--max-model-len" "8192"
+        "--gpu-memory-utilization" "0.65"
+        # This is an on-demand contract reviewer, not a throughput service.
+        # Eager mode avoids a lengthy CUDA-graph capture on the shared 5090.
         "--enforce-eager"
-        "--max-num-seqs" "4"
-        "--max-num-batched-tokens" "16384"
+        "--max-num-seqs" "2"
+        "--max-num-batched-tokens" "8192"
+        "--limit-mm-per-prompt" ''{"image": 8}''
         "--enable-chunked-prefill"
-        "--kv-cache-dtype" "fp8_e4m3"
         "--enable-prefix-caching"
-        "--reasoning-parser" "qwen3"
-        "--tool-call-parser" "qwen3_coder"
-        "--enable-auto-tool-choice"
+        "--enable-sleep-mode"
+        "--api-server-count" "1"
+        "--middleware" "vllm_idle.IdleSleepMiddleware"
       ];
       extraOptions = [
         "--device=nvidia.com/gpu=all"
@@ -317,7 +331,6 @@
       {
         description = "Generate NVIDIA CDI metadata for the vLLM container";
         wantedBy = [ "multi-user.target" ];
-        before = [ "docker-vllm-5090.service" ];
         serviceConfig = {
           Type = "oneshot";
           RuntimeDirectory = "cdi";
@@ -327,9 +340,9 @@
         };
       };
 
-    systemd.services.docker-vllm-5090 = {
-      after = [ "vllm-nvidia-cdi.service" ];
-      requires = [ "vllm-nvidia-cdi.service" ];
+    systemd.services.docker-vllm-vision-5090 = {
+      after = [ "arcane-gpu-lock.service" "vllm-nvidia-cdi.service" ];
+      requires = [ "arcane-gpu-lock.service" "vllm-nvidia-cdi.service" ];
       conflicts = [ "ollama.service" ];
     };
 

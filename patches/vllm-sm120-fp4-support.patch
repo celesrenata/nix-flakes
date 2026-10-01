@@ -1,9 +1,9 @@
---- a/vllm/platforms/interface.py	2026-08-09 18:28:22.649937789 -0700
-+++ b/vllm/platforms/interface.py	2026-08-09 18:28:22.671320142 -0700
-@@ -485,12 +485,20 @@
+--- a/vllm/platforms/interface.py
++++ b/vllm/platforms/interface.py
+@@ -496,12 +496,20 @@
+         device_id: int = 0,
      ) -> bool:
-         """
-         Returns True if the device capability is any <major>.x.
+         """Returns True if the device capability is any <major>.x.
 -        Mirrors CUDA 13 'family' architecture semantics (e.g. 10.x, 11.x, 12.x).
 +        Mirrors CUDA 13 family architecture semantics.
 +

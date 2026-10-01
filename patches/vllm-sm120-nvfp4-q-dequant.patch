@@ -1,0 +1,18 @@
+diff --git a/vllm/v1/attention/backends/flashinfer.py b/vllm/v1/attention/backends/flashinfer.py
+--- a/vllm/v1/attention/backends/flashinfer.py
++++ b/vllm/v1/attention/backends/flashinfer.py
+@@ -2490,6 +2490,14 @@ class FlashInferImpl(AttentionImpl):
+         query: torch.Tensor,
+         q_data_type: torch.dtype,
+         scale: torch.Tensor,
+     ) -> torch.Tensor:
++        # ModelOpt can supply FP8 Q while the sm120 FA2 NVFP4 path needs BF16/FP16 Q.
++        # The query scale is the factor used to recover the original values.
++        if query.dtype in (torch.float8_e4m3fn, torch.float8_e5m2) and q_data_type in (
++            torch.float16,
++            torch.bfloat16,
++        ):
++            return query.to(q_data_type).mul_(scale.to(q_data_type))
++
+         if query.dtype != q_data_type:
+             assert query.dtype in [torch.float16, torch.bfloat16]

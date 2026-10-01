@@ -1,0 +1,9 @@
+diff --git a/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py b/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
+--- a/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
++++ b/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
+@@ -225,4 +225,3 @@ def fi_chunk_gated_delta_rule(
+         output_final_state=output_final_state,
+         cu_seqlens=cu_seqlens,
+-        backend="flashinfer",
+     )
+     # FlashInfer returns (output, state) when output_final_state=True,

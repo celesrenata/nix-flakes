@@ -263,24 +263,32 @@ let
         dontUsePytestCheck = true;
       });
 
-      flashinfer = pyprev.flashinfer.overridePythonAttrs (old: {
+      flashinfer-python = pyprev.flashinfer-python.overridePythonAttrs (old: {
         __noChroot = true;
         nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ prev.distcc prev.ccache ];
-        version = "0.6.14";
+        version = "0.6.18";
         src = prev.fetchFromGitHub {
           owner = "flashinfer-ai";
           repo = "flashinfer";
-          tag = "v0.6.14";
+          tag = "v0.6.18";
           fetchSubmodules = true;
-          hash = "sha256-wqNtO/sDaMzFlxcIp43WGwsYJDGGOAqwbeFwwuUw6KY=";
+          hash = "sha256-EjJFhL97s07pbV4Fn8aky0SJirCbpo+tjww8aXZRec8=";
         };
         dependencies = (old.dependencies or []) ++ [ pyprev.requests ];
         pythonRemoveDeps = (old.pythonRemoveDeps or []) ++ [
           "cuda-tile"
           "tilelang"
+          # FlashInfer's tracing/distributed extras are not used by vLLM's FA2
+          # attention path; nixpkgs has no cuda-python package for this Python.
+          "cuda-python"
+          "nccl4py"
         ];
         dontCheckPythonMetadata = true;
       });
+
+      # Keep the deprecated attribute aligned with the real package name so
+      # vLLM and transitive dependencies cannot fall back to nixpkgs' 0.6.4.
+      flashinfer = pyfinal.flashinfer-python;
 
       outlines = pyprev.outlines.overridePythonAttrs (old: {
         # outlines 1.2.12 added pillow as a runtime dep but nixpkgs missed it
@@ -340,25 +348,31 @@ in {
   python3Packages = python3-for-vllm.pkgs;
   vllm = python3-for-vllm.pkgs.vllm.overridePythonAttrs (old: {
     __noChroot = true;
-    version = "0.27.1";
+    version = "0.31.0rc3";
     src = prev.fetchFromGitHub {
       owner = "vllm-project";
       repo = "vllm";
-      tag = "v0.27.1";
-      hash = "sha256-1cl0Cn6nCj2DpP3uNRrtzOdZkO5Vila1GCQGY2xdib4=";
+      rev = "f42629247d0efcd4f7fd9d0a1cf6fb2060909fc9";
+      hash = "sha256-SrDT1QgdfZNJlCnU6daG7/rdT+peBI4P4QLRuHnF7Hk=";
     };
     
-    patches = [ ../patches/vllm-sm120-fp4-support.patch ];
+    patches = [
+      ../patches/vllm-sm120-fp4-support.patch
+      ../patches/vllm-sm120-nvfp4-kv.patch
+      ../patches/vllm-sm120-nvfp4-q-dequant.patch
+      ../patches/vllm-flashinfer-gdn-api.patch
+      ../patches/vllm-flashinfer-nvfp4-noncausal.patch
+    ];
     cargoRoot = "rust";
     cargoDeps = prev.rustPlatform.fetchCargoVendor {
       src = prev.fetchFromGitHub {
         owner = "vllm-project";
         repo = "vllm";
-        tag = "v0.27.1";
-        hash = "sha256-1cl0Cn6nCj2DpP3uNRrtzOdZkO5Vila1GCQGY2xdib4=";
+        rev = "f42629247d0efcd4f7fd9d0a1cf6fb2060909fc9";
+        hash = "sha256-SrDT1QgdfZNJlCnU6daG7/rdT+peBI4P4QLRuHnF7Hk=";
       };
       sourceRoot = "source/rust";
-      hash = "sha256-lcZZF6Oo2F2Nol7ULQ7TsBFDUJ+IDkv1/5HUQYuvBRo=";
+      hash = "sha256-C24/sPut/W5kjXoVwptRa+Fcn7UzWX+o+9sdxEARjpE=";
     };
     postPatch = ''
       sed -i 's/torch == 2.11.0/torch >= 2.11.0/' pyproject.toml
@@ -368,6 +382,9 @@ in {
       sed -i '/setuptools-rust/d' pyproject.toml
       # Relax setuptools version upper bound (nixpkgs has 83.x, vllm wants <81)
       sed -i 's/"setuptools>=77.0.3,<81.0.0"/"setuptools>=77.0.3"/' pyproject.toml
+      sed -i 's#        ext_modules.append(CMakeExtension(name="vllm._deepselect_C", optional=True))#        pass#; s#        ext_modules.append(CMakeExtension(name="vllm._deep_gemm_C", optional=True))#        pass#; s#        ext_modules.append(CMakeExtension(name="vllm._flashkda_C", optional=True))#        pass#' setup.py
+      sed -i '\#include(cmake/external_projects/deepgemm.cmake)#d; \#include(cmake/external_projects/deepselect.cmake)#d; \#include(cmake/external_projects/flashkda.cmake)#d' CMakeLists.txt
+      sed -i '\#include(cmake/external_projects/deepgemm.cmake)#d; \#include(cmake/external_projects/deepselect.cmake)#d; \#include(cmake/external_projects/flashkda.cmake)#d' CMakeLists.txt
     '';
     pythonCatchConflicts = false;
     pythonRuntimeDepsCheck = false;
@@ -390,8 +407,16 @@ in {
       # Its closure pulls onnxscript -> onnxruntime (a multi-hour CUDA build) for
       # no runtime benefit here, so drop it.
       "amd-quark"
+      "cupy"
+      "opencv-python-headless"
+      "opencv"
     ];
     
+    cmakeFlags = (old.cmakeFlags or []) ++ [
+      "-DVLLM_BUILD_DEEP_GEMM=OFF"
+      "-DVLLM_ENABLE_DEEP_GEMM=OFF"
+    ];
+
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
       python3-for-vllm.pkgs.grpcio-tools
       (python3-for-vllm.pkgs.setuptools-rust.overrideAttrs (old: {
@@ -407,11 +432,12 @@ in {
     # actual inputs, not just the metadata check. AMD Quark quantization is
     # unused on esnixi's NVIDIA GPU and is only imported lazily by vLLM.
     dependencies =
-      builtins.filter (x: (x.pname or x.name or "") != "amd-quark") (old.dependencies or []);
+      builtins.filter (x: (x.pname or x.name or "") != "amd-quark" && (x.pname or x.name or "") != "cupy" && (x.pname or x.name or "") != "opencv-python-headless" && (x.pname or x.name or "") != "opencv" && (x.pname or x.name or "") != "flashinfer" && (x.pname or x.name or "") != "flashinfer-python") (old.dependencies or []);
 
     propagatedBuildInputs =
-      (builtins.filter (x: (x.pname or x.name or "") != "amd-quark")
+      (builtins.filter (x: (x.pname or x.name or "") != "amd-quark" && (x.pname or x.name or "") != "cupy" && (x.pname or x.name or "") != "opencv-python-headless" && (x.pname or x.name or "") != "opencv" && (x.pname or x.name or "") != "flashinfer" && (x.pname or x.name or "") != "flashinfer-python")
         (old.propagatedBuildInputs or [])) ++ [
+      python3-for-vllm.pkgs.flashinfer-python
       python3-for-vllm.pkgs.ijson
       python3-for-vllm.pkgs.mcp
       python3-for-vllm.pkgs.grpcio-reflection
@@ -425,10 +451,11 @@ in {
       export FLASH_MLA_SRC_DIR="${flashmla}"
       export VLLM_FLASH_ATTN_SRC_DIR="${vllm-flash-attn}"
       export QUTLASS_SRC_DIR="${qutlass}"
-      export DEEPGEMM_SRC_DIR="${deepgemm}"
       export FMHA_SM100_SRC_DIR="${fmha-sm100}"
       export TML_FA4_SRC_DIR="${tml-fa4}"
       export FLASH_KDA_SRC_DIR="${flashkda}"
+      export VLLM_BUILD_DEEP_GEMM=0
+      export VLLM_USE_DEEP_GEMM=0
     '';
     
     env = (old.env or {}) // {
