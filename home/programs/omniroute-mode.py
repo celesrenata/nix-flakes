@@ -86,7 +86,7 @@ CLOUD = {
         ('bedrock/global.xai.grok-4.6', 40)],
     4: [('openai/gpt-5.6-sol', 40), ('bedrock/global.openai.gpt-5.6-sol', 35),
         ('bedrock/us.anthropic.claude-sonnet-4-6', 25)],
-    5: [('openai/gpt-5.6', 35), ('bedrock/global.openai.gpt-5.6-sol', 25),
+    5: [('openai/gpt-5.6-terra', 35), ('bedrock/global.openai.gpt-5.6-sol', 25),
         ('bedrock/us.anthropic.claude-opus-5', 20), ('xai/grok-4.6', 20)],
 }
 MODES = {
