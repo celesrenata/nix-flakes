@@ -202,6 +202,7 @@ def main():
         current_overrides = request("/api/model-capability-overrides").get("overrides", [])
         layouts = {
             "vllm/qwen3.8-27b-nvfp4": (131072, 98304),
+            "vllm/qwen3.8-27b-nvfp4-balanced": (131072, 65536),
                     }
         for target, (context, max_input) in layouts.items():
             for key, value in (("context_length", context), ("max_input_tokens", max_input)):
