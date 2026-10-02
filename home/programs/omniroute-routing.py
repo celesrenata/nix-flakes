@@ -136,6 +136,9 @@ def main():
         verb = method or ("PUT" if data is not None else "GET")
         command = ["curl", "--fail-with-body", "--silent", "--show-error", "--max-time", "30",
             "-X", verb, "-H", "Content-Type: application/json", args.base_url.rstrip("/")+path]
+        api_key = os.environ.get("OMNIROUTE_API_KEY")
+        if api_key:
+            command.extend(["-H", "Authorization: Bearer " + api_key])
         payload = None
         if data is not None:
             command.extend(["--data-binary", "@-"])
