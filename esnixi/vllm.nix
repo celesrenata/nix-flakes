@@ -186,7 +186,7 @@ in
     maxNumSeqs = "16";
     # Generous batching so the 9B "flies" on the 5090: real paged/continuous-batching
     # KV, CUDA graphs on (NO --enforce-eager).
-    extraArgs = "--max-num-batched-tokens 8192 --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice";
+    extraArgs = "--linear-backend cutlass --max-num-batched-tokens 8192 --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice";
   };
 
   # Dormant native disaster-recovery fallback reusing the same patched pkgsAccel.vllm
