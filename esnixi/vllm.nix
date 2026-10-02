@@ -119,7 +119,7 @@ let
     pkgs.ninja
   ];
 
-  mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "147456", maxNumSeqs ? "1", kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false }:
+  mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "131072", maxNumSeqs ? "1", kvCacheMemory ? null, kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false }:
     {
       description = "vLLM OpenAI-compatible API server (${servedModel})";
       after = [ "network.target" ] ++ lib.optionals leaseWrap [ "arcane-gpu-lock.service" ];
@@ -136,7 +136,7 @@ let
         # When leaseWrap is set, acquire the shared RTX 5090 flock via gpu_launch.py
         # BEFORE vLLM loads any CUDA weights; gpu_launch.py execs into the command
         # below, and the kernel releases the advisory lock when the process exits.
-        ExecStart = "${lib.optionalString leaseWrap "${pkgs.python3}/bin/python3 ${gpuLaunch} "}${pkgsAccel.vllm}/bin/vllm serve ${model} --served-model-name ${servedModel} --host 127.0.0.1 --port 8010 --max-model-len ${maxModelLen} --max-num-seqs ${maxNumSeqs} --gpu-memory-utilization ${gpuMemoryUtilization} --kv-cache-dtype nvfp4 ${lib.optionalString (kvOffloadingSize != null) "--kv-offloading-size ${toString kvOffloadingSize} --kv-offloading-backend native"} ${extraArgs}";
+        ExecStart = "${lib.optionalString leaseWrap "${pkgs.python3}/bin/python3 ${gpuLaunch} "}${pkgsAccel.vllm}/bin/vllm serve ${model} --served-model-name ${servedModel} --host 127.0.0.1 --port 8010 --max-model-len ${maxModelLen} --max-num-seqs ${maxNumSeqs} ${if kvCacheMemory != null then "--kv-cache-memory=${toString kvCacheMemory}" else "--gpu-memory-utilization ${gpuMemoryUtilization}"} --kv-cache-dtype nvfp4 ${lib.optionalString (kvOffloadingSize != null) "--kv-offloading-size ${toString kvOffloadingSize} --kv-offloading-backend native"} ${extraArgs}";
         Restart = "on-failure";
         RestartSec = "10s";
         TimeoutStopSec = "120s";
@@ -163,8 +163,8 @@ in
     conflicts = [ "vllm-reader.service" "vllm-5090-fallback.service" ];
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
-    gpuMemoryUtilization = "0.88";
-    maxModelLen = "147456";
+    kvCacheMemory = 4776620811;  # ~4.45 GiB nvfp4 KV (unchanged). At the narrowed 131072 this comfortably holds one full-context seq (measured ~3.12 GiB via vLLM profile: 187071 tok / 4776620811 B = 25534 B/tok). maxNumSeqs stays 1 — no concurrency change, no OOM risk.
+    maxModelLen = "131072";
     maxNumSeqs = "1";
     extraArgs = "--language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --max-num-batched-tokens 256 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
   };
