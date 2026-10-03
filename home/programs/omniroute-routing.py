@@ -162,7 +162,8 @@ def main():
             plan.append((combo, patch))
     provider_policy = {
         "d1e3ee59-0182-4cda-932b-c1950f1d5f75": {"isActive": False},
-        CONNECTIONS["vllm"]: {"maxConcurrent": 1},
+        # Matches the 5090 coder's 4 vLLM sequences / switcher max_requests 4.
+        CONNECTIONS["vllm"]: {"maxConcurrent": 4},
         CONNECTIONS["ollama-local"]: {"maxConcurrent": 1},
         CONNECTIONS["llama-cpp"]: {"maxConcurrent": 1, "defaultModel": "ds4-glm53"},
         CONNECTIONS["ollama-m5-reader"]: {"maxConcurrent": 1, "defaultModel": "qwen3.5-reader:9b"},

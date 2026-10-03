@@ -80,14 +80,16 @@ CLOUD = {
     # OpenRouter free requests share a daily account quota; changing model IDs
     # cannot restore capacity after that quota is exhausted. Codestral has a
     # separate free allowance and supports tool calls. Kiro is excluded from all routes.
+    # Direct OpenAI is pay-as-you-go: keep it out of tiers 2-4 (Bedrock serves the same
+    # GPT-5.6 models) and only as low-weight tier-5 routes. Opus 5.5 needs the
+    # global/us inference profile; the bare anthropic.claude-opus-5-5 ID is rejected.
     2: [('mistral/codestral-latest', 25), ('mistral/mistral-code-latest', 25),
-        ('openai/gpt-5.6-luna', 50)],
-    3: [('openai/gpt-5.6-terra', 30), ('bedrock/global.openai.gpt-5.6-terra', 30),
-        ('bedrock/global.xai.grok-4.6', 40)],
-    4: [('openai/gpt-5.6-sol', 40), ('bedrock/global.openai.gpt-5.6-sol', 35),
+        ('bedrock/global.openai.gpt-5.6-luna', 50)],
+    3: [('bedrock/global.openai.gpt-5.6-terra', 60), ('bedrock/global.xai.grok-4.6', 40)],
+    4: [('bedrock/global.anthropic.claude-opus-5-5', 40), ('bedrock/global.openai.gpt-5.6-sol', 35),
         ('bedrock/us.anthropic.claude-sonnet-4-6', 25)],
-    5: [('openai/gpt-5.6-terra', 35), ('bedrock/global.openai.gpt-5.6-sol', 25),
-        ('bedrock/us.anthropic.claude-opus-5', 20), ('xai/grok-4.6', 20)],
+    5: [('bedrock/global.anthropic.claude-opus-5-5', 40), ('bedrock/global.openai.gpt-5.6-sol', 25),
+        ('xai/grok-4.6', 15), ('openai/gpt-5.6-terra', 10), ('openai/gpt-5.6-sol', 10)],
 }
 MODES = {
     'local-only': ([1], 1),
@@ -101,10 +103,11 @@ MODES = {
 }
 FIELDS = ('name', 'description', 'strategy', 'models', 'config', 'context_length', 'context_cache_protection')
 OBSOLETE = {'healthCheckEnabled', 'healthCheckTimeoutMs', 'timeoutMs', 'queueDepth'}
-# The native 5090 vLLM backend runs one request slot; keep OmniRoute's
-# persisted provider semaphore aligned whenever a tier preset is applied.
+# The native 5090 vLLM coder runs 4 sequences (esnixi/vllm.nix --max-num-seqs 4,
+# switcher max_requests 4); keep OmniRoute's persisted provider semaphore aligned
+# whenever a tier preset is applied.
 PROVIDER_POLICIES = {
-    CONNECTIONS['vllm']: {'maxConcurrent': 1},
+    CONNECTIONS['vllm']: {'maxConcurrent': 4},
     # Both M5 models share the mutually-exclusive local-model-proxy.
     CONNECTIONS['llama-cpp']: {'maxConcurrent': 1},
 }
