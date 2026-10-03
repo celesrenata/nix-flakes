@@ -1,7 +1,9 @@
 """ComfyUI 0.36.0 admission and idle unloading for a shared desktop GPU."""
 import asyncio
 import contextlib
+import gc
 import logging
+import os
 import time
 
 from aiohttp import web
@@ -12,6 +14,9 @@ from arcane_gpu import GPULease
 
 NODE_CLASS_MAPPINGS = {}
 LOG = logging.getLogger("arcane.gpu")
+# Bounded server-side wait for /arcane/gpu/acquire; the caller retries, so a
+# long vLLM tenancy never leaves orphaned waiters behind.
+ACQUIRE_WAIT_SECONDS = 20
 
 
 class Admission:
@@ -23,6 +28,7 @@ class Admission:
         self.lock = asyncio.Lock()
         self.last_activity = time.monotonic()
         self.task = None
+        self.idle_unload_seconds = float(os.environ.get("AA_COMFY_IDLE_UNLOAD_SECONDS", "5"))
         queue = server.prompt_queue
         original_get = queue.get
 
@@ -63,6 +69,22 @@ class Admission:
                     self.last_activity = time.monotonic()
         return await handler(request)
 
+    async def acquire_route(self, request):
+        """Take (or keep) the GPU lease for a queue-worker job.
+
+        The esnixi queue worker calls this before a job and as a keepalive
+        during it, so a job owns the GPU end to end instead of losing it to
+        vLLM during CPU-only phases (uploads, compositing) and then stalling
+        past its render deadline.
+        """
+        async with self.lock:
+            try:
+                await asyncio.wait_for(self.lease.acquire(), ACQUIRE_WAIT_SECONDS)
+            except TimeoutError:
+                return web.json_response({"held": False}, status=503, headers={"Retry-After": "2"})
+            self.last_activity = time.monotonic()
+        return web.json_response({"held": True})
+
     async def watch(self):
         while True:
             await asyncio.sleep(.1)
@@ -74,7 +96,7 @@ class Admission:
                     if q.get_tasks_remaining():
                         self.last_activity = time.monotonic()
                         continue
-                    if time.monotonic() - self.last_activity < 5:
+                    if time.monotonic() - self.last_activity < self.idle_unload_seconds:
                         continue
                     # Ask the native execution thread to unload, reset its
                     # output cache and collect CUDA tensors before handoff.
@@ -89,8 +111,20 @@ class Admission:
                             break
                         if time.monotonic() >= deadline:
                             raise RuntimeError("ComfyUI did not release its model/cache memory; retaining GPU lease")
+                    # Comfy's queue flags release CUDA tensors, but Python-side
+                    # model wrappers can otherwise keep tens of GiB resident.
+                    # Use only APIs present in the running Comfy version.
+                    for name in ("cleanup_models_gc", "unload_all_models"):
+                        cleanup = getattr(mm, name, None)
+                        if callable(cleanup):
+                            cleanup()
+                    gc.collect()
+                    if hasattr(torch.cuda, "empty_cache"):
+                        torch.cuda.empty_cache()
+                    if hasattr(torch.cuda, "ipc_collect"):
+                        torch.cuda.ipc_collect()
                     self.lease.release()
-                    LOG.info("ComfyUI released GPU ownership after idle unload")
+                    LOG.info("ComfyUI released GPU and host model memory after %.1fs idle", self.idle_unload_seconds)
             except Exception:
                 LOG.exception("Shared GPU unload failed; retaining ownership")
                 await asyncio.sleep(1)
@@ -98,5 +132,6 @@ class Admission:
 
 admission = Admission(PromptServer.instance)
 PromptServer.instance.app.middlewares.append(admission.middleware)
+PromptServer.instance.routes.post("/arcane/gpu/acquire")(admission.acquire_route)
 PromptServer.instance.app.on_startup.append(admission.start)
 PromptServer.instance.app.on_cleanup.append(admission.stop)

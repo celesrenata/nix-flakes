@@ -22,6 +22,18 @@
         mode = "0440";
         group = "wheel";
       };
+      omniroute_zoo_api_key = {
+        # Gateway admin API key for OmniRoute combo/alias management (hybrid/reader).
+        # Readable by wheel so operator tooling and the combo-apply step can use it.
+        mode = "0440";
+        group = "wheel";
+      };
+      omniroute_management_api_key = {
+        # Manage-scoped OmniRoute API key for combo/connection management (POST /api/combos).
+        # Distinct from the usage-only zoo key; readable by wheel for operator tooling.
+        mode = "0440";
+        group = "wheel";
+      };
       grafana_service_account_token = {
         mode = "0440";
         group = "wheel";

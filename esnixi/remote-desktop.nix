@@ -2,6 +2,22 @@
 { config, pkgs, lib, ... }:
 
 {
+  # Allow FreeRDP USB redirection for the Microsoft webcam/microphone combo.
+  users.groups.freerdp-usb = {};
+  users.users.celes.extraGroups = [ "freerdp-usb" ];
+
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="045e", ATTR{idProduct}=="075d", MODE="0660", GROUP="freerdp-usb", TAG+="uaccess"
+  '';
+
+  security.wrappers.xfreerdp = {
+    source = "${pkgs.freerdp3Override}/bin/xfreerdp";
+    owner = "root";
+    group = "freerdp-usb";
+    permissions = "u+rx,g+rx,o-rwx";
+    capabilities = "cap_dac_override+ep";
+  };
+
   # Enable xrdp service with different port
   services.xrdp = {
     enable = true;
