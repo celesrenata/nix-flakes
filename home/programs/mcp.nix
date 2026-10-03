@@ -26,10 +26,24 @@ let
 
   thvUrl = name: "http://localhost:${toString (thvPort name)}/mcp";
   thvSseUrl = name: "http://localhost:${toString (thvPort name)}/sse";
+  omniRouteMcpUrl = "https://omniroute.celestium.life/api/mcp/stream";
 
   # ── MCP Client Configuration ─────────────────────────────────────────────
   mcpConfig = {
     mcpServers = {
+      # OmniRoute's own scoped observability tools on the public gateway.
+      omniroute-observability = {
+        url = omniRouteMcpUrl;
+      };
+
+      # A single MCP call fans out independent inference work across GPUs.
+      omniroute-workers = {
+        command = "${pkgs.python3}/bin/python3";
+        args = [ "${config.home.homeDirectory}/.local/share/omniroute-workers/server.py" ];
+        env.OMNIROUTE_BASE_URL = "https://omniroute.celestium.life/v1";
+        autoApprove = [ "start_parallel_tasks" "get_parallel_tasks" "cancel_parallel_tasks" "list_zoo_chats" ];
+      };
+
       # ── ToolHive-managed (container-isolated) ──────────────────────────
       github = {
         url = thvUrl "github";
@@ -170,6 +184,13 @@ let
 
 in
 {
+  imports = [ ./zoo-parallel.nix ];
+  home.file.".local/share/omniroute-workers/server.py".source = ./omniroute-workers.py;
+  home.file.".roo/rules/30-omniroute-parallel.md".source = ./omniroute-parallel.md;
+  home.packages = [ (pkgs.writeShellScriptBin "omniroute-apply-routing" ''
+    exec ${pkgs.python3}/bin/python3 ${./omniroute-routing.py} "$@"
+  '') ];
+
   # Seed ~/.kiro/settings/mcp.json only if it doesn't exist (user/Kiro manages it at runtime)
   # Also removes duplicate 'sequentialthinking' that Kiro auto-discovers from ToolHive
   home.activation.seedKiroMcp = let
@@ -235,5 +256,58 @@ in
       cp ${aiJson} "$HOME/ai/mcp.json"
       chmod 644 "$HOME/ai/mcp.json"
     fi
+  '';
+
+  # Add newly declared servers to existing client profiles without replacing
+  # per-client changes. VS Code Remote-SSH uses a separate server-side profile.
+  home.activation.syncMcpProfiles = let
+    kiroJson = pkgs.writeText "kiro-mcp.json" (builtins.toJSON mcpConfig);
+    zooJson = pkgs.writeText "zoo-mcp_settings.json" (builtins.toJSON zooCodeMcpConfig);
+    vscodeJson = pkgs.writeText "vscode-mcp.json" (builtins.toJSON vscodeMcpConfig);
+  in lib.hm.dag.entryAfter [ "writeBoundary" "seedKiroMcp" "seedZooCodeMcp" "seedVscodeMcp" ] ''
+    sync_mcp_file() {
+      desired="$1"
+      target="$2"
+      section="$3"
+      ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$target")"
+      if [ ! -f "$target" ]; then
+        ${pkgs.coreutils}/bin/cp "$desired" "$target"
+      else
+        ${pkgs.jq}/bin/jq --slurpfile defaults "$desired" --arg section "$section" \
+          '.[$section] = (($defaults[0][$section] // {}) + (.[$section] // {}))' \
+          "$target" > "$target.omniroute-new"
+        if ! ${pkgs.diffutils}/bin/cmp -s "$target" "$target.omniroute-new"; then
+          ${pkgs.coreutils}/bin/mv "$target.omniroute-new" "$target"
+        else
+          ${pkgs.coreutils}/bin/rm "$target.omniroute-new"
+        fi
+      fi
+    }
+
+    sync_mcp_file ${kiroJson} "$HOME/.kiro/settings/mcp.json" mcpServers
+    sync_mcp_file ${zooJson} "$HOME/.config/Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" mcpServers
+    sync_mcp_file ${zooJson} "$HOME/.vscode-server/data/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" mcpServers
+    sync_mcp_file ${vscodeJson} "$HOME/.config/Code/User/mcp.json" servers
+    sync_mcp_file ${vscodeJson} "$HOME/.vscode-server/data/User/mcp.json" servers
+
+    # Endpoint migrations are authoritative for the two OmniRoute entries;
+    # preserve every unrelated per-client customization.
+    sync_omniroute_endpoints() {
+      desired="$1"
+      target="$2"
+      section="$3"
+      [ -f "$target" ] || return 0
+      ${pkgs.jq}/bin/jq --slurpfile defaults "$desired" --arg section "$section" \
+        '.[$section]["omniroute-observability"] = $defaults[0][$section]["omniroute-observability"]
+         | .[$section]["omniroute-workers"] = $defaults[0][$section]["omniroute-workers"]' \
+        "$target" > "$target.omniroute-endpoints"
+      ${pkgs.coreutils}/bin/mv "$target.omniroute-endpoints" "$target"
+    }
+
+    sync_omniroute_endpoints ${kiroJson} "$HOME/.kiro/settings/mcp.json" mcpServers
+    sync_omniroute_endpoints ${zooJson} "$HOME/.config/Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" mcpServers
+    sync_omniroute_endpoints ${zooJson} "$HOME/.vscode-server/data/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json" mcpServers
+    sync_omniroute_endpoints ${vscodeJson} "$HOME/.config/Code/User/mcp.json" servers
+    sync_omniroute_endpoints ${vscodeJson} "$HOME/.vscode-server/data/User/mcp.json" servers
   '';
 }

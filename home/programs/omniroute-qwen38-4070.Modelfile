@@ -1,0 +1,3 @@
+FROM /root/.ollama/models/dflash-test/Qwen3.8-27B-IQ3_S-noMTP-.gguf
+PARAMETER num_ctx 147456
+PARAMETER draft_num_predict 0

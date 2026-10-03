@@ -1,7 +1,7 @@
 { lib, pkgs, ... }:
 let
   home = "/home/celes";
-  omniRouteBaseUrl = "http://127.0.0.1:20128";
+  omniRouteBaseUrl = "https://omniroute.celestium.life";
   codexAcpVersion = "1.12.0";
   codexAcpRoot = "${home}/.local/share/omniroute-editor";
   codexAcp = "${codexAcpRoot}/node_modules/.bin/codex-acp";
@@ -36,40 +36,13 @@ let
     "omnicopilot.baseUrl" = omniRouteBaseUrl;
     "omnicopilot.modelFilter" = "^(local|free|hybrid|cloud)/";
     "omnicopilot.maxOutputTokens" = 16384;
-    "omnicopilot.defaultContextLength" = 131072;
+    # GLM's dedicated long/spec route is provisioned at 160K on stabulous.
+    "omnicopilot.defaultContextLength" = 163840;
     "omnicopilot.exposeToAgentsWindow" = true;
     "chat.agentHost.byokModels.enabled" = true;
   };
-  omniRouteTunnel = pkgs.writeShellScript "omniroute-stabulous-tunnel" ''
-    exec ${pkgs.openssh}/bin/ssh \
-      -NT \
-      -o BatchMode=yes \
-      -o ExitOnForwardFailure=yes \
-      -o ServerAliveInterval=30 \
-      -o ServerAliveCountMax=3 \
-      -o StrictHostKeyChecking=yes \
-      -L 127.0.0.1:20128:127.0.0.1:20128 \
-      celes@192.168.42.201
-  '';
 in
 {
-  # Keep OmniRoute private on stabulous. Esnixi clients see the router on their
-  # own loopback interface through this authenticated, self-healing SSH tunnel.
-  systemd.user.services.omniroute-stabulous-tunnel = {
-    Unit = {
-      Description = "Forward esnixi editor traffic to stabulous OmniRoute";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
-    };
-    Service = {
-      Type = "simple";
-      ExecStart = omniRouteTunnel;
-      Restart = "always";
-      RestartSec = 5;
-    };
-    Install.WantedBy = [ "default.target" ];
-  };
-
   home.file.".continue/config.yaml".text = ''
     name: OmniRoute Inference Fabric
     version: 1.0.0
@@ -112,7 +85,7 @@ in
         apiBase: ${omniRouteBaseUrl}/v1
         apiKey: omniroute-local
         useResponsesApi: false
-        contextLength: 131072
+        contextLength: 163840
         capabilities: [tool_use]
         roles: [chat, edit, apply]
 
@@ -168,9 +141,26 @@ in
     fi
 
     code_bin="${pkgs.vscode}/bin/code"
+    # Continue conflicts with Zoo. Remove any version on every activation so
+    # older generations or Settings Sync cannot leave it installed again.
+    if "$code_bin" --list-extensions \
+      | ${pkgs.gnugrep}/bin/grep -Fqix 'continue.continue'; then
+      $DRY_RUN_CMD "$code_bin" --uninstall-extension continue.continue
+    fi
+    if [[ -d "$HOME/.vscode-server/extensions" ]] \
+      && "$code_bin" --extensions-dir "$HOME/.vscode-server/extensions" --list-extensions \
+        | ${pkgs.gnugrep}/bin/grep -Fqix 'continue.continue'; then
+      $DRY_RUN_CMD "$code_bin" --extensions-dir "$HOME/.vscode-server/extensions" \
+        --uninstall-extension continue.continue
+    fi
+
+    # Cline is the VS Code agent used for Spec Kit's repo-local SDD workflows.
+    # Its OmniRoute provider selection is held in VS Code's encrypted extension
+    # storage, rather than in this world-readable Nix configuration.
     if ! "$code_bin" --list-extensions --show-versions \
-      | ${pkgs.gnugrep}/bin/grep -qx 'continue.continue@2.0.0'; then
-      $DRY_RUN_CMD "$code_bin" --install-extension continue.continue@2.0.0 --force
+      | ${pkgs.gnugrep}/bin/grep -qx 'saoudrizwan.claude-dev@4.1.20'; then
+      $DRY_RUN_CMD "$code_bin" --install-extension \
+        saoudrizwan.claude-dev@4.1.20 --force
     fi
 
     kiro_bin="/run/current-system/sw/bin/kiro"

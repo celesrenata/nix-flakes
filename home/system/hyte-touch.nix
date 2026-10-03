@@ -174,8 +174,7 @@ in
   systemd.user.services.hyte-touch-display = {
     Unit = {
       Description = "Hyte Touch Display QuickShell";
-      After = [ "graphical-session.target" "drift-visualizer.service" ];
-      Wants = [ "drift-visualizer.service" ];
+      After = [ "graphical-session.target" ];
       PartOf = [ "graphical-session.target" ];
     };
     
@@ -199,31 +198,4 @@ in
     };
   };
   
-  # HelloDJ Drift visualizer running behind QuickShell
-  systemd.user.services.drift-visualizer = {
-    Unit = {
-      Description = "HelloDJ Drift Music Visualizer";
-      After = [ "graphical-session.target" "hyprland-session.target" ];
-      PartOf = [ "graphical-session.target" ];
-    };
-    
-    Service = {
-      Type = "simple";
-      ExecStart = "${pkgs.writeShellScript "drift-wrapper" ''
-        export WAYLAND_DISPLAY=wayland-1
-        export SDL_VIDEODRIVER=wayland
-        export PYTHONPATH=/home/celes/sources/celesrenata/hellodj/platform/components/hls-transcode
-        export PATH=${lib.makeBinPath [ pythonWithAudio pkgs.mpvpaper pkgs.pulseaudio ]}:$PATH
-        export LD_LIBRARY_PATH=/run/opengl-driver/lib:${lib.makeLibraryPath [ pkgs.libglvnd pkgs.mesa ]}
-        exec ${pythonWithAudio}/bin/python /home/celes/sources/celesrenata/hellodj/platform/components/hls-transcode/tools/drift_panel.py \
-          --width 682 --height 2560 --preset "Ethereal Mist"
-      ''}";
-      Restart = "always";
-      RestartSec = "3s";
-    };
-    
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
-  };
 }

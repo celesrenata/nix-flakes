@@ -10,10 +10,11 @@ Configured clients:
 - JetBrains Air: four Codex ACP agents in
   `~/.config/JetBrains/Air/acp.json` (`local/code`, `hybrid/code`, `free/code`,
   and `local/long`).
-- VS Code: Continue, using the shared `~/.continue/config.yaml` model list.
+- VS Code: Zoo. Home Manager removes Continue on activation from both local
+  and Remote SSH extension directories because it conflicts with Zoo.
 - Kiro: OmniCopilot, filtered to OmniRoute's local, free, hybrid, and cloud
   logical routes.
-- PyCharm: Continue, using the same shared Continue configuration as VS Code.
+- PyCharm: Continue, using `~/.continue/config.yaml`.
 
 The declarative source is `home/programs/omniroute-editors.nix`. Apply it with
 the esnixi Home Manager configuration, then reload any editor that was already
