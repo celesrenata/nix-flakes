@@ -26,7 +26,8 @@ Coder concurrency and nix coupling:
   (n) the coder admits up to max_requests concurrent requests, then 409s
   (o) requests are proxied to the selected model's own backend port
 Fail-safe switching:
-  (p) a sleep that exceeds its budget falls back to stop; (p2) a hung stop is bounded
+  (p) a sleep that exceeds its budget falls back to stop; (p2) a hung stop is bounded;
+      (p3) a hung reader stop fails a coder select (coder breaker failure, not stuck)
   (q) a reader request while the coder has requests in flight -> 409 coder_busy, no sleep
   (r) a reader request inside the coder residency -> 409 coder_resident, no sleep;
       the coder still reclaims an idle reader immediately
@@ -569,6 +570,23 @@ class SwitcherTests(unittest.TestCase):
             # The coder never went down, so the rollback re-adopts it.
             self.assertEqual(SW.active_model, self.CODER)
 
+    def test_p3_reader_stop_timeout_fails_coder_select(self):
+        # Selecting the coder never sleeps the reader, so a hung reader stop fails
+        # the coder select outright: one coder breaker failure, `switching` cleared.
+        SW.RESIDENCY_SECONDS = 0
+        self._seed_active(self.READER, age=0, other_running=True)
+        self.fake.stop_timeout = {READER_UNIT}
+        SW.STOP_SECONDS = 0.3
+        h = self._handler()
+        self.assertFalse(h.acquire_model(self.CODER))
+        self.assertEqual(h.reject_code, "start_failed")
+        self.assertIn("could not stop vllm-reader.service", h.reject_reason)
+        self.assertNotIn(("sleep", READER_UNIT), self.fake.events)
+        self.assertNotIn(("start", CODER_UNIT), self.fake.events)
+        with SW.switch_condition:
+            self.assertIs(SW.switching, False)
+            self.assertIsNone(SW.switching_to)
+            self.assertEqual(SW.breakers[CODER_UNIT]["failures"], 1)
     def test_q_reader_during_coder_inflight_409_no_sleep(self):
         SW.CODER_RESIDENCY_SECONDS = 0
         SW.LOCK_WAIT_SECONDS = 0
