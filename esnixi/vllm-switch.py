@@ -22,6 +22,20 @@ LOCK_WAIT_SECONDS = 3
 MODEL_READY_SECONDS = 540
 # Reader idle backstop (fast path; a systemd timer is the restart-safe backstop).
 READER_IDLE_SECONDS = 300
+
+
+def _env_seconds(name: str, default: float) -> float:
+    try:
+        value = float(os.environ.get(name, default))
+    except ValueError:
+        return default
+    return value if value >= 0 else default
+
+
+# Minimum residency (hysteresis): an idle model used within this window is
+# treated as busy for requests that need a DIFFERENT unit (fast 409 ->
+# next OmniRoute target) instead of being evicted. 0 disables.
+RESIDENCY_SECONDS = _env_seconds("VLLM_SWITCH_RESIDENCY_SECONDS", 90.0)
 # Settle delay after the other unit reaches inactive, so the driver finishes
 # reclaiming VRAM before the target's cudaMalloc (the flock is the real guard).
 DRAIN_SETTLE_SECONDS = 2
@@ -76,6 +90,14 @@ switching = False
 # only fires if the generation is unchanged when its deadline elapses (cancels a
 # stale stop when a new request arrives). Guarded by switch_condition.
 reader_idle_generation = 0
+last_activity: float | None = None  # monotonic; last acquire/release on active_model. Guarded by switch_condition.
+
+
+def residency_remaining(now: float) -> float:
+    """Seconds the idle active model is still protected; 0 when swappable. Hold switch_condition."""
+    if active_model is None or last_activity is None or RESIDENCY_SECONDS <= 0:
+        return 0.0
+    return max(0.0, last_activity + RESIDENCY_SECONDS - now)
 
 
 def read_token() -> str:
@@ -264,23 +286,32 @@ class Handler(BaseHTTPRequestHandler):
 
     def acquire_model(self, model_id: str) -> bool:
         """Serialize both logical aliases against the one loaded model."""
-        global active_model, active_requests, switching
+        global active_model, active_requests, switching, last_activity
         deadline = time.monotonic() + LOCK_WAIT_SECONDS
         with switch_condition:
             while True:
+                hold = 0.0
                 if not switching and active_model is not None and MODELS[active_model]["unit"] == MODELS[model_id]["unit"]:
                     if active_requests < MODELS[model_id]["max_requests"]:
+                        last_activity = time.monotonic()
                         active_requests += 1
                         return True
                 elif not switching and active_requests == 0:
-                    switching = True
-                    active_model = None
-                    break
+                    # Hysteresis: an idle model used within RESIDENCY_SECONDS is
+                    # treated as busy for a different unit (-> 409, next target).
+                    hold = residency_remaining(time.monotonic())
+                    if hold <= 0:
+                        switching = True
+                        active_model = None
+                        last_activity = None
+                        break
 
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     return False
-                switch_condition.wait(remaining)
+                # Nothing notifies when the residency window expires, so wake
+                # at its end if that comes before the lock-wait deadline.
+                switch_condition.wait(min(remaining, hold) if hold > 0 else remaining)
 
         ready = False
         try:
@@ -289,16 +320,19 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             with switch_condition:
                 active_model = model_id if ready else None
+                last_activity = time.monotonic() if ready else None
                 switching = False
                 if ready:
                     active_requests += 1
                 switch_condition.notify_all()
 
     def release_model(self) -> None:
-        global active_requests
+        global active_requests, last_activity
         with switch_condition:
             if active_requests > 0:
                 active_requests -= 1
+            if active_model is not None:
+                last_activity = time.monotonic()
             # Fast-path idle backstop: when a READER unit falls to zero in-flight
             # requests, arm a monotonic deadline; a new request before expiry bumps
             # the generation and cancels the scheduled stop. The restart-safe
@@ -322,7 +356,9 @@ class Handler(BaseHTTPRequestHandler):
         generation = reader_idle_generation
 
         def _maybe_stop() -> None:
-            global active_model
+            global active_model, last_activity
+            # Deliberately no residency check: READER_IDLE_SECONDS >> RESIDENCY_SECONDS,
+            # and the idle stop must always free the GPU for the coder.
             with switch_condition:
                 # Cancelled (a new request armed a newer generation) or the slot
                 # is busy / a different model is active -> do nothing.
@@ -346,6 +382,7 @@ class Handler(BaseHTTPRequestHandler):
                 if reader_idle_generation == generation and active_requests == 0 \
                         and active_model is not None and MODELS[active_model]["unit"] == unit:
                     active_model = None
+                    last_activity = None
                     switch_condition.notify_all()
 
         timer = threading.Timer(READER_IDLE_SECONDS, _maybe_stop)
@@ -401,8 +438,8 @@ class Handler(BaseHTTPRequestHandler):
         deadline = time.monotonic() + MODEL_READY_SECONDS
         # Single tenancy authority: stop every OTHER vLLM unit and wait for it to
         # go inactive (VRAM returned) BEFORE starting the target. Only ever reached
-        # with active_requests == 0 (acquire_model gate), so no generation is
-        # in-flight when the coder is stopped.
+        # with active_requests == 0 and the residency window expired (acquire_model
+        # gate), so no generation is in-flight when the coder is stopped.
         for other in self.other_units(selected["unit"]):
             active, _sub = self.unit_state(other)
             if active not in ("inactive", "failed", ""):

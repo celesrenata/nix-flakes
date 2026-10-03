@@ -10,6 +10,14 @@ Covers design §3.9 cases (a)-(f):
   (e) busy -> 409 via acquire_model returning False on LOCK_WAIT timeout
   (f) MODELS["qwen3.5-9b-nvfp4-reader"]["context"] == the reader unit's served
       --max-model-len (65536) -- the coupling guard
+Minimum-residency hysteresis (RESIDENCY_SECONDS):
+  (g) a different-unit request within the window returns False (409) without
+      any systemctl stop/start
+  (h) after the window it swaps; (h2) a window expiring during the lock wait swaps
+  (i) same-unit requests are unaffected
+  (j) acquire and release stamp last_activity
+  (k) the reader idle stop still fires inside the window and frees the GPU
+  (l) _env_seconds parsing of VLLM_SWITCH_RESIDENCY_SECONDS
 """
 import importlib.util
 import os
@@ -19,6 +27,7 @@ import threading
 import time
 import types
 import unittest
+from unittest import mock
 
 
 def _load_switcher():
@@ -104,6 +113,10 @@ class SwitcherTests(unittest.TestCase):
             SW.active_requests = 0
             SW.switching = False
             SW.reader_idle_generation = 0
+            SW.last_activity = None
+        self._orig_residency = SW.RESIDENCY_SECONDS
+        self._orig_lock_wait = SW.LOCK_WAIT_SECONDS
+        self._orig_idle = SW.READER_IDLE_SECONDS
         self.fake = FakeSystemctl()
         self._orig_run = SW.subprocess.run
         self._orig_co = SW.subprocess.check_output
@@ -122,6 +135,9 @@ class SwitcherTests(unittest.TestCase):
         SW.subprocess.check_output = self._orig_co
         SW.urllib.request.urlopen = self._orig_urlopen
         SW.DRAIN_SETTLE_SECONDS = self._orig_settle
+        SW.RESIDENCY_SECONDS = self._orig_residency
+        SW.LOCK_WAIT_SECONDS = self._orig_lock_wait
+        SW.READER_IDLE_SECONDS = self._orig_idle
 
     def _fake_urlopen(self, request, timeout=0):
         # Report whichever unit is currently "active" as the served model.
@@ -256,6 +272,125 @@ class SwitcherTests(unittest.TestCase):
         self.assertEqual(self.fake.active["vllm-reader.service"], "active")
         # Cleanup: let the final window elapse.
         SW.READER_IDLE_SECONDS = orig
+
+    # --- minimum-residency hysteresis -------------------------------------
+
+    CODER = "qwen3.8-27b-nvfp4"
+    READER = "qwen3.5-9b-nvfp4-reader"
+
+    def _seed_active(self, model_id, age):
+        """Make `model_id` the idle active model, last used `age` seconds ago."""
+        unit = SW.MODELS[model_id]["unit"]
+        with SW.switch_condition:
+            SW.active_model = model_id
+            SW.active_requests = 0
+            SW.last_activity = time.monotonic() - age
+        for u in ("vllm.service", "vllm-reader.service"):
+            self.fake.active[u] = "active" if u == unit else "inactive"
+            self.fake.sub[u] = "running" if u == unit else "dead"
+
+    def test_g_residency_blocks_swap_within_window(self):
+        SW.RESIDENCY_SECONDS = 90
+        SW.LOCK_WAIT_SECONDS = 0.2
+        h = self._handler()
+        for seeded, requested in ((self.CODER, self.READER), (self.READER, self.CODER)):
+            self.fake.calls.clear()
+            self._seed_active(seeded, age=0)
+            seeded_unit = SW.MODELS[seeded]["unit"]
+            self.assertFalse(h.acquire_model(requested))
+            seq = self.verb_unit_sequence()
+            self.assertFalse([s for s in seq if s[0] in ("stop", "start")], seq)
+            self.assertEqual(self.fake.active[seeded_unit], "active")
+            with SW.switch_condition:
+                self.assertEqual(SW.active_model, seeded)
+                self.assertIs(SW.switching, False)
+                self.assertEqual(SW.active_requests, 0)
+
+    def test_h_swaps_after_window(self):
+        SW.RESIDENCY_SECONDS = 90
+        self._seed_active(self.CODER, age=91)
+        h = self._handler()
+        self.assertTrue(h.acquire_model(self.READER))
+        seq = self.verb_unit_sequence()
+        self.assertIn(("stop", "vllm.service"), seq)
+        self.assertIn(("start", "vllm-reader.service"), seq)
+        self.assertLess(seq.index(("stop", "vllm.service")),
+                        seq.index(("start", "vllm-reader.service")))
+        with SW.switch_condition:
+            self.assertEqual(SW.active_model, self.READER)
+        h.release_model()
+
+    def test_h2_window_expiring_during_lock_wait_swaps(self):
+        SW.RESIDENCY_SECONDS = 0.3
+        SW.LOCK_WAIT_SECONDS = 3
+        self._seed_active(self.CODER, age=0)
+        h = self._handler()
+        t0 = time.monotonic()
+        self.assertTrue(h.acquire_model(self.READER))
+        self.assertLess(time.monotonic() - t0, 2.0)
+        self.assertIn(("start", "vllm-reader.service"), self.verb_unit_sequence())
+        h.release_model()
+
+    def test_i_same_unit_unaffected(self):
+        SW.RESIDENCY_SECONDS = 90
+        h = self._handler()
+        self._seed_active(self.CODER, age=0)
+        self.assertTrue(h.acquire_model(self.CODER))
+        h.release_model()
+        self.assertTrue(h.acquire_model("qwen3.8-27b-nvfp4-balanced"))
+        h.release_model()
+        self.assertEqual(self.verb_unit_sequence(), [])
+
+        self._seed_active(self.READER, age=0)
+        results = []
+        threads = [threading.Thread(target=lambda: results.append(h.acquire_model(self.READER)))
+                   for _ in range(2)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(5)
+        self.assertEqual(results, [True, True])
+        with SW.switch_condition:
+            self.assertEqual(SW.active_requests, 2)
+        self.assertEqual(self.verb_unit_sequence(), [])
+        h.release_model()
+        h.release_model()
+
+    def test_j_release_and_acquire_stamp_last_activity(self):
+        h = self._handler()
+        self.assertTrue(h.acquire_model(self.READER))
+        with SW.switch_condition:
+            self.assertIsNotNone(SW.last_activity)
+            self.assertLess(abs(time.monotonic() - SW.last_activity), 1.0)
+            SW.last_activity = 0.0
+        h.release_model()
+        with SW.switch_condition:
+            self.assertLess(abs(time.monotonic() - SW.last_activity), 1.0)
+
+    def test_k_idle_stop_fires_despite_residency_and_frees_gpu(self):
+        SW.RESIDENCY_SECONDS = 90
+        SW.READER_IDLE_SECONDS = 0.2
+        h = self._handler()
+        self.assertTrue(h.acquire_model(self.READER))
+        h.release_model()  # arms the idle stop inside the residency window
+        time.sleep(0.6)
+        self.assertIn(("stop", "vllm-reader.service"), self.verb_unit_sequence())
+        with SW.switch_condition:
+            self.assertIsNone(SW.active_model)
+            self.assertIsNone(SW.last_activity)
+        SW.LOCK_WAIT_SECONDS = 0.2
+        self.assertTrue(h.acquire_model(self.CODER))
+        self.assertIn(("start", "vllm.service"), self.verb_unit_sequence())
+        h.release_model()
+
+    def test_l_env_seconds_parsing(self):
+        name = "VLLM_SWITCH_RESIDENCY_SECONDS"
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop(name, None)
+            self.assertEqual(SW._env_seconds(name, 90.0), 90.0)
+        for raw, expected in (("abc", 90.0), ("-5", 90.0), ("45", 45.0), ("0", 0.0)):
+            with mock.patch.dict(os.environ, {name: raw}):
+                self.assertEqual(SW._env_seconds(name, 90.0), expected, raw)
 
 
 if __name__ == "__main__":

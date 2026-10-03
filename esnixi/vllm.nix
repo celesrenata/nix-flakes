@@ -239,6 +239,8 @@ in
     environment = {
       SYSTEMCTL = "${pkgs.systemd}/bin/systemctl";
       SUDO = "/run/wrappers/bin/sudo";
+      # An idle model used within this many seconds is not evicted for the other unit (the request gets a 409 and goes to the next OmniRoute target).
+      VLLM_SWITCH_RESIDENCY_SECONDS = "90";
     };
     serviceConfig = {
       Type = "simple";
