@@ -128,7 +128,7 @@ let
   # gpuMemoryUtilization x card (default 0.92), and a sleeping neighbour keeps ~3 GiB.
   # Sleep-mode units therefore pass gpuMemoryUtilization as that startup gate only;
   # set it just above the unit's real awake footprint.
-  mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "131072", maxNumSeqs ? "1", kvCacheMemory ? null, kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false, port ? "8010", sleepMode ? false, idleSeconds ? "0" }:
+  mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "131072", maxNumSeqs ? "1", kvCacheMemory ? null, kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false, port ? "8010", sleepMode ? false, idleSeconds ? "0", restart ? "on-failure" }:
     assert sleepMode -> leaseWrap;
     {
       description = "vLLM OpenAI-compatible API server (${servedModel})";
@@ -152,7 +152,7 @@ let
         # BEFORE vLLM loads any CUDA weights; gpu_launch.py execs into the command
         # below, and the kernel releases the advisory lock when the process exits.
         ExecStart = "${lib.optionalString leaseWrap "${pkgs.python3}/bin/python3 ${gpuLaunch} "}${pkgsAccel.vllm}/bin/vllm serve ${model} --served-model-name ${servedModel} --host 127.0.0.1 --port ${port} --max-model-len ${maxModelLen} --max-num-seqs ${maxNumSeqs} ${if kvCacheMemory != null then "--kv-cache-memory=${toString kvCacheMemory}${lib.optionalString sleepMode " --gpu-memory-utilization ${gpuMemoryUtilization}"}" else "--gpu-memory-utilization ${gpuMemoryUtilization}"} --kv-cache-dtype nvfp4 ${lib.optionalString (kvOffloadingSize != null) "--kv-offloading-size ${toString kvOffloadingSize} --kv-offloading-backend native"}${lib.optionalString sleepMode " --enable-sleep-mode --api-server-count 1 --middleware vllm_idle.IdleSleepMiddleware"} ${extraArgs}";
-        Restart = "on-failure";
+        Restart = restart;
         RestartSec = "10s";
         TimeoutStopSec = "120s";
       };
@@ -220,6 +220,10 @@ in
     leaseWrap = true;
     conflicts = [ "vllm-5090-fallback.service" ];
     wantedBy = [ ];
+    # The switcher owns the reader's lifecycle: a crash goes straight to `failed`
+    # (fast detection, circuit breaker, coder rollback) instead of systemd
+    # auto-restarting it and re-taking the GPU flock the coder needs to wake.
+    restart = "no";
     sleepMode = true;
     idleSeconds = "300";
     port = "8012";
@@ -287,10 +291,24 @@ in
     environment = {
       SYSTEMCTL = "${pkgs.systemd}/bin/systemctl";
       SUDO = "/run/wrappers/bin/sudo";
-      # An idle model used within this many seconds is not evicted for the other unit
-      # (the request gets a 409 and goes to the next OmniRoute target). 0: sleep-mode
-      # swaps take seconds, so any idle model may be swapped out immediately.
+      # Residency of the idle READER against a coder request (409 to the next
+      # OmniRoute target inside the window). 0: the coder reclaims the GPU at once.
       VLLM_SWITCH_RESIDENCY_SECONDS = "0";
+      # The coder is the protected default: a reader request never evicts it while
+      # it has requests in flight or within this many seconds of its last use.
+      VLLM_SWITCH_CODER_RESIDENCY_SECONDS = "90";
+      # Circuit breaker after a failed switch: first backoff, doubling up to the max.
+      # Requests for a target in backoff get an immediate 409; the active model is
+      # left untouched.
+      VLLM_SWITCH_BACKOFF_SECONDS = "300";
+      VLLM_SWITCH_BACKOFF_MAX_SECONDS = "1800";
+      # Watchdog: with no ready model for this long, ready (wake/start) the coder.
+      VLLM_SWITCH_WATCHDOG_SECONDS = "60";
+      # Deadlines: sleep budget before falling back to stop, stop+drain (above
+      # TimeoutStopSec), and readiness for one switch.
+      VLLM_SWITCH_SLEEP_SECONDS = "90";
+      VLLM_SWITCH_STOP_SECONDS = "150";
+      VLLM_SWITCH_START_SECONDS = "300";
     };
     serviceConfig = {
       Type = "simple";
