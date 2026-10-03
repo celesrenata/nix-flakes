@@ -190,7 +190,7 @@ in
     gpuMemoryUtilization = "0.92";
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
-    # 4 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
+    # 3 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
     # vllm-switch.py MODELS["qwen3.8-27b-nvfp4"] and ["qwen3.8-27b-nvfp4-balanced"]
     # (context == maxModelLen, max_requests == maxNumSeqs, port == port);
     # test_vllm_switch.py parses this block and asserts them. Change them together.
@@ -206,7 +206,7 @@ in
     kvCacheMemory = 5905580032;
     kvOffloadingSize = 32;
     maxModelLen = "131072";
-    maxNumSeqs = "4";
+    maxNumSeqs = "3";
     # 5760 = 2 x 2848-token blocks (mamba align mode cuts prefill chunks to block multiples) + 64 slots for the other seqs MTP decode tokens.
     extraArgs = "--language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --max-num-batched-tokens 5760 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
   };

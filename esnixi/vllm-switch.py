@@ -92,7 +92,7 @@ MODELS = {
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
         "context": 131072,
-        "max_requests": 4,
+        "max_requests": 3,
     },
     BALANCED_MODEL_ID: {
         "unit": "vllm.service",
@@ -100,7 +100,7 @@ MODELS = {
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
         "context": 131072,
-        "max_requests": 4,
+        "max_requests": 3,
     },
     "qwen3.5-9b-nvfp4-reader": {
         "unit": "vllm-reader.service",

@@ -103,11 +103,11 @@ MODES = {
 }
 FIELDS = ('name', 'description', 'strategy', 'models', 'config', 'context_length', 'context_cache_protection')
 OBSOLETE = {'healthCheckEnabled', 'healthCheckTimeoutMs', 'timeoutMs', 'queueDepth'}
-# The native 5090 vLLM coder runs 4 sequences (esnixi/vllm.nix --max-num-seqs 4,
-# switcher max_requests 4); keep OmniRoute's persisted provider semaphore aligned
+# The native 5090 vLLM coder runs 3 sequences (esnixi/vllm.nix --max-num-seqs 3,
+# switcher max_requests 3); keep OmniRoute's persisted provider semaphore aligned
 # whenever a tier preset is applied.
 PROVIDER_POLICIES = {
-    CONNECTIONS['vllm']: {'maxConcurrent': 4},
+    CONNECTIONS['vllm']: {'maxConcurrent': 3},
     # Both M5 models share the mutually-exclusive local-model-proxy.
     CONNECTIONS['llama-cpp']: {'maxConcurrent': 1},
 }

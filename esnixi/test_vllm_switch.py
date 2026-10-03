@@ -464,8 +464,8 @@ class SwitcherTests(unittest.TestCase):
         SW.LOCK_WAIT_SECONDS = 0.2
         self._seed_active(self.CODER, age=0)
         h = self._handler()
-        self.assertEqual(SW.MODELS[self.CODER]["max_requests"], 4)
-        ids = [self.CODER, self.CODER, SW.BALANCED_MODEL_ID, SW.BALANCED_MODEL_ID]
+        self.assertEqual(SW.MODELS[self.CODER]["max_requests"], 3)
+        ids = [self.CODER, self.CODER, SW.BALANCED_MODEL_ID]
         results = []
         results_lock = threading.Lock()
 
@@ -479,15 +479,15 @@ class SwitcherTests(unittest.TestCase):
             t.start()
         for t in threads:
             t.join(5)
-        self.assertEqual(results, [True] * 4)
+        self.assertEqual(results, [True] * 3)
         with SW.switch_condition:
-            self.assertEqual(SW.active_requests, 4)
+            self.assertEqual(SW.active_requests, 3)
         self.assertFalse(h.acquire_model(self.CODER))
         # A reader request cannot swap while the coder is busy, even past residency.
         SW.RESIDENCY_SECONDS = 0
         self.assertFalse(h.acquire_model(self.READER))
         self.assertEqual(self.lifecycle(), [])
-        for _ in range(4):
+        for _ in range(3):
             h.release_model()
         with SW.switch_condition:
             self.assertEqual(SW.active_requests, 0)
