@@ -124,6 +124,10 @@ let
   # shared 5090 lease, so the other sleep-mode unit (or ComfyUI) can take the GPU and
   # waking costs seconds instead of a cold start. idleSeconds = "0" sleeps only when
   # the switcher asks (POST /arcane/sleep). Requires leaseWrap.
+  # With a fixed kvCacheMemory, vLLM still refuses to start unless free VRAM >=
+  # gpuMemoryUtilization x card (default 0.92), and a sleeping neighbour keeps ~3 GiB.
+  # Sleep-mode units therefore pass gpuMemoryUtilization as that startup gate only;
+  # set it just above the unit's real awake footprint.
   mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "131072", maxNumSeqs ? "1", kvCacheMemory ? null, kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false, port ? "8010", sleepMode ? false, idleSeconds ? "0" }:
     assert sleepMode -> leaseWrap;
     {
@@ -147,7 +151,7 @@ let
         # When leaseWrap is set, acquire the shared RTX 5090 flock via gpu_launch.py
         # BEFORE vLLM loads any CUDA weights; gpu_launch.py execs into the command
         # below, and the kernel releases the advisory lock when the process exits.
-        ExecStart = "${lib.optionalString leaseWrap "${pkgs.python3}/bin/python3 ${gpuLaunch} "}${pkgsAccel.vllm}/bin/vllm serve ${model} --served-model-name ${servedModel} --host 127.0.0.1 --port ${port} --max-model-len ${maxModelLen} --max-num-seqs ${maxNumSeqs} ${if kvCacheMemory != null then "--kv-cache-memory=${toString kvCacheMemory}" else "--gpu-memory-utilization ${gpuMemoryUtilization}"} --kv-cache-dtype nvfp4 ${lib.optionalString (kvOffloadingSize != null) "--kv-offloading-size ${toString kvOffloadingSize} --kv-offloading-backend native"}${lib.optionalString sleepMode " --enable-sleep-mode --api-server-count 1 --middleware vllm_idle.IdleSleepMiddleware"} ${extraArgs}";
+        ExecStart = "${lib.optionalString leaseWrap "${pkgs.python3}/bin/python3 ${gpuLaunch} "}${pkgsAccel.vllm}/bin/vllm serve ${model} --served-model-name ${servedModel} --host 127.0.0.1 --port ${port} --max-model-len ${maxModelLen} --max-num-seqs ${maxNumSeqs} ${if kvCacheMemory != null then "--kv-cache-memory=${toString kvCacheMemory}${lib.optionalString sleepMode " --gpu-memory-utilization ${gpuMemoryUtilization}"}" else "--gpu-memory-utilization ${gpuMemoryUtilization}"} --kv-cache-dtype nvfp4 ${lib.optionalString (kvOffloadingSize != null) "--kv-offloading-size ${toString kvOffloadingSize} --kv-offloading-backend native"}${lib.optionalString sleepMode " --enable-sleep-mode --api-server-count 1 --middleware vllm_idle.IdleSleepMiddleware"} ${extraArgs}";
         Restart = "on-failure";
         RestartSec = "10s";
         TimeoutStopSec = "120s";
@@ -179,6 +183,8 @@ in
     # Never auto-sleeps: sleeping discards the GPU prefix cache, so the coder sleeps
     # only when the switcher hands the GPU to the reader.
     idleSeconds = "0";
+    # Startup gate only (KV is fixed): awake footprint ~28 GiB, 0.80 = 25.2 GiB free.
+    gpuMemoryUtilization = "0.80";
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
     # 4 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
@@ -186,13 +192,13 @@ in
     # (context == maxModelLen, max_requests == maxNumSeqs, port == port);
     # test_vllm_switch.py parses this block and asserts them. Change them together.
     port = "8010";
-    # 5.5 GiB nvfp4 KV ~= 105 hybrid blocks of 2848 tokens: ~3 x 50K requests. 0.5 GiB
-    # below the single-tenant 6 GiB so the sleeping reader's residual CUDA context
-    # (~1 GiB, unmeasured) still fits next to the awake coder.
+    # 5 GiB nvfp4 KV ~= 96 hybrid blocks of 2848 tokens: 2-3 x 50K requests. 1 GiB
+    # below the single-tenant 6 GiB so the sleeping reader's residual still fits next
+    # to the awake coder (a sleeping coder measured 2.6 GiB residual on 2026-10-03).
     # 32 GiB of host RAM is a pinned CPU tier (native OffloadingConnector) for
     # evicted prefix-cache blocks. Upstream #45268 reports sleep mode + native
     # offload crashing after a wake; if that hits, drop kvOffloadingSize.
-    kvCacheMemory = 5905580032;
+    kvCacheMemory = 5368709120;
     kvOffloadingSize = 32;
     maxModelLen = "131072";
     maxNumSeqs = "4";
@@ -221,6 +227,9 @@ in
     # reader must start in the space the sleeping coder leaves, and a fixed size
     # skips profiling against whatever is free at that moment.
     kvCacheMemory = 4294967296;
+    # Startup gate only (KV is fixed): awake footprint ~15.5 GiB (8.4 weights + 4 KV
+    # + ~2 activations + graphs/context); 0.50 = 15.7 GiB free.
+    gpuMemoryUtilization = "0.50";
     maxModelLen = "65536";
     maxNumSeqs = "16";
     # Generous batching so the 9B "flies" on the 5090: real paged/continuous-batching
