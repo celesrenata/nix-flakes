@@ -119,7 +119,13 @@ let
     pkgs.ninja
   ];
 
-  mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "131072", maxNumSeqs ? "1", kvCacheMemory ? null, kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false }:
+  # sleepMode: vLLM sleep mode (level 1) driven by vllm_idle.IdleSleepMiddleware. The
+  # unit stays running; asleep, its weights sit in pinned host RAM and it releases the
+  # shared 5090 lease, so the other sleep-mode unit (or ComfyUI) can take the GPU and
+  # waking costs seconds instead of a cold start. idleSeconds = "0" sleeps only when
+  # the switcher asks (POST /arcane/sleep). Requires leaseWrap.
+  mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "131072", maxNumSeqs ? "1", kvCacheMemory ? null, kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false, port ? "8010", sleepMode ? false, idleSeconds ? "0" }:
+    assert sleepMode -> leaseWrap;
     {
       description = "vLLM OpenAI-compatible API server (${servedModel})";
       after = [ "network.target" ] ++ lib.optionals leaseWrap [ "arcane-gpu-lock.service" ];
@@ -127,6 +133,11 @@ let
       inherit wantedBy conflicts;
       environment = vllmEnvironment // lib.optionalAttrs leaseWrap {
         ARCANE_GPU_LOCK = "/run/arcane-gpu/5090.lock";
+      } // lib.optionalAttrs sleepMode {
+        # vllm_idle.py + arcane_gpu.py for --middleware.
+        PYTHONPATH = "${gpuRuntime}:${vllmPythonPath}";
+        VLLM_IDLE_SECONDS = idleSeconds;
+        VLLM_LEASE_WAIT_SECONDS = "60";
       };
       path = vllmPath;
       serviceConfig = {
@@ -136,7 +147,7 @@ let
         # When leaseWrap is set, acquire the shared RTX 5090 flock via gpu_launch.py
         # BEFORE vLLM loads any CUDA weights; gpu_launch.py execs into the command
         # below, and the kernel releases the advisory lock when the process exits.
-        ExecStart = "${lib.optionalString leaseWrap "${pkgs.python3}/bin/python3 ${gpuLaunch} "}${pkgsAccel.vllm}/bin/vllm serve ${model} --served-model-name ${servedModel} --host 127.0.0.1 --port 8010 --max-model-len ${maxModelLen} --max-num-seqs ${maxNumSeqs} ${if kvCacheMemory != null then "--kv-cache-memory=${toString kvCacheMemory}" else "--gpu-memory-utilization ${gpuMemoryUtilization}"} --kv-cache-dtype nvfp4 ${lib.optionalString (kvOffloadingSize != null) "--kv-offloading-size ${toString kvOffloadingSize} --kv-offloading-backend native"} ${extraArgs}";
+        ExecStart = "${lib.optionalString leaseWrap "${pkgs.python3}/bin/python3 ${gpuLaunch} "}${pkgsAccel.vllm}/bin/vllm serve ${model} --served-model-name ${servedModel} --host 127.0.0.1 --port ${port} --max-model-len ${maxModelLen} --max-num-seqs ${maxNumSeqs} ${if kvCacheMemory != null then "--kv-cache-memory=${toString kvCacheMemory}" else "--gpu-memory-utilization ${gpuMemoryUtilization}"} --kv-cache-dtype nvfp4 ${lib.optionalString (kvOffloadingSize != null) "--kv-offloading-size ${toString kvOffloadingSize} --kv-offloading-backend native"}${lib.optionalString sleepMode " --enable-sleep-mode --api-server-count 1 --middleware vllm_idle.IdleSleepMiddleware"} ${extraArgs}";
         Restart = "on-failure";
         RestartSec = "10s";
         TimeoutStopSec = "120s";
@@ -148,6 +159,7 @@ let
   # exclusive flock on /run/arcane-gpu/5090.lock, marks the fd inheritable, then
   # execs into vLLM so the kernel releases the lease when the process dies.
   gpuLaunch = ./gpu_launch.py;
+  gpuRuntime = import ./gpu-runtime.nix { inherit pkgs; };
 in
 {
   sops.secrets.huggingface_token = {
@@ -160,20 +172,27 @@ in
     model = "nvidia/Qwen3.8-27B-NVFP4";
     servedModel = "qwen3.8-27b-nvfp4";
     leaseWrap = true;
-    conflicts = [ "vllm-reader.service" "vllm-5090-fallback.service" ];
+    # Co-resident with the reader (sleep mode swaps them); only the fallback, which
+    # binds the same port without sleep mode, is exclusive.
+    conflicts = [ "vllm-5090-fallback.service" ];
+    sleepMode = true;
+    # Never auto-sleeps: sleeping discards the GPU prefix cache, so the coder sleeps
+    # only when the switcher hands the GPU to the reader.
+    idleSeconds = "0";
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
-    # 4 concurrent sequences. maxModelLen and maxNumSeqs are COUPLED to vllm-switch.py
-    # MODELS["qwen3.8-27b-nvfp4"] and ["qwen3.8-27b-nvfp4-balanced"] (context ==
-    # maxModelLen, max_requests == maxNumSeqs); test_vllm_switch.py parses this block
-    # and asserts both. Change them together.
-    # 6 GiB nvfp4 KV ~= 114 hybrid blocks of 2848 tokens: 4 x ~50K requests, or ~1.8
-    # full 131072 contexts. ~2 GiB of the card stays free for the desktop and an idle
-    # ComfyUI CUDA context (the lease is exclusive, so Comfy never runs models while
-    # this unit holds it).
+    # 4 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
+    # vllm-switch.py MODELS["qwen3.8-27b-nvfp4"] and ["qwen3.8-27b-nvfp4-balanced"]
+    # (context == maxModelLen, max_requests == maxNumSeqs, port == port);
+    # test_vllm_switch.py parses this block and asserts them. Change them together.
+    port = "8010";
+    # 5.5 GiB nvfp4 KV ~= 105 hybrid blocks of 2848 tokens: ~3 x 50K requests. 0.5 GiB
+    # below the single-tenant 6 GiB so the sleeping reader's residual CUDA context
+    # (~1 GiB, unmeasured) still fits next to the awake coder.
     # 32 GiB of host RAM is a pinned CPU tier (native OffloadingConnector) for
-    # evicted prefix-cache blocks.
-    kvCacheMemory = 6442450944;
+    # evicted prefix-cache blocks. Upstream #45268 reports sleep mode + native
+    # offload crashing after a wake; if that hits, drop kvOffloadingSize.
+    kvCacheMemory = 5905580032;
     kvOffloadingSize = 32;
     maxModelLen = "131072";
     maxNumSeqs = "4";
@@ -183,17 +202,25 @@ in
 
   # NVFP4 9B reader (AxionML/Qwen3.5-9B-NVFP4, modelopt_fp4 W4A4; vLLM auto-promotes
   # weight-only NVFP4 to W4A16 from the checkpoint config) + NVFP4 KV on SM120.
-  # Started ONLY by the switcher (wantedBy = [ ]); mutually exclusive with the coder.
-  # --max-model-len 65536 is COUPLED to the switcher MODELS["qwen3.5-9b-nvfp4-reader"]
-  # ["context"] in vllm-switch.py — change BOTH together or the readiness poll never
-  # matches and the reader tier goes silently dead.
+  # Started ONLY by the switcher (wantedBy = [ ]); co-resident with the coder through
+  # sleep mode (the switcher sleeps one before the other runs). Sleeps itself after
+  # 5 minutes idle so ComfyUI can take the GPU when neither LLM is in use.
+  # --max-model-len 65536 and port 8012 are COUPLED to the switcher
+  # MODELS["qwen3.5-9b-nvfp4-reader"] ["context"]/["port"] in vllm-switch.py — change
+  # BOTH together or the readiness poll never matches and the reader tier goes dead.
   systemd.services.vllm-reader = mkVllmService {
     model = "AxionML/Qwen3.5-9B-NVFP4";
     servedModel = "qwen3.5-9b-nvfp4-reader";
     leaseWrap = true;
-    conflicts = [ "vllm.service" "vllm-5090-fallback.service" ];
+    conflicts = [ "vllm-5090-fallback.service" ];
     wantedBy = [ ];
-    gpuMemoryUtilization = "0.85";
+    sleepMode = true;
+    idleSeconds = "300";
+    port = "8012";
+    # Fixed 4 GiB KV (~390K tokens, ~6 x 65536) instead of 0.85 utilization: the
+    # reader must start in the space the sleeping coder leaves, and a fixed size
+    # skips profiling against whatever is free at that moment.
+    kvCacheMemory = 4294967296;
     maxModelLen = "65536";
     maxNumSeqs = "16";
     # Generous batching so the 9B "flies" on the 5090: real paged/continuous-batching
@@ -251,8 +278,10 @@ in
     environment = {
       SYSTEMCTL = "${pkgs.systemd}/bin/systemctl";
       SUDO = "/run/wrappers/bin/sudo";
-      # An idle model used within this many seconds is not evicted for the other unit (the request gets a 409 and goes to the next OmniRoute target).
-      VLLM_SWITCH_RESIDENCY_SECONDS = "90";
+      # An idle model used within this many seconds is not evicted for the other unit
+      # (the request gets a 409 and goes to the next OmniRoute target). 0: sleep-mode
+      # swaps take seconds, so any idle model may be swapped out immediately.
+      VLLM_SWITCH_RESIDENCY_SECONDS = "0";
     };
     serviceConfig = {
       Type = "simple";
@@ -269,66 +298,8 @@ in
     };
   };
 
-  # Restart-safe idle backstop (independent of the switcher): polls the reader's
-  # Prometheus metrics every 60s and stops vllm-reader.service once it has been idle
-  # (num_requests_running + num_requests_waiting == 0) for READER_IDLE_SECONDS=300.
-  # NOT RuntimeMaxSec (a hard wall-clock cap would kill a long in-flight batch).
-  # Runs as root -> needs no sudo. PartOf the reader so a stopped reader has no timer.
-  systemd.services.vllm-reader-idle = {
-    description = "Stop the NVFP4 reader after it has been idle for 5 minutes";
-    serviceConfig = {
-      Type = "oneshot";
-      User = "root";
-    };
-    path = [ pkgs.curl pkgs.coreutils pkgs.gnugrep pkgs.gawk pkgs.systemd ];
-    script = ''
-      set -u
-      STATE=/run/vllm-reader-idle.last-nonzero
-      IDLE_WINDOW=300
-      now=$(date +%s)
-      # If the reader is not active, nothing to do (and clear stale state).
-      if ! systemctl is-active --quiet vllm-reader.service; then
-        rm -f "$STATE" 2>/dev/null || true
-        exit 0
-      fi
-      metrics=$(curl -s --max-time 5 http://127.0.0.1:8010/metrics || true)
-      running=$(printf '%s\n' "$metrics" | grep -E '^vllm:num_requests_running' | awk '{print $2}' | head -1)
-      waiting=$(printf '%s\n' "$metrics" | grep -E '^vllm:num_requests_waiting' | awk '{print $2}' | head -1)
-      # If metrics are unreadable, be conservative: treat as busy (do not stop).
-      if [ -z "$running" ] && [ -z "$waiting" ]; then
-        echo "$now" > "$STATE"
-        exit 0
-      fi
-      busy=$(awk -v r="''${running:-0}" -v w="''${waiting:-0}" 'BEGIN { print (r+0 > 0 || w+0 > 0) ? 1 : 0 }')
-      if [ "$busy" = "1" ]; then
-        echo "$now" > "$STATE"
-        exit 0
-      fi
-      # Idle this scrape. Seed the state file if missing so the window starts now.
-      if [ ! -f "$STATE" ]; then
-        echo "$now" > "$STATE"
-        exit 0
-      fi
-      last=$(cat "$STATE" 2>/dev/null || echo "$now")
-      if [ $(( now - last )) -ge "$IDLE_WINDOW" ]; then
-        systemctl stop vllm-reader.service || true
-        rm -f "$STATE" 2>/dev/null || true
-      fi
-    '';
-  };
-
-  systemd.timers.vllm-reader-idle = {
-    description = "Poll the NVFP4 reader for idleness every 60 seconds";
-    # partOf stops/restarts the timer with the reader; wantedBy pulls the timer in
-    # when the reader starts (partOf alone does not propagate start). Together: the
-    # timer runs exactly while the reader is active.
-    partOf = [ "vllm-reader.service" ];
-    wantedBy = [ "vllm-reader.service" ];
-    timerConfig = {
-      OnActiveSec = 60;
-      OnUnitActiveSec = 60;
-    };
-  };
+  # The former vllm-reader-idle stop timer is gone: the reader puts itself to sleep
+  # (vllm_idle.py, idleSeconds) instead of being stopped.
 
   users.users.vllm = {
     isSystemUser = true;

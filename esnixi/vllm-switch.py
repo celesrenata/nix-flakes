@@ -15,13 +15,13 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
 
-BACKEND = "http://127.0.0.1:8010"
 SYSTEMCTL = os.environ["SYSTEMCTL"]
 SUDO = os.environ["SUDO"]
 LOCK_WAIT_SECONDS = 3
 MODEL_READY_SECONDS = 540
-# Reader idle backstop (fast path; a systemd timer is the restart-safe backstop).
-READER_IDLE_SECONDS = 300
+# How long a sleep request may wait for the old unit's in-flight requests to drain
+# before the switcher falls back to a full stop.
+SLEEP_DRAIN_SECONDS = 30
 
 
 def _env_seconds(name: str, default: float) -> float:
@@ -39,8 +39,6 @@ RESIDENCY_SECONDS = _env_seconds("VLLM_SWITCH_RESIDENCY_SECONDS", 90.0)
 # Settle delay after the other unit reaches inactive, so the driver finishes
 # reclaiming VRAM before the target's cudaMalloc (the flock is the real guard).
 DRAIN_SETTLE_SECONDS = 2
-# Units that are vLLM readers (fully stop on idle so the coder reclaims the GPU).
-READER_UNITS = {"vllm-reader.service"}
 MAX_REQUEST_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_COMPLETION_TOKENS = 16384
 BALANCED_MODEL_ID = "qwen3.8-27b-nvfp4-balanced"
@@ -49,12 +47,13 @@ FULL_THINKING_BUDGET = 8192
 
 MODELS = {
     # COUPLED to vllm.service in esnixi/vllm.nix: "context" == --max-model-len
-    # (otherwise the readiness poll never matches) and "max_requests" ==
-    # --max-num-seqs. Both coder aliases share one engine and the single
-    # active_requests counter, so they must carry the same max_requests. A unit
-    # test asserts this (test_vllm_switch.py).
+    # (otherwise the readiness poll never matches), "max_requests" ==
+    # --max-num-seqs and "port" == --port. Both coder aliases share one engine and
+    # the single active_requests counter, so they must carry the same max_requests.
+    # A unit test asserts this (test_vllm_switch.py).
     "qwen3.8-27b-nvfp4": {
         "unit": "vllm.service",
+        "port": 8010,
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
         "context": 131072,
@@ -62,6 +61,7 @@ MODELS = {
     },
     BALANCED_MODEL_ID: {
         "unit": "vllm.service",
+        "port": 8010,
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
         "context": 131072,
@@ -69,6 +69,8 @@ MODELS = {
     },
     "qwen3.5-9b-nvfp4-reader": {
         "unit": "vllm-reader.service",
+        # COUPLED to the reader unit's --port in esnixi/vllm.nix.
+        "port": 8012,
         "served": "qwen3.5-9b-nvfp4-reader",
         "hf_id": "AxionML/Qwen3.5-9B-NVFP4",
         # COUPLED to the reader unit's served --max-model-len in esnixi/vllm.nix.
@@ -91,10 +93,6 @@ switch_condition = threading.Condition()
 active_model: str | None = None
 active_requests = 0
 switching = False
-# Monotonic reader-idle generation counter: each arm bumps it; a scheduled stop
-# only fires if the generation is unchanged when its deadline elapses (cancels a
-# stale stop when a new request arrives). Guarded by switch_condition.
-reader_idle_generation = 0
 last_activity: float | None = None  # monotonic; last acquire/release on active_model. Guarded by switch_condition.
 
 
@@ -103,6 +101,14 @@ def residency_remaining(now: float) -> float:
     if active_model is None or last_activity is None or RESIDENCY_SECONDS <= 0:
         return 0.0
     return max(0.0, last_activity + RESIDENCY_SECONDS - now)
+
+
+def backend_url(model_id: str) -> str:
+    return f"http://127.0.0.1:{MODELS[model_id]['port']}"
+
+
+def unit_port(unit: str) -> int:
+    return next(m["port"] for m in MODELS.values() if m["unit"] == unit)
 
 
 def read_token() -> str:
@@ -285,7 +291,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
         try:
-            self.proxy(path, body)
+            self.proxy(path, body, model_id)
         finally:
             self.release_model()
 
@@ -338,61 +344,9 @@ class Handler(BaseHTTPRequestHandler):
                 active_requests -= 1
             if active_model is not None:
                 last_activity = time.monotonic()
-            # Fast-path idle backstop: when a READER unit falls to zero in-flight
-            # requests, arm a monotonic deadline; a new request before expiry bumps
-            # the generation and cancels the scheduled stop. The restart-safe
-            # systemd vllm-reader-idle.timer is the backstop if this process dies.
-            if (
-                active_requests == 0
-                and active_model is not None
-                and MODELS[active_model]["unit"] in READER_UNITS
-            ):
-                self.arm_reader_idle_stop(MODELS[active_model]["unit"])
+            # Idle readers put themselves to sleep (vllm_idle.py VLLM_IDLE_SECONDS),
+            # so the switcher no longer stops them.
             switch_condition.notify_all()
-
-    def arm_reader_idle_stop(self, unit: str) -> None:
-        """Schedule a stop of a reader `unit` after READER_IDLE_SECONDS of idle.
-
-        Must be called holding switch_condition. Uses a generation counter so a
-        later request cancels this stop.
-        """
-        global reader_idle_generation
-        reader_idle_generation += 1
-        generation = reader_idle_generation
-
-        def _maybe_stop() -> None:
-            global active_model, last_activity
-            # Deliberately no residency check: READER_IDLE_SECONDS >> RESIDENCY_SECONDS,
-            # and the idle stop must always free the GPU for the coder.
-            with switch_condition:
-                # Cancelled (a new request armed a newer generation) or the slot
-                # is busy / a different model is active -> do nothing.
-                if reader_idle_generation != generation:
-                    return
-                if active_requests != 0:
-                    return
-                if active_model is None or MODELS[active_model]["unit"] != unit:
-                    return
-            try:
-                subprocess.run(
-                    [SUDO, "-n", SYSTEMCTL, "stop", unit],
-                    check=False,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    timeout=120,
-                )
-            except (subprocess.SubprocessError, OSError):
-                return
-            with switch_condition:
-                if reader_idle_generation == generation and active_requests == 0 \
-                        and active_model is not None and MODELS[active_model]["unit"] == unit:
-                    active_model = None
-                    last_activity = None
-                    switch_condition.notify_all()
-
-        timer = threading.Timer(READER_IDLE_SECONDS, _maybe_stop)
-        timer.daemon = True
-        timer.start()
 
     def other_units(self, target_unit: str) -> list[str]:
         """Every distinct vLLM unit in MODELS that is not the target unit."""
@@ -438,18 +392,54 @@ class Handler(BaseHTTPRequestHandler):
             time.sleep(0.5)
         return False
 
+    def sleep_unit(self, unit: str, deadline: float) -> bool:
+        """Ask a running unit to sleep (weights to host RAM) and release the GPU lease.
+
+        Retries while the unit is busy or not yet serving, up to SLEEP_DRAIN_SECONDS.
+        Returns False so the caller can fall back to a full stop.
+        """
+        url = f"http://127.0.0.1:{unit_port(unit)}/arcane/sleep?timeout=10"
+        give_up = min(deadline, time.monotonic() + SLEEP_DRAIN_SECONDS)
+        while time.monotonic() < give_up:
+            request = urllib.request.Request(url, data=b"", method="POST")
+            try:
+                with urllib.request.urlopen(request, timeout=120) as response:
+                    if response.status == 200:
+                        return True
+            except urllib.error.HTTPError as error:
+                error.close()
+                if error.code not in (409, 503):
+                    return False
+            except (urllib.error.URLError, OSError):
+                pass
+            time.sleep(0.5)
+        return False
+
+    def unit_running(self, unit: str) -> bool:
+        active, _sub = self.unit_state(unit)
+        return active == "active"
+
     def select_model(self, model_id: str) -> bool:
         selected = MODELS[model_id]
         deadline = time.monotonic() + MODEL_READY_SECONDS
-        # Single tenancy authority: stop every OTHER vLLM unit and wait for it to
-        # go inactive (VRAM returned) BEFORE starting the target. Only ever reached
-        # with active_requests == 0 and the residency window expired (acquire_model
-        # gate), so no generation is in-flight when the coder is stopped.
+        # Single tenancy authority: every OTHER vLLM unit must give up the GPU
+        # BEFORE the target runs. Running units sleep (weights stay in host RAM,
+        # lease released); a unit that cannot sleep is stopped and drained. Only
+        # ever reached with active_requests == 0 and the residency window expired
+        # (acquire_model gate), so no generation is in flight.
         for other in self.other_units(selected["unit"]):
             active, _sub = self.unit_state(other)
-            if active not in ("inactive", "failed", ""):
-                if not self.stop_and_drain(other, deadline):
-                    return False
+            if active in ("inactive", "failed", ""):
+                continue
+            if active == "active" and self.sleep_unit(other, deadline):
+                continue
+            if not self.stop_and_drain(other, deadline):
+                return False
+        # Warm path: a running (possibly sleeping) target is ready as soon as it
+        # answers /v1/models; its middleware takes the lease and wakes it on the
+        # first engine request.
+        if self.unit_running(selected["unit"]) and self.wait_ready(model_id, deadline, -1):
+            return True
         # Clear any stale `failed` state on the target so its own is-failed guard
         # (below) does not refuse to start a deliberately-stopped unit.
         try:
@@ -483,9 +473,19 @@ class Handler(BaseHTTPRequestHandler):
             )
         except (subprocess.SubprocessError, OSError):
             return False
+        return self.wait_ready(model_id, deadline, restarts_before)
 
+    def wait_ready(self, model_id: str, deadline: float, restarts_before: int) -> bool:
+        """Poll the target's /v1/models until it serves the expected model/context.
+
+        restarts_before == -1 is the warm path (no start issued): give up as soon
+        as the unit is no longer running so the caller can cold-start it.
+        """
+        selected = MODELS[model_id]
         while time.monotonic() < deadline:
-            request = urllib.request.Request(f"{BACKEND}/v1/models")
+            if restarts_before == -1 and not self.unit_running(selected["unit"]):
+                return False
+            request = urllib.request.Request(f"{backend_url(model_id)}/v1/models")
             try:
                 with urllib.request.urlopen(request, timeout=3) as response:
                     models = json.loads(response.read())
@@ -514,13 +514,13 @@ class Handler(BaseHTTPRequestHandler):
             time.sleep(2)
         return False
 
-    def proxy(self, path: str, body: bytes) -> None:
+    def proxy(self, path: str, body: bytes, model_id: str) -> None:
         headers = {
             "Content-Type": self.headers.get("Content-Type", "application/json"),
             "Accept": self.headers.get("Accept", "text/event-stream, application/json"),
             "Accept-Encoding": "identity",
         }
-        request = urllib.request.Request(f"{BACKEND}{path}", data=body, headers=headers, method="POST")
+        request = urllib.request.Request(f"{backend_url(model_id)}{path}", data=body, headers=headers, method="POST")
         try:
             upstream = urllib.request.urlopen(request, timeout=900)
         except urllib.error.HTTPError as error:
