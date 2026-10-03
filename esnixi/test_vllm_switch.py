@@ -18,9 +18,14 @@ Minimum-residency hysteresis (RESIDENCY_SECONDS):
   (j) acquire and release stamp last_activity
   (k) the reader idle stop still fires inside the window and frees the GPU
   (l) _env_seconds parsing of VLLM_SWITCH_RESIDENCY_SECONDS
+Coder concurrency (vllm.service --max-num-seqs):
+  (m) coder MODELS context/max_requests == maxModelLen/maxNumSeqs parsed from
+      esnixi/vllm.nix (and the reader context), both coder aliases equal
+  (n) the coder admits up to max_requests concurrent requests, then 409s
 """
 import importlib.util
 import os
+import re
 import sys
 import tempfile
 import threading
@@ -49,6 +54,18 @@ def _load_switcher():
 SW = _load_switcher()
 
 
+def _nix_block(service):
+    """Return the body of `systemd.services.<service> = mkVllmService { ... };` in vllm.nix."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(here, "vllm.nix")) as f:
+        src = f.read()
+    m = re.search(r"systemd\.services\.%s = mkVllmService \{(.*?)\n  \};" % re.escape(service),
+                  src, re.S)
+    return m.group(1) if m else None
+def _nix_attr(block, name):
+    """Return the integer value of `name = "<digits>";` inside a nix block."""
+    m = re.search(r'%s = "(\d+)";' % re.escape(name), block)
+    return int(m.group(1)) if m else None
 class FakeSystemctl:
     """Records systemctl/sudo invocations and simulates unit ActiveState.
 
@@ -393,5 +410,59 @@ class SwitcherTests(unittest.TestCase):
                 self.assertEqual(SW._env_seconds(name, 90.0), expected, raw)
 
 
+    def test_m_coder_coupling_matches_vllm_nix(self):
+        coder = _nix_block("vllm")
+        reader = _nix_block("vllm-reader")
+        self.assertIsNotNone(coder, "vllm.service block not found in vllm.nix")
+        self.assertIsNotNone(reader, "vllm-reader.service block not found in vllm.nix")
+        max_len = _nix_attr(coder, "maxModelLen")
+        num_seqs = _nix_attr(coder, "maxNumSeqs")
+        reader_len = _nix_attr(reader, "maxModelLen")
+        self.assertIsNotNone(max_len)
+        self.assertIsNotNone(num_seqs)
+        self.assertIsNotNone(reader_len)
+        for mid in (self.CODER, SW.BALANCED_MODEL_ID):
+            m = SW.MODELS[mid]
+            self.assertEqual(m["unit"], "vllm.service", mid)
+            self.assertEqual(m["context"], max_len, mid)
+            self.assertEqual(m["max_requests"], num_seqs, mid)
+        self.assertEqual(SW.MODELS[self.CODER]["max_requests"],
+                         SW.MODELS[SW.BALANCED_MODEL_ID]["max_requests"])
+        self.assertEqual(SW.MODELS[self.READER]["context"], reader_len)
+    def test_n_coder_admits_up_to_max_requests_then_409(self):
+        SW.RESIDENCY_SECONDS = 90
+        SW.LOCK_WAIT_SECONDS = 0.2
+        self._seed_active(self.CODER, age=0)
+        h = self._handler()
+        self.assertEqual(SW.MODELS[self.CODER]["max_requests"], 4)
+        ids = [self.CODER, self.CODER, SW.BALANCED_MODEL_ID, SW.BALANCED_MODEL_ID]
+        results = []
+        results_lock = threading.Lock()
+        def worker(mid):
+            ok = h.acquire_model(mid)
+            with results_lock:
+                results.append(ok)
+        threads = [threading.Thread(target=worker, args=(mid,)) for mid in ids]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(5)
+        self.assertEqual(results, [True] * 4)
+        with SW.switch_condition:
+            self.assertEqual(SW.active_requests, 4)
+        # A 5th coder request times out on LOCK_WAIT -> 409.
+        self.assertFalse(h.acquire_model(self.CODER))
+        # A reader request cannot swap while the coder is busy, even past residency.
+        SW.RESIDENCY_SECONDS = 0
+        self.assertFalse(h.acquire_model(self.READER))
+        seq = self.verb_unit_sequence()
+        self.assertFalse([x for x in seq if x[0] in ("stop", "start")], seq)
+        for _ in range(4):
+            h.release_model()
+        with SW.switch_condition:
+            self.assertEqual(SW.active_requests, 0)
+            self.assertEqual(SW.active_model, self.CODER)
+            self.assertIsNotNone(SW.last_activity)
+            self.assertLess(abs(time.monotonic() - SW.last_activity), 1.0)
 if __name__ == "__main__":
     unittest.main(verbosity=2)

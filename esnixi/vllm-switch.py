@@ -48,19 +48,24 @@ BALANCED_THINKING_BUDGET = 2048
 FULL_THINKING_BUDGET = 8192
 
 MODELS = {
+    # COUPLED to vllm.service in esnixi/vllm.nix: "context" == --max-model-len
+    # (otherwise the readiness poll never matches) and "max_requests" ==
+    # --max-num-seqs. Both coder aliases share one engine and the single
+    # active_requests counter, so they must carry the same max_requests. A unit
+    # test asserts this (test_vllm_switch.py).
     "qwen3.8-27b-nvfp4": {
         "unit": "vllm.service",
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
         "context": 131072,
-        "max_requests": 1,
+        "max_requests": 4,
     },
     BALANCED_MODEL_ID: {
         "unit": "vllm.service",
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
         "context": 131072,
-        "max_requests": 1,
+        "max_requests": 4,
     },
     "qwen3.5-9b-nvfp4-reader": {
         "unit": "vllm-reader.service",

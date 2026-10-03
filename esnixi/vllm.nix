@@ -163,10 +163,22 @@ in
     conflicts = [ "vllm-reader.service" "vllm-5090-fallback.service" ];
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
-    kvCacheMemory = 4776620811;  # ~4.45 GiB nvfp4 KV (unchanged). At the narrowed 131072 this comfortably holds one full-context seq (measured ~3.12 GiB via vLLM profile: 187071 tok / 4776620811 B = 25534 B/tok). maxNumSeqs stays 1 — no concurrency change, no OOM risk.
+    # 4 concurrent sequences. maxModelLen and maxNumSeqs are COUPLED to vllm-switch.py
+    # MODELS["qwen3.8-27b-nvfp4"] and ["qwen3.8-27b-nvfp4-balanced"] (context ==
+    # maxModelLen, max_requests == maxNumSeqs); test_vllm_switch.py parses this block
+    # and asserts both. Change them together.
+    # 6 GiB nvfp4 KV ~= 114 hybrid blocks of 2848 tokens: 4 x ~50K requests, or ~1.8
+    # full 131072 contexts. ~2 GiB of the card stays free for the desktop and an idle
+    # ComfyUI CUDA context (the lease is exclusive, so Comfy never runs models while
+    # this unit holds it).
+    # 32 GiB of host RAM is a pinned CPU tier (native OffloadingConnector) for
+    # evicted prefix-cache blocks.
+    kvCacheMemory = 6442450944;
+    kvOffloadingSize = 32;
     maxModelLen = "131072";
-    maxNumSeqs = "1";
-    extraArgs = "--language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --max-num-batched-tokens 256 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
+    maxNumSeqs = "4";
+    # 5760 = 2 x 2848-token blocks (mamba align mode cuts prefill chunks to block multiples) + 64 slots for the other seqs MTP decode tokens.
+    extraArgs = "--language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --max-num-batched-tokens 5760 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
   };
 
   # NVFP4 9B reader (AxionML/Qwen3.5-9B-NVFP4, modelopt_fp4 W4A4; vLLM auto-promotes
