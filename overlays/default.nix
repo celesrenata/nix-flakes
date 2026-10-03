@@ -31,6 +31,7 @@
     (import ./materialyoucolor.nix)
     (import ./end-4-dots.nix)
     (import ./fuzzel-emoji.nix)
+    (import ./freerdp.nix)
     (import ./wofi-calc.nix)
     (import ./dots-hyprland-dp3-filter.nix inputs)
   ];
@@ -75,6 +76,39 @@
           } ''
             mkdir -p "$out/lib"
           '';
+
+          # CCCL 13.3.3.4.1: drop the "fix-invalid-cpp-syntax" patch (backport of
+          # NVIDIA/cccl PR #8771). The 13.3.3 redist source already contains that
+          # fix, so applying it fails with "Reversed (or previously applied) patch
+          # detected!" and aborts the build. This nixpkgs pin mis-gates the patch
+          # as `cudaAtLeast "13.2" && cudaOlder "13.4"` (it should stop at 13.3).
+          # Upstream fixed this in nixpkgs commit b01001ac7e20
+          # ("cudaPackages_13_3.cccl: don't patch 13.3+", 2026-09-22), which has
+          # not yet reached the nixos-unstable channel. Reproduce that fix locally
+          # by stripping the redundant patch. Remove this override once the pinned
+          # nixpkgs advances past b01001ac7e20.
+          cccl = cudaPrev.cccl.overrideAttrs (old: {
+            patches = builtins.filter
+              (p: !(prev.lib.hasInfix "fix-invalid-cpp-syntax" (p.name or "")))
+              (old.patches or []);
+          });
+
+          # NCCL 2.32.3-1: correct a stale source hash. nixpkgs (including
+          # master) pins the NVIDIA/nccl v2.32.3-1 tag tarball at
+          # sha256-ytAJn8F0QEHhUadiOmVKTUiL7lsUnasoP4MOv/t60xk=, but GitHub now
+          # serves a different archive for that tag (NVIDIA re-tagged / the
+          # auto-generated tarball changed), so the fixed-output fetch fails with
+          # a hash mismatch. Verified the CURRENT correct hash by independent
+          # `nix-prefetch-url --unpack` of
+          # https://github.com/NVIDIA/nccl/archive/refs/tags/v2.32.3-1.tar.gz
+          # -> sha256-xUllfdWAL0Ee9P9T9CZC2ddkPRnSXZXgwApgO398i6g= (matches the
+          # "got" value from the failing build). Override the fetched src hash to
+          # the real one. Remove this once nixpkgs updates the upstream pin.
+          nccl = cudaPrev.nccl.overrideAttrs (old: {
+            src = old.src.overrideAttrs (_: {
+              outputHash = "sha256-xUllfdWAL0Ee9P9T9CZC2ddkPRnSXZXgwApgO398i6g=";
+            });
+          });
         });
       })
     (import ./vllm.nix)

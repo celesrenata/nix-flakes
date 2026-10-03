@@ -108,6 +108,7 @@
             "nodejs-20.20.2"
             "nodejs-slim-20.20.2"
             "python3.14-vllm-0.27.1"
+            "tmate-unstable-2022-08-07"
           ];
         };
         overlays = builtins.concatLists (map (g: overlayGroups.${g}) groups) ++ extraOverlays;
@@ -216,8 +217,10 @@
           ./esnixi/lvra.nix
           ./esnixi/vllm-proxy.nix
           ./esnixi/lan-mouse.nix
+          ./esnixi/omniroute-wireguard.nix
           ./esnixi/clipboard-sync.nix
           ./esnixi/qdrant.nix
+          ./esnixi/backup.nix
           #./esnixi/exo.nix                            # Disabled: requires exo flake input
           #./esnixi/dcgm-exporter.nix                  # Disabled: dcgm-exporter not in nixpkgs
 

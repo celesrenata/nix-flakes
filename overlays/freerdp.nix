@@ -23,6 +23,9 @@ in
 
       substituteInPlace client/SDL/SDL2/dialogs/{sdl_input.cpp,sdl_select.cpp,sdl_widget.cpp,sdl_widget.hpp} \
         --replace-fail "<SDL_ttf.h>" "<SDL2/SDL_ttf.h>"
+
+      substituteInPlace "libfreerdp/codec/dsp_ffmpeg.c" \
+        --replace-fail "FF_PROFILE_AAC_MAIN" "AV_PROFILE_AAC_MAIN"
     ''
     + prev.lib.optionalString (prev.pcsclite != null) ''
       substituteInPlace "winpr/libwinpr/smartcard/smartcard_pcsc.c" \
@@ -34,4 +37,3 @@ in
     '';
   });
 }
-
