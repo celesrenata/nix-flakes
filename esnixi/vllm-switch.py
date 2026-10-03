@@ -2,6 +2,8 @@
 """Authenticated, serialized OpenAI-compatible gateway for the esnixi RTX 5090.
 
 Fail-safe tenancy (one model awake on the 5090 at a time):
+  * Selecting the reader sleeps the coder; selecting the coder STOPS the reader,
+    because the coder's KV budget leaves no room for the reader's sleep residual.
   * The 27B coder (PRIMARY_MODEL) is the protected default; the reader is secondary.
     A reader request never evicts the coder while it has requests in flight or is
     inside CODER_RESIDENCY_SECONDS of its last use (409 to the next OmniRoute tier).
@@ -440,14 +442,16 @@ def select_model(model_id: str, deadline: float) -> tuple[bool, str]:
     """Make `model_id` the only awake model on the GPU; (ready, failure reason)."""
     target_unit = MODELS[model_id]["unit"]
     # Single tenancy authority: every OTHER vLLM unit must give up the GPU BEFORE
-    # the target runs. Running units sleep (weights stay in host RAM, lease
-    # released); a unit that cannot sleep is stopped and drained. Only reached
-    # with active_requests == 0 and the residency window expired (acquire gate).
+    # the target runs. For a non-primary target, running units sleep (weights stay
+    # in host RAM, lease released); a unit that cannot sleep is stopped and drained.
+    # The coder's KV budget assumes no resident neighbour (a sleeping reader keeps
+    # 1.56 GiB), so selecting the coder stops and drains every other unit. Only
+    # reached with active_requests == 0 and the residency window expired.
     for other in other_units(target_unit):
         active, _sub = unit_state(other)
         if active in ("inactive", "failed", ""):
             continue
-        if active == "active" and sleep_unit(other, deadline):
+        if active == "active" and target_unit != PRIMARY_UNIT and sleep_unit(other, deadline):
             LOG.info("slept %s", other)
             continue
         if not stop_and_drain(other, time.monotonic() + STOP_SECONDS):
@@ -624,8 +628,8 @@ def release() -> None:
             active_requests -= 1
         if active_model is not None:
             last_activity = time.monotonic()
-        # Idle readers put themselves to sleep (vllm_idle.py VLLM_IDLE_SECONDS),
-        # so the switcher no longer stops them.
+        # Idle readers put themselves to sleep (vllm_idle.py VLLM_IDLE_SECONDS); the
+        # switcher stops the reader only when it next selects the coder.
         switch_condition.notify_all()
 
 

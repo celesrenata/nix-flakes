@@ -125,7 +125,8 @@ let
   # waking costs seconds instead of a cold start. idleSeconds = "0" sleeps only when
   # the switcher asks (POST /arcane/sleep). Requires leaseWrap.
   # With a fixed kvCacheMemory, vLLM still refuses to start unless free VRAM >=
-  # gpuMemoryUtilization x card (default 0.92), and a sleeping neighbour keeps ~3 GiB.
+  # gpuMemoryUtilization x card (default 0.92). A sleeping unit keeps a residual
+  # (measured 2026-10-03: coder 2.30 GiB, reader 1.56 GiB) plus ~0.93 GiB of desktop.
   # Sleep-mode units therefore pass gpuMemoryUtilization as that startup gate only;
   # set it just above the unit's real awake footprint.
   mkVllmService = { model, servedModel, extraArgs, gpuMemoryUtilization ? "0.79", maxModelLen ? "131072", maxNumSeqs ? "1", kvCacheMemory ? null, kvOffloadingSize ? null, wantedBy ? [ ], conflicts ? [ ], leaseWrap ? false, port ? "8010", sleepMode ? false, idleSeconds ? "0", restart ? "on-failure" }:
@@ -183,8 +184,10 @@ in
     # Never auto-sleeps: sleeping discards the GPU prefix cache, so the coder sleeps
     # only when the switcher hands the GPU to the reader.
     idleSeconds = "0";
-    # Startup gate only (KV is fixed): awake footprint ~28 GiB, 0.80 = 25.2 GiB free.
-    gpuMemoryUtilization = "0.80";
+    # Startup gate only (KV is fixed): awake footprint ~29.5 GiB, and 0.92 x 31.45 GiB
+    # usable = 28.93 GiB. A sleeping reader leaves only ~28.60 GiB free, so the coder
+    # refuses to start instead of OOMing after loading.
+    gpuMemoryUtilization = "0.92";
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
     # 4 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
@@ -192,13 +195,15 @@ in
     # (context == maxModelLen, max_requests == maxNumSeqs, port == port);
     # test_vllm_switch.py parses this block and asserts them. Change them together.
     port = "8010";
-    # 5 GiB nvfp4 KV ~= 96 hybrid blocks of 2848 tokens: 2-3 x 50K requests. 1 GiB
-    # below the single-tenant 6 GiB so the sleeping reader's residual still fits next
-    # to the awake coder (a sleeping coder measured 2.6 GiB residual on 2026-10-03).
+    # 5.5 GiB nvfp4 KV = 105 hybrid blocks of 2848 tokens (104 usable). Each sequence
+    # also holds 15 GDN state blocks (3 groups x (2 + 3 MTP spec)), so without a shared
+    # prefix it fits 3 x 54K or 2 x 57K (4 x 57K with a ~40K shared Zoo prefix). Peak
+    # free is ~1.0 GiB with the reader stopped (29708 + 512 MiB of 32202 MiB usable);
+    # the switcher stops the reader (not sleeps it) whenever it selects the coder.
     # 32 GiB of host RAM is a pinned CPU tier (native OffloadingConnector) for
     # evicted prefix-cache blocks. Upstream #45268 reports sleep mode + native
     # offload crashing after a wake; if that hits, drop kvOffloadingSize.
-    kvCacheMemory = 5368709120;
+    kvCacheMemory = 5905580032;
     kvOffloadingSize = 32;
     maxModelLen = "131072";
     maxNumSeqs = "4";
@@ -208,9 +213,11 @@ in
 
   # NVFP4 9B reader (AxionML/Qwen3.5-9B-NVFP4, modelopt_fp4 W4A4; vLLM auto-promotes
   # weight-only NVFP4 to W4A16 from the checkpoint config) + NVFP4 KV on SM120.
-  # Started ONLY by the switcher (wantedBy = [ ]); co-resident with the coder through
-  # sleep mode (the switcher sleeps one before the other runs). Sleeps itself after
-  # 5 minutes idle so ComfyUI can take the GPU when neither LLM is in use.
+  # Started ONLY by the switcher (wantedBy = [ ]). Never co-resident with an awake
+  # coder: the switcher stops it (its 1.56 GiB sleep residual does not fit next to the
+  # coder's KV) whenever it selects the coder, and sleeps the coder to run it. It
+  # sleeps itself after 5 minutes idle only to free the lease for ComfyUI while the
+  # coder is asleep.
   # --max-model-len 65536 and port 8012 are COUPLED to the switcher
   # MODELS["qwen3.5-9b-nvfp4-reader"] ["context"]/["port"] in vllm-switch.py — change
   # BOTH together or the readiness poll never matches and the reader tier goes dead.
@@ -325,8 +332,8 @@ in
     };
   };
 
-  # The former vllm-reader-idle stop timer is gone: the reader puts itself to sleep
-  # (vllm_idle.py, idleSeconds) instead of being stopped.
+  # The former vllm-reader-idle stop timer is gone: an idle reader puts itself to
+  # sleep (vllm_idle.py, idleSeconds); the switcher stops it when the coder is selected.
 
   users.users.vllm = {
     isSystemUser = true;

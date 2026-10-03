@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Unit tests for the esnixi vLLM switcher tenancy state machine (no GPU, no systemd).
 
-Sleep-mode tenancy (both units co-resident, one awake at a time):
-  (a) acquiring the reader puts the running coder to sleep instead of stopping it
+Sleep-mode tenancy (one awake at a time; only the coder is kept resident asleep):
+  (a) acquiring the reader puts the running coder to sleep instead of stopping it;
+      (a2) acquiring the coder stops the reader (awake or asleep), never sleeps it
   (b) a cold reader start issues sleep<coder> -> reset-failed<reader> ->
       start<reader>, in that order, only when active_requests==0
   (c) a coder that cannot sleep falls back to stop + drain before the start
-  (d) a warm swap (both units running) is sleep<other> only: no start, no stop
+  (d) a warm coder->reader swap is sleep<coder> only; reader->coder is stop<reader>
+      only (the coder is woken, not started)
   (e) busy -> 409 via acquire_model returning False on LOCK_WAIT timeout
   (f) MODELS["qwen3.5-9b-nvfp4-reader"]["context"] == the reader unit's served
       --max-model-len (65536) -- the coupling guard
@@ -37,7 +39,7 @@ Fail-safe switching:
       threshold / an in-progress switch / the coder breaker; (y3) it adopts an awake
       unit after a switcher restart; (y4) it clears a dead active model; (y5) the
       loop survives an exception
-  (z) vllm.nix: reader Restart=no, switcher fail-safe env parses
+  (z) vllm.nix: reader Restart=no, switcher fail-safe env parses, coder KV/gate pinned
 """
 import importlib.util
 import io
@@ -281,6 +283,24 @@ class SwitcherTests(unittest.TestCase):
         self.assertEqual(self.fake.gpu_owners(), [READER_UNIT])
         h.release_model()
 
+    def test_a2_coder_stops_reader_instead_of_sleeping(self):
+        SW.RESIDENCY_SECONDS = 0
+        h = self._handler()
+        # (reader asleep?, coder running asleep?) -- the last case is a coder cold start.
+        for reader_asleep, coder_running in ((False, True), (True, True), (True, False)):
+            self.fake.events.clear()
+            self._seed_active(self.READER, age=0, other_running=coder_running)
+            if reader_asleep:
+                self.fake.asleep.add(READER_UNIT)
+            self.assertTrue(h.acquire_model(self.CODER))
+            self.assertIn(("stop", READER_UNIT), self.fake.events)
+            self.assertNotIn(("sleep", READER_UNIT), self.fake.events)
+            self.assertEqual(self.fake.active[READER_UNIT], "inactive")
+            self.assertEqual(("start", CODER_UNIT) in self.fake.events, not coder_running)
+            # A warm coder is woken by its own middleware on the first engine request.
+            self.fake.asleep.discard(CODER_UNIT)
+            self.assertEqual(self.fake.gpu_owners(), [CODER_UNIT])
+            h.release_model()
     def test_b_cold_reader_start_ordering(self):
         h = self._handler()
         self.assertTrue(h.acquire_model(self.READER))
@@ -306,12 +326,13 @@ class SwitcherTests(unittest.TestCase):
         SW.RESIDENCY_SECONDS = 0
         SW.CODER_RESIDENCY_SECONDS = 0
         h = self._handler()
-        for seeded, requested in ((self.CODER, self.READER), (self.READER, self.CODER)):
+        for seeded, requested, expected in (
+                (self.CODER, self.READER, [("sleep", CODER_UNIT)]),
+                (self.READER, self.CODER, [("stop", READER_UNIT)])):
             self.fake.events.clear()
             self._seed_active(seeded, age=0, other_running=True)
-            seeded_unit = SW.MODELS[seeded]["unit"]
             self.assertTrue(h.acquire_model(requested))
-            self.assertEqual(self.lifecycle(), [("sleep", seeded_unit)])
+            self.assertEqual(self.lifecycle(), expected)
             with SW.switch_condition:
                 self.assertEqual(SW.active_model, requested)
             h.release_model()
@@ -574,7 +595,7 @@ class SwitcherTests(unittest.TestCase):
         # The coder reclaims an idle reader immediately (RESIDENCY_SECONDS = 0).
         self._seed_active(self.READER, age=0, other_running=True)
         self.assertTrue(h.acquire_model(self.CODER))
-        self.assertEqual(self.lifecycle(), [("sleep", READER_UNIT)])
+        self.assertEqual(self.lifecycle(), [("stop", READER_UNIT)])
         h.release_model()
 
     def test_s_reject_reason_in_body(self):
@@ -740,6 +761,9 @@ class SwitcherTests(unittest.TestCase):
     def test_z_nix_switcher_env_and_reader_restart(self):
         self.assertIn('restart = "no";', _nix_block("vllm-reader"))
         self.assertNotIn("restart =", _nix_block("vllm"))
+        # The coder KV budget is measured against a non-resident reader; pin it.
+        self.assertIn("kvCacheMemory = 5905580032;", _nix_block("vllm"))
+        self.assertIn('gpuMemoryUtilization = "0.92";', _nix_block("vllm"))
         here = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(here, "vllm.nix")) as f:
             src = f.read()
