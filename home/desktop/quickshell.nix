@@ -2,22 +2,15 @@
 { inputs, lib, pkgs, ... }:
 
 {
-  # Add environment variables to quickshell service
+  # Add environment variables to quickshell service.
+  # NOTE: LD_LIBRARY_PATH for the quickshell venv libs is now set
+  # service-scoped (without glibc) inside the dots-hyprland quickshell-service
+  # module itself. It must NOT be re-added here with glibc: a glibc entry on
+  # LD_LIBRARY_PATH forces binaries onto a pinned glibc and breaks the whole
+  # session with "GLIBC_x.y not found" once that glibc drifts from the system.
   systemd.user.services.quickshell = {
     Service = {
       Environment = [
-        "LD_LIBRARY_PATH=${lib.makeLibraryPath [
-          pkgs.gcc.cc.lib
-          pkgs.glibc
-          pkgs.zlib
-          pkgs.libffi
-          pkgs.openssl
-          pkgs.bzip2
-          pkgs.xz
-          pkgs.ncurses
-          pkgs.readline
-          pkgs.sqlite
-        ]}"
         "ILLOGICAL_IMPULSE_VIRTUAL_ENV=%h/.local/state/quickshell/.venv"
       ];
       ProtectSystem = lib.mkForce "false";  # Allow filesystem writes for color generation

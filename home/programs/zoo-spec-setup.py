@@ -46,7 +46,7 @@ def configure(profile_path, *mode_paths):
         if model.startswith("hybrid/") and model not in {"hybrid/reader", "hybrid/tiny"}:
             profile["openAiCustomModelInfo"] = {**profile.get("openAiCustomModelInfo", {}), "contextWindow": 262144}
         elif model == "local/5090":
-            profile["openAiCustomModelInfo"] = {**profile.get("openAiCustomModelInfo", {}), "contextWindow": 131072}
+            profile["openAiCustomModelInfo"] = {**profile.get("openAiCustomModelInfo", {}), "contextWindow": 163840}
         elif model in {"local/code", "local/long"}:
             profile["openAiCustomModelInfo"] = {**profile.get("openAiCustomModelInfo", {}), "contextWindow": 163840}
     settings = data.setdefault("globalSettings", {})

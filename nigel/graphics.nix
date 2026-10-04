@@ -1,17 +1,14 @@
-# Graphics configuration for Nigel (Lenovo ideacentre AIO 700-27ISH)
-# NVIDIA GeForce GTX 950M — primary display + Hyprland compositor
-# Intel HD Graphics 530 — reserved for Windows VM passthrough
+# Graphics configuration for Nigel (Ryzen AM5 desktop)
+# Modern NVIDIA GPU (Turing / Ampere / Ada / Blackwell) — primary display + Hyprland.
 #
-# GTX 950M is Maxwell (GM107). Maxwell is supported by the 470xx driver series.
-# Maxwell is NOT supported by the open kernel module (nvidia-open) — that's Turing+.
-# Maxwell lacks explicit sync support (pre-555 drivers), so Hyprland may have
-# flickering in XWayland. Using proprietary 470xx driver.
+# Modern NVIDIA (Turing GTX 16xx / RTX 20xx and newer) supports the open kernel
+# module (nvidia-open) and explicit sync, so Wayland/Hyprland runs cleanly.
+# Using the latest production driver with the open module (same as esnixi).
 
 { config, lib, pkgs, ... }:
 let
-  # GTX 950M (Maxwell GM107) — last driver: 470.256.56 (470xx series)
-  # Use nixpkgs' nvidiaPackages.legacy_470 (or stable) which provides 470xx drivers
-  nvidia-package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+  # Latest production NVIDIA driver — supports Turing+ and the open kernel module.
+  nvidia-package = config.boot.kernelPackages.nvidiaPackages.latest;
 in
 {
   config = {
@@ -29,6 +26,7 @@ in
     hardware.graphics = {
       enable = true;
       extraPackages = with pkgs; [
+        nvidia-vaapi-driver
         libva-vdpau-driver
         libvdpau-va-gl
         libGL
@@ -44,7 +42,7 @@ in
       modesetting.enable = true;
       powerManagement.enable = true;
       forceFullCompositionPipeline = true;
-      open = false;  # Maxwell requires proprietary driver — no open kernel module
+      open = true;   # Modern GPU — use the open kernel module (Turing+)
       nvidiaSettings = true;
     };
   };

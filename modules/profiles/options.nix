@@ -32,6 +32,17 @@
         default = false;
         description = "Enable AI/ML profile (Ollama, vLLM, CUDA/ROCm workloads).";
       };
+
+      miniAi.enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Enable the lightweight mini-AI profile (CUDA-accelerated Ollama only,
+          no vLLM/TensorRT/Open WebUI). Mutually exclusive in practice with the
+          full `ai` profile — pick one. Used by hosts like nigel that have a
+          real NVIDIA GPU but should not pull in the heavy serving stack.
+        '';
+      };
     };
 
     acceleration.backend = lib.mkOption {

@@ -166,6 +166,7 @@
             my.profiles.videoEditing.enable = groups.videoEditing or false;
             my.profiles.virtualization.enable = groups.virtualization or false;
             my.profiles.ai.enable = groups.ai or false;
+            my.profiles.miniAi.enable = groups.miniAi or false;
             my.acceleration.backend = backend;
           }
 
@@ -250,24 +251,31 @@
         ];
       };
 
-      # ── Nigel (Lenovo ideacentre AIO 700-27ISH) ─────────────────────
-      # Intel i7-6700, NVIDIA GTX 950M (Hyprland), Intel HD Graphics 530 (VM passthrough)
-      # Profiles: gaming, development, virtualization, mini-ai
-      # Mini-ai uses upstream ollama only (no vLLM/TensorRT/BitAndBytes)
+      # ── Nigel (Ryzen AM5 desktop) ───────────────────────────────────
+      # CPU: AMD Ryzen (AM5, Zen 4/5)   GPU: modern NVIDIA (Turing+ / Ada)
+      # Storage: NVMe (auto-tiered by nigel/setup.sh — fastest drive gets
+      #          /nix + build scratch, slower drives get /home + bulk)
+      #
+      # Per-component triggers (flip true/false, same mechanism as esnixi):
+      #   games          — Steam, Proton, gamemode, xpadneo
+      #   development    — compilers, language runtimes, AWS, nix tooling
+      #   videoEditing   — kdenlive, ffmpeg, blender
+      #   virtualization — Docker, QEMU/KVM, Windows VM (AMD IOMMU passthrough)
+      #   miniAi         — Ollama on CUDA only (no vLLM/TensorRT/Open WebUI)
       nigel = {
         system = "x86_64-linux";
-        backend = "cpu";  # GTX 950M too weak for CUDA AI — use CPU backend with upstream ollama
+        backend = "cuda";  # Real NVIDIA GPU — CUDA-accelerated ollama
         groups = {
           games = true;
           development = true;
           videoEditing = false;
           virtualization = true;
-          ai = false;     # mini-ai: avoid heavy AI overlays, handled via extraOverlays
+          ai = false;      # full AI stack (vLLM/TensorRT/Open WebUI) stays off
+          miniAi = true;   # lightweight CUDA ollama only (nigel/mini-ai.nix)
         };
-        extraOverlays = [
-          # Only upstream ollama — no CUDA-heavy packages
-          (final: prev: { ollama = prev.ollama; })
-        ];
+        # mini-ai keeps inference lean: it uses the CUDA-built upstream ollama
+        # from pkgsAccel (backend=cuda) without pulling the heavy "ai" overlay
+        # group (custom ollama build, vLLM, TensorRT, bitsandbytes, xformers).
         extraModules = [
           # Platform-specific Nigel configurations
           ./nigel/hardware-configuration.nix

@@ -205,8 +205,9 @@ def main():
     if not args.code_only:
         current_overrides = request("/api/model-capability-overrides").get("overrides", [])
         layouts = {
-            "vllm/qwen3.8-27b-nvfp4": (131072, 98304),
-            "vllm/qwen3.8-27b-nvfp4-balanced": (131072, 65536),
+            # 147456 = 163840 - 16384 output reserve; COUPLED to esnixi/vllm.nix maxModelLen.
+            "vllm/qwen3.8-27b-nvfp4": (163840, 147456),
+            "vllm/qwen3.8-27b-nvfp4-balanced": (163840, 65536),
                     }
         for target, (context, max_input) in layouts.items():
             for key, value in (("context_length", context), ("max_input_tokens", max_input)):

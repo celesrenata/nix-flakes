@@ -347,10 +347,15 @@ hl.bind("Ctrl + Page_Down", hl.dsp.focus({ workspace = "+1" }), { description = 
 hl.bind("Ctrl + Page_Up", hl.dsp.focus({ workspace = "-1" }), { description = "Workspace: Previous (PageUp)" })
 
 -- Split ratio
-hl.bind("Ctrl + Super + Minus", hl.dsp.layout("splitratio", -0.1), { repeating = true, description = "Window: Decrease split ratio" })
-hl.bind("Ctrl + Super + Equal", hl.dsp.layout("splitratio", 0.1), { repeating = true, description = "Window: Increase split ratio" })
-hl.bind("Ctrl + Semicolon", hl.dsp.layout("splitratio", -0.1), { repeating = true }) -- [hidden]
-hl.bind("Ctrl + Apostrophe", hl.dsp.layout("splitratio", 0.1), { repeating = true }) -- [hidden]
+-- NOTE: hl.dsp.layout takes a SINGLE layoutmsg string ("<command> <arg>"),
+-- not (command, arg) as two arguments. Also, this host uses the master layout
+-- (general.layout = "master"), whose split-ratio message is "mfact"
+-- ("splitratio" is a dwindle-only message and errors as "Unknown master
+-- layoutmsg" under master).
+hl.bind("Ctrl + Super + Minus", hl.dsp.layout("mfact -0.1"), { repeating = true, description = "Window: Decrease split ratio" })
+hl.bind("Ctrl + Super + Equal", hl.dsp.layout("mfact +0.1"), { repeating = true, description = "Window: Increase split ratio" })
+hl.bind("Ctrl + Semicolon", hl.dsp.layout("mfact -0.1"), { repeating = true }) -- [hidden]
+hl.bind("Ctrl + Apostrophe", hl.dsp.layout("mfact +0.1"), { repeating = true }) -- [hidden]
 
 -------------------------------------------------------------------------------
 -- KEYBINDS: Master Layout
@@ -369,7 +374,7 @@ hl.bind("Super + Shift + Alt + Left", hl.dsp.layout("orientationleft"), { descri
 hl.bind("Super + Shift + Alt + Right", hl.dsp.layout("orientationright"), { description = "Layout: Orientation right" })
 
 -- Swap with master
-hl.bind("Super + Alt + Return", hl.dsp.layout("swapwithmaster", "master"), { description = "Layout: Swap with master" })
+hl.bind("Super + Alt + Return", hl.dsp.layout("swapwithmaster master"), { description = "Layout: Swap with master" })
 
 -------------------------------------------------------------------------------
 -- KEYBINDS: Window States

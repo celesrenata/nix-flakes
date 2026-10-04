@@ -190,7 +190,7 @@ in
     gpuMemoryUtilization = "0.92";
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
-    # 3 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
+    # 2 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
     # vllm-switch.py MODELS["qwen3.8-27b-nvfp4"] and ["qwen3.8-27b-nvfp4-balanced"]
     # (context == maxModelLen, max_requests == maxNumSeqs, port == port);
     # test_vllm_switch.py parses this block and asserts them. Change them together.
@@ -198,7 +198,7 @@ in
     # 5.5 GiB nvfp4 KV = 105 hybrid blocks of 2848 tokens (104 usable). Each sequence
     # also holds 15 GDN state blocks (3 groups x (2 + 3 MTP spec)), so without a shared
     # prefix it fits 3 x 54K or 2 x 57K (4 x 57K with a ~40K shared Zoo prefix).
-    # One max-length 147456 sequence = 52 blocks + 15 GDN state = 67 of 104 usable. Peak
+    # One max-length 163840 sequence = 58 blocks + 15 GDN state = 73 of 104 usable (maxNumSeqs now 2). Peak
     # free is ~1.0 GiB with the reader stopped (29708 + 512 MiB of 32202 MiB usable);
     # the switcher stops the reader (not sleeps it) whenever it selects the coder.
     # 32 GiB of host RAM is a pinned CPU tier (native OffloadingConnector) for
@@ -206,8 +206,8 @@ in
     # offload crashing after a wake; if that hits, drop kvOffloadingSize.
     kvCacheMemory = 5905580032;
     kvOffloadingSize = 32;
-    maxModelLen = "147456";
-    maxNumSeqs = "3";
+    maxModelLen = "163840";
+    maxNumSeqs = "2";
     # 5760 = 2 x 2848-token blocks (mamba align mode cuts prefill chunks to block multiples) + 64 slots for the other seqs MTP decode tokens.
     extraArgs = "--language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --max-num-batched-tokens 5760 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
   };

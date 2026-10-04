@@ -1,6 +1,5 @@
-# Boot configuration for Nigel (Lenovo ideacentre AIO 700-27ISH)
-# NVIDIA GTX 950M primary GPU for Hyprland
-# Intel HD Graphics 530 passed through to Windows VM
+# Boot configuration for Nigel (Ryzen AM5 desktop)
+# Modern NVIDIA GPU drives Hyprland; AMD IOMMU available for VM passthrough.
 
 { config, lib, pkgs, ... }:
 
@@ -14,10 +13,11 @@
       supportedFilesystems = [ "ntfs" "nfs" "btrfs" "ext4" "cifs" ];
       plymouth.enable = true;
 
-      # Use stable kernel for better NVIDIA 950M compatibility
+      # Latest kernel — modern NVIDIA (Turing+/Ada) + AM5 platform support.
       kernelPackages = pkgs.linuxPackages_latest;
 
-      kernelModules = [ "uinput" "nvidia" "i915" "nvidia_drm" "nvidia_modeset" "nvidia_uvm" ];
+      kernelModules = [ "uinput" "nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm" "kvm-amd" ];
+
       kernelPatches = [
         {
           name = "amdgpu-ignore-ctx-privileges";
@@ -29,12 +29,14 @@
         }
       ];
 
+      # AMD IOMMU for GPU/device passthrough into VMs (replaces intel_iommu).
+      kernelParams = [
+        "amd_iommu=on"
+        "iommu=pt"
+      ];
+
       extraModprobeConfig = ''
         options nvidia_drm modeset=1 fbdev=1
-        # Bind Intel GPU to vfio-pci for VM passthrough
-        # Find Intel GPU PCI ID via lspci -nn | grep "VGA" | grep Intel
-        # Example: 00:02.0 VGA compatible controller [0300]: Intel Corporation Skylake GT2 [HD Graphics 520] [8086:1912]
-        # options vfio-pci ids=8086:1912
       '';
 
       initrd.kernelModules = [
@@ -44,6 +46,8 @@
         "nvidia_drm"
       ];
     };
+
     hardware.graphics.enable = true;
+    services.thermald.enable = lib.mkDefault false;  # thermald is Intel-only
   };
 }

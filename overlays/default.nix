@@ -24,6 +24,8 @@
     (import ./mkvtoolnix.nix)
     (import ./tidal-hifi.nix)
     (import ./perplexity-desktop.nix)
+    (import ./ltrace-skip-tests.nix)
+    (import ./dcgm-skip-flaky-tests.nix)
   ];
 
   # Desktop environment overlays: theming, emoji picker, calculator, DP-3 filter
@@ -67,7 +69,16 @@
     # hook without a source, keeping the intended CUDA 13 stack buildable.
     (final: prev:
       {
-        cudaPackages = prev.cudaPackages_13.overrideScope (cudaFinal: cudaPrev: {
+        # Pin to cudaPackages_13_3 explicitly rather than the floating
+        # cudaPackages_13 alias. The nixos-unstable channel advanced
+        # cudaPackages_13 from 13.3 -> 13.4, and the nixpkgs cuda-bindings python
+        # module (pulled transitively through the vLLM dependency set) only knows
+        # a fixed set of CUDA versions and throws "Unsupported cuda-bindings
+        # version: 13.4". The entire AI accel stack here is written against 13.3
+        # (the cccl patch below targets 13.3.3, and esnixi/vllm.nix hardcodes
+        # cudaPackages_13_3 for its toolkit), so pin 13.3 for a consistent,
+        # buildable closure. Revisit once nixpkgs' cuda-bindings supports 13.4.
+        cudaPackages = prev.cudaPackages_13_3.overrideScope (cudaFinal: cudaPrev: {
           cuda_compat = prev.runCommand "cuda_compat-stub-595.58.03" {
             meta = (cudaPrev.cuda_compat.meta or {}) // {
               platforms = [ "x86_64-linux" ];

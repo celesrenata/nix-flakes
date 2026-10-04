@@ -103,11 +103,15 @@ MODES = {
 }
 FIELDS = ('name', 'description', 'strategy', 'models', 'config', 'context_length', 'context_cache_protection')
 OBSOLETE = {'healthCheckEnabled', 'healthCheckTimeoutMs', 'timeoutMs', 'queueDepth'}
-# The native 5090 vLLM coder runs 3 sequences (esnixi/vllm.nix --max-num-seqs 3,
-# switcher max_requests 3); keep OmniRoute's persisted provider semaphore aligned
-# whenever a tier preset is applied.
+# Shared GPU pool: each connection's maxConcurrent is OmniRoute's persisted
+# per-device semaphore, the cross-lane arbiter so code/research/planner don't
+# over-dispatch the same card. 5090 vLLM runs 2 sequences (esnixi/vllm.nix
+# --max-num-seqs 2; the 2nd slot is slow overflow). 4070 Ti Super ollama caps
+# at 4 (its 9B capacity); ollama's own NUM_PARALLEL/MAX_QUEUE gates the 27B
+# down to 1 and spills. M5 GLM is a single slot. (M5 reader connection retired.)
 PROVIDER_POLICIES = {
-    CONNECTIONS['vllm']: {'maxConcurrent': 3},
+    CONNECTIONS['vllm']: {'maxConcurrent': 2},
+    CONNECTIONS['ollama-local']: {'maxConcurrent': 4},
     # Both M5 models share the mutually-exclusive local-model-proxy.
     CONNECTIONS['llama-cpp']: {'maxConcurrent': 1},
 }
@@ -208,7 +212,7 @@ def build(mode, existing):
                 description = f'Tier {tier} {category}: capacity-aware weighted round robin'
             plan[name] = {'name': name, 'description': description,
                 'strategy': strategy, 'models': [model_step(category,tier,i,m,w) for i,(m,w) in enumerate(targets)],
-                'context_length': 163840 if tier == 1 else 1000000,
+                'context_length': (PLANNER_RAW_WINDOW if category == 'planner' else 163840) if tier == 1 else 1000000,
                 'context_cache_protection': False,
                 'config': config_for(existing.get(name), weightedRoundRobin=tier != 1, concurrencyPerModel=1 if tier == 1 else 4,
                     **({'weightedTargetPolicies': target_policies} if tier == 1 else {}))}
