@@ -10,7 +10,10 @@ Fail-safe tenancy (one model awake on the 5090 at a time):
   * A failed switch (unit failed, NRestarts rose, readiness timeout, eviction
     failure) stops the failed target, restores the previous model and answers 409.
   * A per-unit circuit breaker then rejects that target immediately (no sleep, no
-    stop of the active model) with exponential backoff.
+    stop of the active model) with exponential backoff. A failed coder start
+    (unit failed / restarted / start error) is first retried CODER_FAST_RETRIES
+    times, CODER_FAST_RETRY_DELAY_SECONDS apart; if all fail the coder is stopped
+    (no systemd crash loop) and its breaker records ONE failure.
   * A watchdog thread makes the coder ready again when nothing is ready.
   * Every sleep/stop/start/readiness wait is bounded; the switch lock is never held
     across subprocess or HTTP calls, so concurrent requests get fast 409s.
@@ -67,6 +70,10 @@ CODER_RESIDENCY_SECONDS = _env_seconds("VLLM_SWITCH_CODER_RESIDENCY_SECONDS", 90
 # Circuit breaker: first backoff after a failed switch, doubling up to the max.
 BACKOFF_SECONDS = _env_seconds("VLLM_SWITCH_BACKOFF_SECONDS", 300.0)
 BACKOFF_MAX_SECONDS = _env_seconds("VLLM_SWITCH_BACKOFF_MAX_SECONDS", 1800.0)
+# Immediate retries of a failed primary-coder start before its breaker opens.
+CODER_FAST_RETRIES = int(_env_seconds("VLLM_SWITCH_CODER_FAST_RETRIES", 2.0))
+# Pause between coder fast retries (after the failed attempt is stopped).
+CODER_FAST_RETRY_DELAY_SECONDS = _env_seconds("VLLM_SWITCH_CODER_FAST_RETRY_DELAY_SECONDS", 15.0)
 # Watchdog: make the coder ready after this long with no ready model.
 WATCHDOG_SECONDS = _env_seconds("VLLM_SWITCH_WATCHDOG_SECONDS", 60.0)
 WATCHDOG_INTERVAL_SECONDS = 5.0
@@ -91,7 +98,7 @@ MODELS = {
         "port": 8010,
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
-        "context": 131072,
+        "context": 147456,
         "max_requests": 3,
     },
     BALANCED_MODEL_ID: {
@@ -99,7 +106,7 @@ MODELS = {
         "port": 8010,
         "served": "qwen3.8-27b-nvfp4",
         "hf_id": "nvidia/Qwen3.8-27B-NVFP4",
-        "context": 131072,
+        "context": 147456,
         "max_requests": 3,
     },
     "qwen3.5-9b-nvfp4-reader": {
@@ -489,6 +496,47 @@ def safe_select(model_id: str, deadline: float) -> tuple[bool, str]:
         return False, f"error {type(error).__name__}"
 
 
+_FAST_RETRY_PREFIXES = ("unit failed", "unit restarted", "systemctl start failed", "error ")
+
+
+def _fast_retryable(why: str) -> bool:
+    """A start/readiness failure a fresh start can fix (not a wedged neighbour or timeout)."""
+    return why.startswith(_FAST_RETRY_PREFIXES)
+
+
+def select_with_fast_retry(model_id: str) -> tuple[bool, str]:
+    """safe_select with immediate retries for the primary coder. Lock NOT held; never raises.
+
+    Each attempt gets its own START_SECONDS budget. Non-coder targets get one attempt.
+    The caller records at most ONE breaker failure for the whole sequence.
+    """
+    unit = MODELS[model_id]["unit"]
+    attempts = 1 + max(0, CODER_FAST_RETRIES) if unit == PRIMARY_UNIT else 1
+    ok, why = False, "no attempt"
+    for attempt in range(1, attempts + 1):
+        ok, why = safe_select(model_id, time.monotonic() + START_SECONDS)
+        if ok or unit != PRIMARY_UNIT or not _fast_retryable(why):
+            return ok, why
+        if attempt == attempts:
+            break
+        LOG.warning("coder start failed (%s); fast retry %d/%d in %.0fs",
+                    why, attempt, attempts - 1, CODER_FAST_RETRY_DELAY_SECONDS)
+        # Stop first so systemd's own Restart= cannot race the next start.
+        try:
+            if not stop_and_drain(unit, time.monotonic() + STOP_SECONDS):
+                return ok, why
+        except Exception:  # noqa: BLE001 - never raise into the caller
+            LOG.exception("stopping %s before a fast retry crashed", unit)
+            return ok, why
+        time.sleep(CODER_FAST_RETRY_DELAY_SECONDS)
+    LOG.error("coder start failed %d time(s) (%s); stopping crash-looping coder", attempts, why)
+    try:
+        stop_and_drain(unit, time.monotonic() + STOP_SECONDS)
+    except Exception:  # noqa: BLE001 - never raise into the caller
+        LOG.exception("stopping crash-looping %s crashed", unit)
+    return ok, why
+
+
 def restore_target(previous: str | None, failed_unit: str) -> str | None:
     """Model to restore after `failed_unit` failed: the previous one, else the coder."""
     candidate = previous or PRIMARY_MODEL
@@ -562,7 +610,7 @@ def acquire(model_id: str) -> tuple[bool, str, str, int]:
     ready, why = False, "switch aborted"
     restored = None
     try:
-        ready, why = safe_select(model_id, started + START_SECONDS)
+        ready, why = select_with_fast_retry(model_id)
         if ready:
             LOG.info("switch %s -> %s ok in %.1fs", previous, model_id, time.monotonic() - started)
             return True, "", "", 0
@@ -606,7 +654,7 @@ def rollback(failed_unit: str, previous: str | None) -> str | None:
             if breaker_remaining(restore_unit, time.monotonic()) > 0:
                 LOG.warning("not restoring %s: its breaker is open", restore)
                 return None
-        ok, why = safe_select(restore, time.monotonic() + START_SECONDS)
+        ok, why = select_with_fast_retry(restore)
         with switch_condition:
             if ok:
                 reset_breaker(restore_unit)
@@ -680,7 +728,7 @@ def watchdog_tick(now: float | None = None) -> str | None:
         else:
             LOG.warning("watchdog: no model ready for %.0fs; readying %s",
                         now - no_ready_since, PRIMARY_MODEL)
-            ok, why = safe_select(PRIMARY_MODEL, time.monotonic() + START_SECONDS)
+            ok, why = select_with_fast_retry(PRIMARY_MODEL)
             adopted = PRIMARY_MODEL if ok else None
     except Exception as error:  # noqa: BLE001 - watchdog must not leave `switching` stuck
         LOG.exception("watchdog recovery crashed")

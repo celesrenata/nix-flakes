@@ -40,6 +40,14 @@ Fail-safe switching:
       threshold / an in-progress switch / the coder breaker; (y3) it adopts an awake
       unit after a switcher restart; (y4) it clears a dead active model; (y5) the
       loop survives an exception
+  (ff1) a coder start that fails once succeeds via a fast retry: no breaker;
+      (ff1b) the same for a one-off NRestarts rise
+  (ff2) a coder failing every attempt (1 + 2 retries) opens the breaker ONCE and
+      is left stopped (no crash loop)
+  (ff3) the watchdog's coder start gets the fast retry; (ff4) when every attempt
+      fails, one breaker failure and the coder is stopped
+  (ff5) a reader start failure is NOT fast-retried (one start, one breaker failure)
+  (ff6) a coder restore after a reader failure gets the fast retry (no coder blame)
   (z) vllm.nix: reader Restart=no, switcher fail-safe env parses, coder KV/gate pinned
 """
 import importlib.util
@@ -127,6 +135,9 @@ class FakeHost:
         self.proxied = []
         # Failure injection.
         self.start_fails = set()       # start -> unit failed, never serves
+        self.start_fail_times = {}     # unit -> remaining starts that fail like start_fails
+        self.restart_once = set()      # next start bumps NRestarts and never serves
+        self.restart_once_done = set()  # units whose restart_once already fired
         self.restart_on_start = set()  # start bumps NRestarts, never serves
         self.sleep_hangs = set()       # /arcane/sleep times out
         self.stop_timeout = set()      # systemctl stop raises TimeoutExpired, unit stays up
@@ -149,12 +160,25 @@ class FakeHost:
                 self.failed.discard(unit)
                 if self.active.get(unit) == "failed":
                     self.active[unit], self.sub[unit] = "inactive", "dead"
+            elif verb == "start" and self.start_fail_times.get(unit, 0) > 0:
+                self.start_fail_times[unit] -= 1
+                self.active[unit], self.sub[unit] = "failed", "failed"
+                self.failed.add(unit)
+            elif verb == "start" and unit in self.restart_once:
+                self.restart_once.discard(unit)
+                self.active[unit], self.sub[unit] = "active", "running"
+                self.nrestarts[unit] += 1
+                self.restart_on_start.add(unit)
+                self.restart_once_done.add(unit)
             elif verb == "start" and unit in self.start_fails:
                 self.active[unit], self.sub[unit] = "failed", "failed"
                 self.failed.add(unit)
             elif verb == "start" and unit:
                 self.active[unit], self.sub[unit] = "active", "running"
                 self.asleep.discard(unit)
+                if unit in self.restart_once_done:  # the one-shot restart is over
+                    self.restart_once_done.discard(unit)
+                    self.restart_on_start.discard(unit)
                 if unit in self.restart_on_start:
                     self.nrestarts[unit] += 1
             elif verb == "stop" and unit in self.stop_timeout:
@@ -230,17 +254,19 @@ class SwitcherTests(unittest.TestCase):
             "RESIDENCY_SECONDS", "CODER_RESIDENCY_SECONDS", "LOCK_WAIT_SECONDS",
             "DRAIN_SETTLE_SECONDS", "SLEEP_DRAIN_SECONDS", "STOP_SECONDS",
             "START_SECONDS", "BACKOFF_SECONDS", "BACKOFF_MAX_SECONDS",
-            "WATCHDOG_SECONDS", "WATCHDOG_INTERVAL_SECONDS")}
+            "WATCHDOG_SECONDS", "WATCHDOG_INTERVAL_SECONDS",
+            "CODER_FAST_RETRIES", "CODER_FAST_RETRY_DELAY_SECONDS")}
         SW.DRAIN_SETTLE_SECONDS = 0
         SW.SLEEP_DRAIN_SECONDS = 3
         SW.STOP_SECONDS = 3
         SW.START_SECONDS = 3
         self.fake = FakeHost()
+        self.sleeps = []  # recorded time.sleep() arguments (nothing really sleeps)
         self._patches = [
             mock.patch.object(SW.subprocess, "run", self.fake.run),
             mock.patch.object(SW.subprocess, "check_output", self.fake.check_output),
             mock.patch.object(SW.urllib.request, "urlopen", self.fake.urlopen),
-            mock.patch.object(SW.time, "sleep", lambda s: None),
+            mock.patch.object(SW.time, "sleep", self.sleeps.append),
         ]
         for p in self._patches:
             p.start()
@@ -775,6 +801,111 @@ class SwitcherTests(unittest.TestCase):
             thread.join(5)
         self.assertFalse(thread.is_alive())
         self.assertTrue(any("watchdog tick failed" in line for line in logs.output))
+
+    # ---- coder fast retry ----------------------------------------------------
+
+    def _coder_starts(self):
+        return [e for e in self.fake.events if e == ("start", CODER_UNIT)]
+
+    def _seed_reader_idle(self):
+        """Reader active and idle, coder stopped: acquiring the coder cold-starts it."""
+        SW.RESIDENCY_SECONDS = 0
+        self._seed_active(self.READER, age=0)
+
+    def test_ff1_coder_fails_once_then_fast_retry_succeeds(self):
+        self._seed_reader_idle()
+        self.fake.start_fail_times = {CODER_UNIT: 1}
+        h = self._handler()
+        self.assertTrue(h.acquire_model(self.CODER))
+        self.assertEqual(len(self._coder_starts()), 2)
+        seq = self.fake.events
+        first = seq.index(("start", CODER_UNIT))
+        second = seq.index(("start", CODER_UNIT), first + 1)
+        self.assertIn(("stop", CODER_UNIT), seq[first:second])
+        self.assertIn(SW.CODER_FAST_RETRY_DELAY_SECONDS, self.sleeps)
+        with SW.switch_condition:
+            self.assertNotIn(CODER_UNIT, SW.breakers)
+            self.assertEqual(SW.breaker_remaining(CODER_UNIT, time.monotonic()), 0)
+            self.assertEqual(SW.active_model, self.CODER)
+        h.release_model()
+
+    def test_ff1b_coder_restart_once_then_fast_retry_succeeds(self):
+        self._seed_reader_idle()
+        self.fake.restart_once = {CODER_UNIT}
+        h = self._handler()
+        self.assertTrue(h.acquire_model(self.CODER))
+        self.assertEqual(len(self._coder_starts()), 2)
+        with SW.switch_condition:
+            self.assertNotIn(CODER_UNIT, SW.breakers)
+        h.release_model()
+
+    def test_ff2_coder_fails_every_attempt_opens_breaker_once(self):
+        self.fake.active[CODER_UNIT], self.fake.sub[CODER_UNIT] = "inactive", "dead"
+        self.fake.start_fails = {CODER_UNIT}
+        h = self._handler()
+        self.assertFalse(h.acquire_model(self.CODER))
+        self.assertEqual(h.reject_code, "start_failed")
+        self.assertEqual(len(self._coder_starts()), 1 + SW.CODER_FAST_RETRIES)
+        self.assertEqual(self.sleeps.count(SW.CODER_FAST_RETRY_DELAY_SECONDS),
+                         SW.CODER_FAST_RETRIES)
+        coder_events = [e for e in self.lifecycle() if e[1] == CODER_UNIT]
+        self.assertEqual(coder_events[-1], ("stop", CODER_UNIT))
+        self.assertNotEqual(self.fake.active[CODER_UNIT], "active")
+        with SW.switch_condition:
+            self.assertEqual(SW.breakers[CODER_UNIT]["failures"], 1)
+            self.assertAlmostEqual(SW.breaker_remaining(CODER_UNIT, time.monotonic()),
+                                   SW.BACKOFF_SECONDS, delta=5)
+
+    def _watchdog_cold(self):
+        self.fake.active = {CODER_UNIT: "inactive", READER_UNIT: "inactive"}
+        self.fake.sub = {CODER_UNIT: "dead", READER_UNIT: "dead"}
+        with SW.switch_condition:
+            SW.active_model = None
+            SW.no_ready_since = time.monotonic() - 61
+
+    def test_ff3_watchdog_coder_fast_retry_succeeds(self):
+        self._watchdog_cold()
+        self.fake.start_fail_times = {CODER_UNIT: 1}
+        self.assertEqual(SW.watchdog_tick(), "ready qwen3.8-27b-nvfp4")
+        self.assertEqual(len(self._coder_starts()), 2)
+        with SW.switch_condition:
+            self.assertNotIn(CODER_UNIT, SW.breakers)
+            self.assertEqual(SW.active_model, self.CODER)
+
+    def test_ff4_watchdog_coder_always_fails_stops_coder(self):
+        self._watchdog_cold()
+        self.fake.start_fails = {CODER_UNIT}
+        self.assertEqual(SW.watchdog_tick(), "failed")
+        self.assertEqual(len(self._coder_starts()), 1 + SW.CODER_FAST_RETRIES)
+        self.assertEqual(self.lifecycle()[-1], ("stop", CODER_UNIT))
+        self.assertNotEqual(self.fake.active[CODER_UNIT], "active")
+        with SW.switch_condition:
+            self.assertEqual(SW.breakers[CODER_UNIT]["failures"], 1)
+            self.assertIsNone(SW.active_model)
+            self.assertIs(SW.switching, False)
+
+    def test_ff5_reader_failure_not_fast_retried(self):
+        self._fail_reader_once()
+        self.assertEqual(self.fake.events.count(("start", READER_UNIT)), 1)
+        self.assertNotIn(SW.CODER_FAST_RETRY_DELAY_SECONDS, self.sleeps)
+        with SW.switch_condition:
+            self.assertEqual(SW.breakers[READER_UNIT]["failures"], 1)
+            self.assertNotIn(CODER_UNIT, SW.breakers)
+
+    def test_ff6_coder_restore_fast_retry_avoids_coder_blame(self):
+        # Reader start fails; the coder (stopped) fails its first restore start once.
+        self._seed_active(self.CODER, age=200)
+        self.fake.sleep_answers[CODER_UNIT] = [500]  # coder is stopped, not slept
+        self.fake.start_fails = {READER_UNIT}
+        self.fake.start_fail_times = {CODER_UNIT: 1}
+        h = self._handler()
+        self.assertFalse(h.acquire_model(self.READER))
+        self.assertIn("restored qwen3.8-27b-nvfp4", h.reject_reason)
+        self.assertEqual(len(self._coder_starts()), 2)
+        with SW.switch_condition:
+            self.assertEqual(SW.active_model, self.CODER)
+            self.assertNotIn(CODER_UNIT, SW.breakers)
+            self.assertEqual(SW.breakers[READER_UNIT]["failures"], 1)
 
     def test_z_nix_switcher_env_and_reader_restart(self):
         self.assertIn('restart = "no";', _nix_block("vllm-reader"))
