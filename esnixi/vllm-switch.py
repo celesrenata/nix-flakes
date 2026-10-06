@@ -109,20 +109,6 @@ MODELS = {
         "context": 163840,
         "max_requests": 2,
     },
-    "qwen3.5-9b-nvfp4-reader": {
-        "unit": "vllm-reader.service",
-        # COUPLED to the reader unit's --port in esnixi/vllm.nix.
-        "port": 8012,
-        "served": "qwen3.5-9b-nvfp4-reader",
-        "hf_id": "AxionML/Qwen3.5-9B-NVFP4",
-        # COUPLED to the reader unit's served --max-model-len in esnixi/vllm.nix.
-        # If these two ever disagree, select_model's readiness poll (which requires
-        # max_model_len == context) never matches, burns START_SECONDS, then
-        # 409s to the next tier forever. Change BOTH together. A unit test asserts
-        # this equality (test_vllm_switch.py).
-        "context": 65536,
-        "max_requests": 8,
-    },
 }
 PRIMARY_MODEL = "qwen3.8-27b-nvfp4"
 PRIMARY_UNIT = MODELS[PRIMARY_MODEL]["unit"]

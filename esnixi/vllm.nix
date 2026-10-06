@@ -177,16 +177,15 @@ in
     model = "nvidia/Qwen3.8-27B-NVFP4";
     servedModel = "qwen3.8-27b-nvfp4";
     leaseWrap = true;
-    # Co-resident with the reader (sleep mode swaps them); only the fallback, which
-    # binds the same port without sleep mode, is exclusive.
+    # The sole 5090 sleep-mode tenant; only the fallback, which binds the same port
+    # without sleep mode, is exclusive.
     conflicts = [ "vllm-5090-fallback.service" ];
     sleepMode = true;
     # Never auto-sleeps: sleeping discards the GPU prefix cache, so the coder sleeps
-    # only when the switcher hands the GPU to the reader.
+    # only when the switcher hands the GPU to another lease holder (e.g. ComfyUI).
     idleSeconds = "0";
     # Startup gate only (KV is fixed): awake footprint ~29.5 GiB, and 0.92 x 31.45 GiB
-    # usable = 28.93 GiB. A sleeping reader leaves only ~28.60 GiB free, so the coder
-    # refuses to start instead of OOMing after loading.
+    # usable = 28.93 GiB, so the coder refuses to start instead of OOMing after loading.
     gpuMemoryUtilization = "0.92";
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
@@ -199,8 +198,7 @@ in
     # also holds 15 GDN state blocks (3 groups x (2 + 3 MTP spec)), so without a shared
     # prefix it fits 3 x 54K or 2 x 57K (4 x 57K with a ~40K shared Zoo prefix).
     # One max-length 163840 sequence = 58 blocks + 15 GDN state = 73 of 104 usable (maxNumSeqs now 2). Peak
-    # free is ~1.0 GiB with the reader stopped (29708 + 512 MiB of 32202 MiB usable);
-    # the switcher stops the reader (not sleeps it) whenever it selects the coder.
+    # free is ~1.0 GiB as the sole 5090 tenant (29708 + 512 MiB of 32202 MiB usable).
     # 32 GiB of host RAM is a pinned CPU tier (native OffloadingConnector) for
     # evicted prefix-cache blocks. Upstream #45268 reports sleep mode + native
     # offload crashing after a wake; if that hits, drop kvOffloadingSize.
@@ -212,52 +210,15 @@ in
     extraArgs = "--language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --max-num-batched-tokens 5760 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
   };
 
-  # NVFP4 9B reader (AxionML/Qwen3.5-9B-NVFP4, modelopt_fp4 W4A4; vLLM auto-promotes
-  # weight-only NVFP4 to W4A16 from the checkpoint config) + NVFP4 KV on SM120.
-  # Started ONLY by the switcher (wantedBy = [ ]). Never co-resident with an awake
-  # coder: the switcher stops it (its 1.56 GiB sleep residual does not fit next to the
-  # coder's KV) whenever it selects the coder, and sleeps the coder to run it. It
-  # sleeps itself after 5 minutes idle only to free the lease for ComfyUI while the
-  # coder is asleep.
-  # --max-model-len 65536 and port 8012 are COUPLED to the switcher
-  # MODELS["qwen3.5-9b-nvfp4-reader"] ["context"]/["port"] in vllm-switch.py — change
-  # BOTH together or the readiness poll never matches and the reader tier goes dead.
-  systemd.services.vllm-reader = mkVllmService {
-    model = "AxionML/Qwen3.5-9B-NVFP4";
-    servedModel = "qwen3.5-9b-nvfp4-reader";
-    leaseWrap = true;
-    conflicts = [ "vllm-5090-fallback.service" ];
-    wantedBy = [ ];
-    # The switcher owns the reader's lifecycle: a crash goes straight to `failed`
-    # (fast detection, circuit breaker, coder rollback) instead of systemd
-    # auto-restarting it and re-taking the GPU flock the coder needs to wake.
-    restart = "no";
-    sleepMode = true;
-    idleSeconds = "300";
-    port = "8012";
-    # Fixed 4 GiB KV (~390K tokens, ~6 x 65536) instead of 0.85 utilization: the
-    # reader must start in the space the sleeping coder leaves, and a fixed size
-    # skips profiling against whatever is free at that moment.
-    kvCacheMemory = 4294967296;
-    # Startup gate only (KV is fixed): awake footprint ~15.5 GiB (8.4 weights + 4 KV
-    # + ~2 activations + graphs/context); 0.50 = 15.7 GiB free.
-    gpuMemoryUtilization = "0.50";
-    maxModelLen = "65536";
-    maxNumSeqs = "16";
-    # Generous batching so the 9B "flies" on the 5090: real paged/continuous-batching
-    # KV, CUDA graphs on (NO --enforce-eager).
-    extraArgs = "--linear-backend cutlass --max-num-batched-tokens 8192 --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice";
-  };
-
   # Dormant native disaster-recovery fallback reusing the same patched pkgsAccel.vllm
   # as the coder (replaces the retired stock-image docker-vllm-5090 container).
   # wantedBy = [ ] (the autoStart=false analog); binds the same 127.0.0.1:8010 so it
-  # conflicts with both the coder and the reader. Operator-started only.
+  # conflicts with the coder. Operator-started only.
   systemd.services.vllm-5090-fallback = mkVllmService {
     model = "nvidia/Qwen3.8-27B-NVFP4";
     servedModel = "qwen3.8-27b-nvfp4";
     leaseWrap = true;
-    conflicts = [ "vllm.service" "vllm-reader.service" ];
+    conflicts = [ "vllm.service" ];
     wantedBy = [ ];
     gpuMemoryUtilization = "0.75";
     maxModelLen = "24576";
@@ -285,9 +246,6 @@ in
         { command = "${pkgs.systemd}/bin/systemctl start vllm.service"; options = [ "NOPASSWD" ]; }
         { command = "${pkgs.systemd}/bin/systemctl stop vllm.service"; options = [ "NOPASSWD" ]; }
         { command = "${pkgs.systemd}/bin/systemctl reset-failed vllm.service"; options = [ "NOPASSWD" ]; }
-        { command = "${pkgs.systemd}/bin/systemctl start vllm-reader.service"; options = [ "NOPASSWD" ]; }
-        { command = "${pkgs.systemd}/bin/systemctl stop vllm-reader.service"; options = [ "NOPASSWD" ]; }
-        { command = "${pkgs.systemd}/bin/systemctl reset-failed vllm-reader.service"; options = [ "NOPASSWD" ]; }
       ];
     }
   ];
@@ -332,9 +290,6 @@ in
       RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
     };
   };
-
-  # The former vllm-reader-idle stop timer is gone: an idle reader puts itself to
-  # sleep (vllm_idle.py, idleSeconds); the switcher stops it when the coder is selected.
 
   users.users.vllm = {
     isSystemUser = true;

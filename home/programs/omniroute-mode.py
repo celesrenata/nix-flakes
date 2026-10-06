@@ -33,10 +33,7 @@ QWEN5090 = 'vllm/qwen3.8-27b-nvfp4'
 IQ3 = 'ollama-local/qwen3.8:27b-iq3-code144k'
 MLX = 'llama-cpp/mlx-qwen3.8-27b-4bit'
 GLM = 'llama-cpp/ds4-glm53'
-# Dedicated 9B reader models (NOT coders). The 5090 NVFP4 reader is primary; the
-# 4070 Ti Super ollama reader is the overflow fallback (reached via the switcher's
-# 409 when the 5090 is serving the coder). User decision: "5090, fallback to 4070 ti super".
-READER5090 = 'vllm/qwen3.5-9b-nvfp4-reader'
+# Dedicated 9B reader model (NOT a coder): the 4070 Ti Super ollama reader.
 READER4070 = 'ollama-local/qwen3.5-reader:9b'
 # Per-category tier-1 target overrides. Categories NOT listed here keep the shared
 # [5090/MLX/IQ3/GLM] slot layout driven by WEIGHTS (minimal blast radius: only
@@ -44,8 +41,8 @@ READER4070 = 'ollama-local/qwen3.5-reader:9b'
 # [(model, weight), ...]; list order is the priority order (tier-1 strategy = priority).
 TIER1_OVERRIDES = {
     # Root-cause fix: the reader category previously inherited the CODER models.
-    # Serve the dedicated 9B readers instead: 5090 NVFP4 reader -> 4070 Ti Super ollama reader.
-    'reader': [(READER5090, 60), (READER4070, 40)],
+    # Serve the dedicated 9B reader instead: the 4070 Ti Super ollama reader.
+    'reader': [(READER4070, 100)],
     # Coder chain: 5090 Qwen3.8 NVFP4 (131072) -> m5max GLM-5.3 (speed-first overflow)
     # -> 4070 Ti Super Qwen3.8 IQ3 (147456, unchanged). Replaces MLX with GLM in the
     # local priority chain for code + tester only (reviewer keeps its own GLM blend).
@@ -72,7 +69,6 @@ OVERRIDE_POLICIES = {
     QWEN5090: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     IQ3: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     GLM: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
-    READER5090: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     READER4070: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
 }
 # Existing, verified provider model IDs. Never derive credit tiers from rounded display names.
@@ -203,7 +199,7 @@ def build(mode, existing):
             if tier == 1 and category == 'planner':
                 description = 'Tier 1 planner: M5 DS4 GLM only'
             elif tier == 1 and category == 'reader':
-                description = 'Tier 1 reader: 5090 NVFP4 9B reader > 4070 Ti Super 9B reader priority'
+                description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
             elif tier == 1 and category in TIER1_OVERRIDES:
                 description = f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority'
             elif tier == 1:

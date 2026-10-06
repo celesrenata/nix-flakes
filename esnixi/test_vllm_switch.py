@@ -1,54 +1,32 @@
 #!/usr/bin/env python3
 """Unit tests for the esnixi vLLM switcher tenancy state machine (no GPU, no systemd).
 
-Sleep-mode tenancy (one awake at a time; only the coder is kept resident asleep):
-  (a) acquiring the reader puts the running coder to sleep instead of stopping it;
-      (a2) acquiring the coder stops the reader (awake or asleep), never sleeps it
-  (b) a cold reader start issues sleep<coder> -> reset-failed<reader> ->
-      start<reader>, in that order, only when active_requests==0
-  (c) a coder that cannot sleep falls back to stop + drain before the start
-  (d) a warm coder->reader swap is sleep<coder> only; reader->coder is stop<reader>
-      only (the coder is woken, not started)
+Single-tenant coder lifecycle (the 27B coder is the sole 5090 sleep-mode tenant):
   (e) busy -> 409 via acquire_model returning False on LOCK_WAIT timeout
-  (f) MODELS["qwen3.5-9b-nvfp4-reader"]["context"] == the reader unit's served
-      --max-model-len (65536) -- the coupling guard
-Minimum-residency hysteresis (RESIDENCY_SECONDS):
+Minimum-residency hysteresis (CODER_RESIDENCY_SECONDS):
   (g) a different-unit request within the window returns False (409) without
       any sleep/stop/start
-  (h) after the window it swaps; (h2) a window expiring during the lock wait swaps
   (i) same-unit requests are unaffected
   (j) acquire and release stamp last_activity
-  (k) a sleep request answered 409 (requests still draining) is retried
   (l) _env_seconds parsing of VLLM_SWITCH_RESIDENCY_SECONDS
 Coder concurrency and nix coupling:
   (m) MODELS context/max_requests/port == maxModelLen/maxNumSeqs/port parsed from
-      esnixi/vllm.nix for the coder (both aliases) and the reader
+      esnixi/vllm.nix for the coder (both aliases)
   (n) the coder admits up to max_requests concurrent requests, then 409s
-  (o) requests are proxied to the selected model's own backend port
+  (o) requests are proxied to the coder's own backend port
 Fail-safe switching:
-  (p) a sleep that exceeds its budget falls back to stop; (p2) a hung stop is bounded;
-      (p3) a hung reader stop fails a coder select (coder breaker failure, not stuck)
-  (q) a reader request while the coder has requests in flight -> 409 coder_busy, no sleep
-  (r) a reader request inside the coder residency -> 409 coder_resident, no sleep;
-      the coder still reclaims an idle reader immediately
-  (s) do_POST puts the reject code/reason in the 409 body
-  (t) a failed target start restores the coder and returns 409 start_failed;
-      (x) a NRestarts rise triggers the same rollback
+  (p2) a hung stop is bounded
   (u) an open breaker -> immediate 409 backoff with Retry-After, active model untouched
-  (v) breaker backoff doubles and caps; (w) it resets after a successful start
   (y) the watchdog readies the coder when nothing is ready; (y2) it waits for the
-      threshold / an in-progress switch / the coder breaker; (y3) it adopts an awake
-      unit after a switcher restart; (y4) it clears a dead active model; (y5) the
-      loop survives an exception
+      threshold / an in-progress switch / the coder breaker; (y4) it clears a dead
+      active model; (y5) the loop survives an exception
   (ff1) a coder start that fails once succeeds via a fast retry: no breaker;
       (ff1b) the same for a one-off NRestarts rise
   (ff2) a coder failing every attempt (1 + 2 retries) opens the breaker ONCE and
       is left stopped (no crash loop)
   (ff3) the watchdog's coder start gets the fast retry; (ff4) when every attempt
       fails, one breaker failure and the coder is stopped
-  (ff5) a reader start failure is NOT fast-retried (one start, one breaker failure)
-  (ff6) a coder restore after a reader failure gets the fast retry (no coder blame)
-  (z) vllm.nix: reader Restart=no, switcher fail-safe env parses, coder KV/gate pinned
+  (z) vllm.nix: switcher fail-safe env parses, coder KV/gate pinned
 """
 import importlib.util
 import io
@@ -82,7 +60,6 @@ def _load_switcher():
 
 SW = _load_switcher()
 CODER_UNIT = "vllm.service"
-READER_UNIT = "vllm-reader.service"
 
 
 def _nix_block(service):
@@ -117,7 +94,7 @@ class _Resp:
 
 
 class FakeHost:
-    """Simulates systemctl for both units plus each backend's HTTP control surface.
+    """Simulates systemctl for the coder unit plus its backend's HTTP control surface.
 
     `events` is one ordered log of ("start"|"stop"|"reset-failed"|"sleep", unit).
     """
@@ -125,13 +102,13 @@ class FakeHost:
     def __init__(self):
         self.events = []
         # Start with the coder active and awake (as if it was already serving).
-        self.active = {CODER_UNIT: "active", READER_UNIT: "inactive"}
-        self.sub = {CODER_UNIT: "running", READER_UNIT: "dead"}
+        self.active = {CODER_UNIT: "active"}
+        self.sub = {CODER_UNIT: "running"}
         self.asleep = set()
         self.failed = set()
-        self.nrestarts = {CODER_UNIT: 0, READER_UNIT: 0}
+        self.nrestarts = {CODER_UNIT: 0}
         # Per-unit scripted /arcane/sleep answers; default 200.
-        self.sleep_answers = {CODER_UNIT: [], READER_UNIT: []}
+        self.sleep_answers = {CODER_UNIT: []}
         self.proxied = []
         # Failure injection.
         self.start_fails = set()       # start -> unit failed, never serves
@@ -239,7 +216,6 @@ class FakeHost:
 
 class SwitcherTests(unittest.TestCase):
     CODER = "qwen3.8-27b-nvfp4"
-    READER = "qwen3.5-9b-nvfp4-reader"
 
     def setUp(self):
         with SW.switch_condition:
@@ -283,139 +259,49 @@ class SwitcherTests(unittest.TestCase):
     def lifecycle(self):
         return [e for e in self.fake.events if e[0] in ("start", "stop", "sleep")]
 
-    def _seed_active(self, model_id, age, other_running=False):
+    def _seed_active(self, model_id, age):
         """Make `model_id` the idle active model, last used `age` seconds ago."""
         unit = SW.MODELS[model_id]["unit"]
         with SW.switch_condition:
             SW.active_model = model_id
             SW.active_requests = 0
             SW.last_activity = time.monotonic() - age
-        for u in (CODER_UNIT, READER_UNIT):
-            running = u == unit or other_running
+        for u in (CODER_UNIT,):
+            running = u == unit
             self.fake.active[u] = "active" if running else "inactive"
             self.fake.sub[u] = "running" if running else "dead"
-        self.fake.asleep = {u for u in (CODER_UNIT, READER_UNIT) if u != unit and other_running}
-
-    def test_f_context_matches_served_max_model_len(self):
-        self.assertEqual(SW.MODELS[self.READER]["context"], 65536)
-        self.assertEqual(SW.MODELS[self.READER]["served"], self.READER)
-        self.assertEqual(SW.MODELS[self.READER]["unit"], READER_UNIT)
-
-    def test_a_reader_sleeps_coder_instead_of_stopping(self):
-        h = self._handler()
-        self.assertTrue(h.acquire_model(self.READER))
-        self.assertEqual(self.fake.active[CODER_UNIT], "active")
-        self.assertIn(CODER_UNIT, self.fake.asleep)
-        self.assertNotIn(("stop", CODER_UNIT), self.fake.events)
-        self.assertEqual(self.fake.gpu_owners(), [READER_UNIT])
-        h.release_model()
-
-    def test_a2_coder_stops_reader_instead_of_sleeping(self):
-        SW.RESIDENCY_SECONDS = 0
-        h = self._handler()
-        # (reader asleep?, coder running asleep?) -- the last case is a coder cold start.
-        for reader_asleep, coder_running in ((False, True), (True, True), (True, False)):
-            self.fake.events.clear()
-            self._seed_active(self.READER, age=0, other_running=coder_running)
-            if reader_asleep:
-                self.fake.asleep.add(READER_UNIT)
-            self.assertTrue(h.acquire_model(self.CODER))
-            self.assertIn(("stop", READER_UNIT), self.fake.events)
-            self.assertNotIn(("sleep", READER_UNIT), self.fake.events)
-            self.assertEqual(self.fake.active[READER_UNIT], "inactive")
-            self.assertEqual(("start", CODER_UNIT) in self.fake.events, not coder_running)
-            # A warm coder is woken by its own middleware on the first engine request.
-            self.fake.asleep.discard(CODER_UNIT)
-            self.assertEqual(self.fake.gpu_owners(), [CODER_UNIT])
-            h.release_model()
-    def test_b_cold_reader_start_ordering(self):
-        h = self._handler()
-        self.assertTrue(h.acquire_model(self.READER))
-        seq = self.fake.events
-        i_sleep = seq.index(("sleep", CODER_UNIT))
-        i_reset = seq.index(("reset-failed", READER_UNIT))
-        i_start = seq.index(("start", READER_UNIT))
-        self.assertLess(i_sleep, i_reset)
-        self.assertLess(i_reset, i_start)
-        h.release_model()
-
-    def test_c_sleep_failure_falls_back_to_stop(self):
-        self.fake.sleep_answers[CODER_UNIT] = [500]
-        h = self._handler()
-        self.assertTrue(h.acquire_model(self.READER))
-        seq = self.lifecycle()
-        self.assertNotIn(("sleep", CODER_UNIT), seq)
-        self.assertLess(seq.index(("stop", CODER_UNIT)), seq.index(("start", READER_UNIT)))
-        self.assertEqual(self.fake.gpu_owners(), [READER_UNIT])
-        h.release_model()
-
-    def test_d_warm_swap_is_sleep_only(self):
-        SW.RESIDENCY_SECONDS = 0
-        SW.CODER_RESIDENCY_SECONDS = 0
-        h = self._handler()
-        for seeded, requested, expected in (
-                (self.CODER, self.READER, [("sleep", CODER_UNIT)]),
-                (self.READER, self.CODER, [("stop", READER_UNIT)])):
-            self.fake.events.clear()
-            self._seed_active(seeded, age=0, other_running=True)
-            self.assertTrue(h.acquire_model(requested))
-            self.assertEqual(self.lifecycle(), expected)
-            with SW.switch_condition:
-                self.assertEqual(SW.active_model, requested)
-            h.release_model()
+        self.fake.asleep = set()
 
     def test_e_busy_returns_false(self):
         with SW.switch_condition:
             SW.active_model = self.CODER
-            SW.active_requests = 1  # a coding generation is in flight
+            # The coder is already at its max concurrency (both aliases in flight).
+            SW.active_requests = SW.MODELS[self.CODER]["max_requests"]
         SW.LOCK_WAIT_SECONDS = 0
-        self.assertFalse(self._handler().acquire_model(self.READER))
-        self.assertEqual(self.lifecycle(), [])
+        self.assertFalse(self._handler().acquire_model(self.CODER))
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "vllm-switch.py")) as src:
             self.assertIn("RTX 5090 is busy; use the next OmniRoute fallback", src.read())
 
-    def test_g_residency_blocks_swap_within_window(self):
-        SW.RESIDENCY_SECONDS = 90
+    def test_g_residency_blocks_full_coder(self):
         SW.CODER_RESIDENCY_SECONDS = 90
         SW.LOCK_WAIT_SECONDS = 0.2
         h = self._handler()
-        for seeded, requested in ((self.CODER, self.READER), (self.READER, self.CODER)):
-            self.fake.events.clear()
-            self._seed_active(seeded, age=0, other_running=True)
-            self.assertFalse(h.acquire_model(requested))
-            self.assertEqual(self.lifecycle(), [])
-            with SW.switch_condition:
-                self.assertEqual(SW.active_model, seeded)
-                self.assertIs(SW.switching, False)
-                self.assertEqual(SW.active_requests, 0)
-
-    def test_h_swaps_after_window(self):
-        SW.RESIDENCY_SECONDS = 90
-        SW.CODER_RESIDENCY_SECONDS = 90
-        self._seed_active(self.CODER, age=91)
-        h = self._handler()
-        self.assertTrue(h.acquire_model(self.READER))
-        seq = self.lifecycle()
-        self.assertLess(seq.index(("sleep", CODER_UNIT)), seq.index(("start", READER_UNIT)))
-        with SW.switch_condition:
-            self.assertEqual(SW.active_model, self.READER)
-        h.release_model()
-
-    def test_h2_window_expiring_during_lock_wait_swaps(self):
-        SW.RESIDENCY_SECONDS = 0.3
-        SW.CODER_RESIDENCY_SECONDS = 0.3
-        SW.LOCK_WAIT_SECONDS = 3
+        # The coder is resident and already at max requests: a further coder
+        # request within the window is rejected without any sleep/stop/start.
         self._seed_active(self.CODER, age=0)
-        h = self._handler()
-        t0 = time.monotonic()
-        self.assertTrue(h.acquire_model(self.READER))
-        self.assertLess(time.monotonic() - t0, 2.0)
-        self.assertIn(("start", READER_UNIT), self.fake.events)
-        h.release_model()
+        with SW.switch_condition:
+            SW.active_requests = SW.MODELS[self.CODER]["max_requests"]
+            SW.last_activity = time.monotonic()
+        self.assertFalse(h.acquire_model(self.CODER))
+        self.assertEqual(self.lifecycle(), [])
+        with SW.switch_condition:
+            self.assertEqual(SW.active_model, self.CODER)
+            self.assertIs(SW.switching, False)
 
     def test_i_same_unit_unaffected(self):
         SW.RESIDENCY_SECONDS = 90
+        SW.CODER_RESIDENCY_SECONDS = 90
         h = self._handler()
         self._seed_active(self.CODER, age=0)
         self.assertTrue(h.acquire_model(self.CODER))
@@ -424,9 +310,9 @@ class SwitcherTests(unittest.TestCase):
         h.release_model()
         self.assertEqual(self.lifecycle(), [])
 
-        self._seed_active(self.READER, age=0)
+        self._seed_active(self.CODER, age=0)
         results = []
-        threads = [threading.Thread(target=lambda: results.append(h.acquire_model(self.READER)))
+        threads = [threading.Thread(target=lambda: results.append(h.acquire_model(self.CODER)))
                    for _ in range(2)]
         for t in threads:
             t.start()
@@ -441,7 +327,8 @@ class SwitcherTests(unittest.TestCase):
 
     def test_j_release_and_acquire_stamp_last_activity(self):
         h = self._handler()
-        self.assertTrue(h.acquire_model(self.READER))
+        self._seed_active(self.CODER, age=0)
+        self.assertTrue(h.acquire_model(self.CODER))
         with SW.switch_condition:
             self.assertIsNotNone(SW.last_activity)
             self.assertLess(abs(time.monotonic() - SW.last_activity), 1.0)
@@ -449,15 +336,6 @@ class SwitcherTests(unittest.TestCase):
         h.release_model()
         with SW.switch_condition:
             self.assertLess(abs(time.monotonic() - SW.last_activity), 1.0)
-
-    def test_k_sleep_busy_is_retried(self):
-        self.fake.sleep_answers[CODER_UNIT] = [409, 409]
-        h = self._handler()
-        self.assertTrue(h.acquire_model(self.READER))
-        seq = self.lifecycle()
-        self.assertIn(("sleep", CODER_UNIT), seq)
-        self.assertNotIn(("stop", CODER_UNIT), seq)
-        h.release_model()
 
     def test_l_env_seconds_parsing(self):
         name = "VLLM_SWITCH_RESIDENCY_SECONDS"
@@ -470,9 +348,7 @@ class SwitcherTests(unittest.TestCase):
 
     def test_m_coupling_matches_vllm_nix(self):
         coder = _nix_block("vllm")
-        reader = _nix_block("vllm-reader")
         self.assertIsNotNone(coder, "vllm.service block not found in vllm.nix")
-        self.assertIsNotNone(reader, "vllm-reader.service block not found in vllm.nix")
         values = {name: _nix_attr(coder, name) for name in ("maxModelLen", "maxNumSeqs", "port")}
         self.assertNotIn(None, values.values(), values)
         for mid in (self.CODER, SW.BALANCED_MODEL_ID):
@@ -481,12 +357,9 @@ class SwitcherTests(unittest.TestCase):
             self.assertEqual(m["context"], values["maxModelLen"], mid)
             self.assertEqual(m["max_requests"], values["maxNumSeqs"], mid)
             self.assertEqual(m["port"], values["port"], mid)
-        self.assertEqual(SW.MODELS[self.READER]["context"], _nix_attr(reader, "maxModelLen"))
-        self.assertEqual(SW.MODELS[self.READER]["port"], _nix_attr(reader, "port"))
-        self.assertNotEqual(SW.MODELS[self.READER]["port"], values["port"])
 
     def test_n_coder_admits_up_to_max_requests_then_409(self):
-        SW.RESIDENCY_SECONDS = 90
+        SW.CODER_RESIDENCY_SECONDS = 90
         SW.LOCK_WAIT_SECONDS = 0.2
         self._seed_active(self.CODER, age=0)
         h = self._handler()
@@ -512,9 +385,6 @@ class SwitcherTests(unittest.TestCase):
         with SW.switch_condition:
             self.assertEqual(SW.active_requests, len(ids))
         self.assertFalse(h.acquire_model(self.CODER))
-        # A reader request cannot swap while the coder is busy, even past residency.
-        SW.RESIDENCY_SECONDS = 0
-        self.assertFalse(h.acquire_model(self.READER))
         self.assertEqual(self.lifecycle(), [])
         for _ in range(len(ids)):
             h.release_model()
@@ -540,12 +410,10 @@ class SwitcherTests(unittest.TestCase):
         with mock.patch.object(SW.urllib.request, "urlopen",
                                lambda req, timeout=0: (self.fake.proxied.append(req.full_url),
                                                        _Upstream(b""))[1]):
-            h.proxy("/v1/chat/completions", b"{}", self.READER)
             h.proxy("/v1/chat/completions", b"{}", self.CODER)
         self.assertEqual(self.fake.proxied, [
-            "http://127.0.0.1:8012/v1/chat/completions",
             "http://127.0.0.1:8010/v1/chat/completions"])
-        self.assertEqual(sent, [200, 200])
+        self.assertEqual(sent, [200])
 
     # ---- fail-safe switching -------------------------------------------------
 
@@ -565,175 +433,48 @@ class SwitcherTests(unittest.TestCase):
         h.do_POST()
         return sent["status"], sent["headers"], json.loads(h.wfile.getvalue())
 
-    def _fail_reader_once(self):
-        """Coder idle past residency, reader start fails -> one breaker failure."""
-        self._seed_active(self.CODER, age=200)
-        self.fake.start_fails = {READER_UNIT}
-        h = self._handler()
-        self.assertFalse(h.acquire_model(self.READER))
-        return h
-
-    def test_p_sleep_timeout_falls_back_to_stop(self):
-        self.fake.sleep_hangs = {CODER_UNIT}
-        SW.SLEEP_DRAIN_SECONDS = 0.2
-        h = self._handler()
-        self.assertTrue(h.acquire_model(self.READER))
-        seq = self.lifecycle()
-        self.assertNotIn(("sleep", CODER_UNIT), seq)
-        self.assertLess(seq.index(("stop", CODER_UNIT)), seq.index(("start", READER_UNIT)))
-        h.release_model()
-
     def test_p2_stop_timeout_is_bounded(self):
-        self.fake.sleep_hangs = {CODER_UNIT}
+        # A hung stop during a coder fast-retry is bounded; the coder is left
+        # stopped and its breaker opens once.
+        self.fake.active[CODER_UNIT], self.fake.sub[CODER_UNIT] = "inactive", "dead"
+        self.fake.start_fails = {CODER_UNIT}
         self.fake.stop_timeout = {CODER_UNIT}
-        SW.SLEEP_DRAIN_SECONDS = 0.1
         SW.STOP_SECONDS = 0.3
+        SW.CODER_FAST_RETRY_DELAY_SECONDS = 0
         h = self._handler()
         t0 = time.monotonic()
-        self.assertFalse(h.acquire_model(self.READER))
+        self.assertFalse(h.acquire_model(self.CODER))
         self.assertLess(time.monotonic() - t0, 5.0)
         self.assertEqual(h.reject_code, "start_failed")
-        self.assertNotIn(("start", READER_UNIT), self.fake.events)
         with SW.switch_condition:
             self.assertIs(SW.switching, False)
-            # The coder never went down, so the rollback re-adopts it.
-            self.assertEqual(SW.active_model, self.CODER)
-
-    def test_p3_reader_stop_timeout_fails_coder_select(self):
-        # Selecting the coder never sleeps the reader, so a hung reader stop fails
-        # the coder select outright: one coder breaker failure, `switching` cleared.
-        SW.RESIDENCY_SECONDS = 0
-        self._seed_active(self.READER, age=0, other_running=True)
-        self.fake.stop_timeout = {READER_UNIT}
-        SW.STOP_SECONDS = 0.3
-        h = self._handler()
-        self.assertFalse(h.acquire_model(self.CODER))
-        self.assertEqual(h.reject_code, "start_failed")
-        self.assertIn("could not stop vllm-reader.service", h.reject_reason)
-        self.assertNotIn(("sleep", READER_UNIT), self.fake.events)
-        self.assertNotIn(("start", CODER_UNIT), self.fake.events)
-        with SW.switch_condition:
-            self.assertIs(SW.switching, False)
-            self.assertIsNone(SW.switching_to)
             self.assertEqual(SW.breakers[CODER_UNIT]["failures"], 1)
-    def test_q_reader_during_coder_inflight_409_no_sleep(self):
-        SW.CODER_RESIDENCY_SECONDS = 0
-        SW.LOCK_WAIT_SECONDS = 0
-        self._seed_active(self.CODER, age=500)
-        with SW.switch_condition:
-            SW.active_requests = 1
-        h = self._handler()
-        self.assertFalse(h.acquire_model(self.READER))
-        self.assertEqual(h.reject_code, "coder_busy")
-        self.assertIn("coder busy: 1 request(s) in flight", h.reject_reason)
-        self.assertEqual(self.lifecycle(), [])
-        self.assertNotIn(CODER_UNIT, self.fake.asleep)
-
-    def test_r_reader_during_coder_residency_409_no_sleep(self):
-        SW.CODER_RESIDENCY_SECONDS = 90
-        SW.RESIDENCY_SECONDS = 0
-        SW.LOCK_WAIT_SECONDS = 0
-        self._seed_active(self.CODER, age=10)
-        h = self._handler()
-        self.assertFalse(h.acquire_model(self.READER))
-        self.assertEqual(h.reject_code, "coder_resident")
-        self.assertIn("coder resident for", h.reject_reason)
-        self.assertEqual(self.lifecycle(), [])
-        # The coder reclaims an idle reader immediately (RESIDENCY_SECONDS = 0).
-        self._seed_active(self.READER, age=0, other_running=True)
-        self.assertTrue(h.acquire_model(self.CODER))
-        self.assertEqual(self.lifecycle(), [("stop", READER_UNIT)])
-        h.release_model()
-
-    def test_s_reject_reason_in_body(self):
-        SW.CODER_RESIDENCY_SECONDS = 90
-        SW.LOCK_WAIT_SECONDS = 0
-        self._seed_active(self.CODER, age=10)
-        status, headers, body = self._post(self.READER)
-        self.assertEqual(status, 409)
-        self.assertEqual(body["error"]["code"], "coder_resident")
-        self.assertEqual(body["error"]["type"], "vllm_switch_unavailable")
-        self.assertIn("RTX 5090 is busy; use the next OmniRoute fallback", body["error"]["message"])
-        self.assertIn("coder resident for", body["error"]["message"])
-        self.assertNotIn("Retry-After", headers)
-
-    def test_t_target_start_fails_restores_coder_and_409(self):
-        h = self._fail_reader_once()
-        self.assertEqual(h.reject_code, "start_failed")
-        self.assertIn("restored qwen3.8-27b-nvfp4", h.reject_reason)
-        seq = self.lifecycle()
-        self.assertLess(seq.index(("sleep", CODER_UNIT)), seq.index(("start", READER_UNIT)))
-        with SW.switch_condition:
-            self.assertEqual(SW.active_model, self.CODER)
-            self.assertIs(SW.switching, False)
-        self.assertNotIn(READER_UNIT, self.fake.gpu_owners())
-        self.fake.events.clear()
-        self.assertTrue(h.acquire_model(self.CODER))
-        self.assertEqual(self.lifecycle(), [])
-        h.release_model()
-
-    def test_x_restart_count_rise_triggers_rollback(self):
-        self._seed_active(self.CODER, age=200)
-        self.fake.restart_on_start = {READER_UNIT}
-        h = self._handler()
-        self.assertFalse(h.acquire_model(self.READER))
-        self.assertEqual(h.reject_code, "start_failed")
-        self.assertIn("NRestarts", h.reject_reason)
-        seq = self.lifecycle()
-        self.assertLess(seq.index(("start", READER_UNIT)), seq.index(("stop", READER_UNIT)))
-        self.assertEqual(self.fake.active[READER_UNIT], "inactive")
-        with SW.switch_condition:
-            self.assertEqual(SW.active_model, self.CODER)
 
     def test_u_breaker_open_immediate_409_active_untouched(self):
-        self._fail_reader_once()
+        # The coder's breaker is open after a failed start; a fresh request gets an
+        # immediate 409 backoff with Retry-After and never touches the active model.
+        self._seed_active(self.CODER, age=200)
+        with SW.switch_condition:
+            SW.record_failure(CODER_UNIT, "test")
         self.fake.events.clear()
         SW.LOCK_WAIT_SECONDS = 3
-        # Past the coder's residency, so only the breaker can stop the swap.
         with SW.switch_condition:
-            SW.last_activity = time.monotonic() - 200
+            SW.active_model = None
+            SW.no_ready_since = time.monotonic() - 200
         t0 = time.monotonic()
-        status, headers, body = self._post(self.READER)
+        status, headers, body = self._post(self.CODER)
         self.assertLess(time.monotonic() - t0, 1.0)
         self.assertEqual(status, 409)
         self.assertEqual(body["error"]["code"], "backoff")
         self.assertIn("in backoff for", body["error"]["message"])
         self.assertGreater(int(headers["Retry-After"]), 0)
         self.assertEqual(self.fake.events, [])
-        with SW.switch_condition:
-            self.assertEqual(SW.active_model, self.CODER)
-
-    def test_v_breaker_backoff_doubles_and_caps(self):
-        for failures, expected in enumerate((300, 600, 1200, 1800, 1800), start=1):
-            with SW.switch_condition:
-                if READER_UNIT in SW.breakers:
-                    SW.breakers[READER_UNIT]["open_until"] = time.monotonic() - 1  # half-open
-            self._fail_reader_once()
-            with SW.switch_condition:
-                state = SW.breakers[READER_UNIT]
-                self.assertEqual(state["failures"], failures)
-                self.assertAlmostEqual(state["open_until"] - time.monotonic(), expected, delta=5)
-
-    def test_w_breaker_resets_after_success(self):
-        self._fail_reader_once()
-        with SW.switch_condition:
-            SW.breakers[READER_UNIT]["open_until"] = time.monotonic() - 1
-        self.fake.start_fails = set()
-        self._seed_active(self.CODER, age=200)
-        h = self._handler()
-        with self.assertLogs("vllm.switch", "INFO") as logs:
-            self.assertTrue(h.acquire_model(self.READER))
-        self.assertNotIn(READER_UNIT, SW.breakers)
-        self.assertTrue(any("breaker CLOSED unit=vllm-reader.service" in line for line in logs.output))
-        h.release_model()
 
     def test_y_watchdog_restores_coder_when_nothing_ready(self):
         for coder_running in (True, False):
             self.fake.events.clear()
-            self.fake.active = {CODER_UNIT: "active" if coder_running else "inactive",
-                                READER_UNIT: "inactive"}
-            self.fake.sub = {CODER_UNIT: "running" if coder_running else "dead",
-                             READER_UNIT: "dead"}
+            self.fake.active = {CODER_UNIT: "active" if coder_running else "inactive"}
+            self.fake.sub = {CODER_UNIT: "running" if coder_running else "dead"}
             self.fake.asleep = {CODER_UNIT} if coder_running else set()
             with SW.switch_condition:
                 SW.active_model = None
@@ -761,18 +502,6 @@ class SwitcherTests(unittest.TestCase):
         with SW.switch_condition:
             self.assertIsNone(SW.active_model)
         self.assertEqual(self.fake.events, [])
-
-    def test_y3_watchdog_adopts_awake_unit_after_restart(self):
-        self.fake.active = {CODER_UNIT: "active", READER_UNIT: "active"}
-        self.fake.sub = {CODER_UNIT: "running", READER_UNIT: "running"}
-        self.fake.asleep = {CODER_UNIT}
-        with SW.switch_condition:
-            SW.no_ready_since = time.monotonic() - 61
-        SW.watchdog_tick()
-        with SW.switch_condition:
-            self.assertEqual(SW.active_model, self.READER)
-        self.assertEqual(self.fake.events, [])
-        self.assertEqual(self.fake.gpu_owners(), [READER_UNIT])
 
     def test_y4_watchdog_clears_dead_active_model(self):
         self._seed_active(self.CODER, age=5)
@@ -810,13 +539,17 @@ class SwitcherTests(unittest.TestCase):
     def _coder_starts(self):
         return [e for e in self.fake.events if e == ("start", CODER_UNIT)]
 
-    def _seed_reader_idle(self):
-        """Reader active and idle, coder stopped: acquiring the coder cold-starts it."""
+    def _seed_coder_stopped(self):
+        """Coder stopped and nothing resident: acquiring the coder cold-starts it."""
         SW.RESIDENCY_SECONDS = 0
-        self._seed_active(self.READER, age=0)
+        SW.CODER_RESIDENCY_SECONDS = 0
+        self.fake.active[CODER_UNIT], self.fake.sub[CODER_UNIT] = "inactive", "dead"
+        with SW.switch_condition:
+            SW.active_model = None
+            SW.last_activity = None
 
     def test_ff1_coder_fails_once_then_fast_retry_succeeds(self):
-        self._seed_reader_idle()
+        self._seed_coder_stopped()
         self.fake.start_fail_times = {CODER_UNIT: 1}
         h = self._handler()
         self.assertTrue(h.acquire_model(self.CODER))
@@ -833,7 +566,7 @@ class SwitcherTests(unittest.TestCase):
         h.release_model()
 
     def test_ff1b_coder_restart_once_then_fast_retry_succeeds(self):
-        self._seed_reader_idle()
+        self._seed_coder_stopped()
         self.fake.restart_once = {CODER_UNIT}
         h = self._handler()
         self.assertTrue(h.acquire_model(self.CODER))
@@ -860,8 +593,8 @@ class SwitcherTests(unittest.TestCase):
                                    SW.BACKOFF_SECONDS, delta=5)
 
     def _watchdog_cold(self):
-        self.fake.active = {CODER_UNIT: "inactive", READER_UNIT: "inactive"}
-        self.fake.sub = {CODER_UNIT: "dead", READER_UNIT: "dead"}
+        self.fake.active = {CODER_UNIT: "inactive"}
+        self.fake.sub = {CODER_UNIT: "dead"}
         with SW.switch_condition:
             SW.active_model = None
             SW.no_ready_since = time.monotonic() - 61
@@ -887,31 +620,7 @@ class SwitcherTests(unittest.TestCase):
             self.assertIsNone(SW.active_model)
             self.assertIs(SW.switching, False)
 
-    def test_ff5_reader_failure_not_fast_retried(self):
-        self._fail_reader_once()
-        self.assertEqual(self.fake.events.count(("start", READER_UNIT)), 1)
-        self.assertNotIn(SW.CODER_FAST_RETRY_DELAY_SECONDS, self.sleeps)
-        with SW.switch_condition:
-            self.assertEqual(SW.breakers[READER_UNIT]["failures"], 1)
-            self.assertNotIn(CODER_UNIT, SW.breakers)
-
-    def test_ff6_coder_restore_fast_retry_avoids_coder_blame(self):
-        # Reader start fails; the coder (stopped) fails its first restore start once.
-        self._seed_active(self.CODER, age=200)
-        self.fake.sleep_answers[CODER_UNIT] = [500]  # coder is stopped, not slept
-        self.fake.start_fails = {READER_UNIT}
-        self.fake.start_fail_times = {CODER_UNIT: 1}
-        h = self._handler()
-        self.assertFalse(h.acquire_model(self.READER))
-        self.assertIn("restored qwen3.8-27b-nvfp4", h.reject_reason)
-        self.assertEqual(len(self._coder_starts()), 2)
-        with SW.switch_condition:
-            self.assertEqual(SW.active_model, self.CODER)
-            self.assertNotIn(CODER_UNIT, SW.breakers)
-            self.assertEqual(SW.breakers[READER_UNIT]["failures"], 1)
-
-    def test_z_nix_switcher_env_and_reader_restart(self):
-        self.assertIn('restart = "no";', _nix_block("vllm-reader"))
+    def test_z_nix_switcher_env_and_coder_gate(self):
         self.assertNotIn("restart =", _nix_block("vllm"))
         # The coder KV budget is measured against a non-resident reader; pin it.
         self.assertIn("kvCacheMemory = 5905580032;", _nix_block("vllm"))

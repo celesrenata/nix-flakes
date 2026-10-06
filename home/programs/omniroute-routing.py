@@ -86,20 +86,15 @@ def desired(combo):
         out["context_length"] = 32768
         config.update(concurrencyPerModel=1, queueTimeoutMs=1000, targetTimeoutMs=120000, disableSessionStickiness=True, trackMetrics=True)
     elif name == "hybrid/reader":
-        # Tiered reader fabric (priority = strict step order, overflow is
-        # ERROR-DRIVEN): tier 1 esnixi 5090 NVFP4 reader (PRIMARY; reachable only
-        # when the switcher is NOT serving the coder -- enforced by the switcher's
-        # 409, which drives overflow to the next tier), tier 2 gremlin 4070 Ti Super
-        # fallback reader, tier 3 M5 Max. Per the authoritative task (user msg 12:
-        # "5090, fallback to 4070 ti super") the 5090 is primary and the 4070 Ti
-        # Super is the fallback. Tiers 2 and 3 share the model string but are pinned
-        # to DIFFERENT connections (the connectionId is the dispatch pin).
-        # context_length is the most-constrained tier (M5, 32768).
+        # Two-tier ollama reader fabric (priority = strict step order, overflow is
+        # ERROR-DRIVEN): tier 1 gremlin 4070 Ti Super ollama reader (primary),
+        # tier 2 M5 Max ollama reader (fallback). Both tiers share the model string
+        # but are pinned to DIFFERENT connections (the connectionId is the dispatch
+        # pin). context_length is the most-constrained tier (M5, 32768).
         out["strategy"] = "priority"
         out["models"] = [
-            target("reader-t1-esnixi-5090", "vllm/qwen3.5-9b-nvfp4-reader", "vllm"),
-            target("reader-t2-gremlin-4070ti", "ollama/qwen3.5-reader:9b", "ollama-local"),
-            target("reader-t3-m5max", "ollama/qwen3.5-reader:9b", "ollama-m5-reader"),
+            target("reader-t1-gremlin-4070ti", "ollama/qwen3.5-reader:9b", "ollama-local"),
+            target("reader-t2-m5max", "ollama/qwen3.5-reader:9b", "ollama-m5-reader"),
         ]
         out["context_length"] = 32768
         config.update(queueTimeoutMs=1000, targetTimeoutMs=120000, disableSessionStickiness=True, trackMetrics=True)
