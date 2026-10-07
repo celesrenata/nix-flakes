@@ -56,7 +56,7 @@ def configure(profile_path, *mode_paths):
     for profile in profiles["apiConfigs"].values():
         profile["todoListEnabled"] = True
     modes = settings.setdefault("customModes", [])
-    mode_profiles = {"spec-orchestrator": "omni-hybrid-planner", "project-reader": "omni-hybrid-reader", "project-research": "omni-hybrid-research"}
+    mode_profiles = {"spec-orchestrator": "omni-hybrid-code", "project-reader": "omni-hybrid-reader", "project-research": "omni-hybrid-research"}
     mode_api_configs = profiles.setdefault("modeApiConfigs", {})
     for mode in modes_to_merge:
         modes[:] = [item for item in modes if item.get("slug") != mode["slug"]] + [mode]
@@ -66,8 +66,12 @@ def configure(profile_path, *mode_paths):
     # Independent repository research uses the warm M5 long-context model.
     # Keep Code, planning and explicit long-task profiles unchanged.
     profiles["modeApiConfigs"]["project-research"] = "omni-hybrid-research"
-    # Orchestrator coordinates long, growing task histories; avoid the one-slot 4070 fast route.
-    profiles["modeApiConfigs"]["orchestrator"] = "omni-hybrid-planner"
+    # Orchestrator/spec-orchestrator are dispatchers (classify task -> delegate to reader/code/research
+    # lanes), not deep single-shot planners. Route their coordination/tool-calling turns to the
+    # 5090-primary coder/reasoner lane (hybrid/code: QWEN5090 -> GLM -> IQ3 overflow) instead of the
+    # GLM-only 1-slot planner lane, which serialized the whole system on the M5. hybrid/planner stays
+    # GLM-only and reserved for genuine deep planning (e.g. visual-auditor).
+    profiles["modeApiConfigs"]["orchestrator"] = "omni-hybrid-code"
     temporary = path.with_name(path.name + ".native-new")
     with open(temporary, "w", opener=lambda p, flags: os.open(p, flags, 0o600)) as handle:
         json.dump(data, handle, indent=2)
