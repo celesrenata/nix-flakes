@@ -74,6 +74,11 @@ def configure(profile_path, *mode_paths):
     # NOT by the orchestrator being on GLM -- so routing it to the coder lane was the wrong fix:
     # it put a coding model on reasoning work and tied up a 5090 slot the code workers need.
     profiles["modeApiConfigs"]["orchestrator"] = "omni-hybrid-planner"
+    # Pin the ACTIVE/selected profile too, not just the per-mode mapping. The app persists
+    # currentApiConfigName in its own (encrypted) state and it had been drifting back to
+    # OmniRoute-Hybrid-Code on launch, overriding the orchestrator mapping. Force it to the
+    # planner profile here so every rebuild re-asserts the GLM mastermind as the active config.
+    profiles["currentApiConfigName"] = "OmniRoute-Hybrid-Planner"
     temporary = path.with_name(path.name + ".native-new")
     with open(temporary, "w", opener=lambda p, flags: os.open(p, flags, 0o600)) as handle:
         json.dump(data, handle, indent=2)
