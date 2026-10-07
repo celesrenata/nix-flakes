@@ -56,7 +56,7 @@ def configure(profile_path, *mode_paths):
     for profile in profiles["apiConfigs"].values():
         profile["todoListEnabled"] = True
     modes = settings.setdefault("customModes", [])
-    mode_profiles = {"spec-orchestrator": "omni-hybrid-code", "project-reader": "omni-hybrid-reader", "project-research": "omni-hybrid-research"}
+    mode_profiles = {"spec-orchestrator": "omni-hybrid-planner", "project-reader": "omni-hybrid-reader", "project-research": "omni-hybrid-research"}
     mode_api_configs = profiles.setdefault("modeApiConfigs", {})
     for mode in modes_to_merge:
         modes[:] = [item for item in modes if item.get("slug") != mode["slug"]] + [mode]
@@ -66,12 +66,14 @@ def configure(profile_path, *mode_paths):
     # Independent repository research uses the warm M5 long-context model.
     # Keep Code, planning and explicit long-task profiles unchanged.
     profiles["modeApiConfigs"]["project-research"] = "omni-hybrid-research"
-    # Orchestrator/spec-orchestrator are dispatchers (classify task -> delegate to reader/code/research
-    # lanes), not deep single-shot planners. Route their coordination/tool-calling turns to the
-    # 5090-primary coder/reasoner lane (hybrid/code: QWEN5090 -> GLM -> IQ3 overflow) instead of the
-    # GLM-only 1-slot planner lane, which serialized the whole system on the M5. hybrid/planner stays
-    # GLM-only and reserved for genuine deep planning (e.g. visual-auditor).
-    profiles["modeApiConfigs"]["orchestrator"] = "omni-hybrid-code"
+    # The orchestrator/spec-orchestrator IS the GLM mastermind: it does the deep reasoning that
+    # decides which workers/models each task needs. Keep it on the GLM-only planner lane (M5,
+    # llama-cpp, 1M context) so the brain runs on GLM and the 5090/4070/ollama GPUs stay free for
+    # the worker lanes (code/reader/research). Earlier GLM saturation was caused by workers wrongly
+    # inheriting the orchestrator model (fixed in menagerie resolveLaneRouteId, commit b0a986cdb),
+    # NOT by the orchestrator being on GLM -- so routing it to the coder lane was the wrong fix:
+    # it put a coding model on reasoning work and tied up a 5090 slot the code workers need.
+    profiles["modeApiConfigs"]["orchestrator"] = "omni-hybrid-planner"
     temporary = path.with_name(path.name + ".native-new")
     with open(temporary, "w", opener=lambda p, flags: os.open(p, flags, 0o600)) as handle:
         json.dump(data, handle, indent=2)
