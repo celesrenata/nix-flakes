@@ -268,7 +268,7 @@ def build(mode, existing):
             refs = [t for t in tiers if f'pool/tier{t}/{category}' in plan]
             plan[name] = {'name': name, 'description': f'{category} routing: {mode if family == "hybrid" else "local-only"}; per-task X-OmniRoute-Tier',
                 'strategy': 'priority', 'models': ([{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs] if category not in ('code', 'tester') else ([{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': f'pool/tier1/{category}', 'weight': 0}] + ([{'id': f'{family}-{category}-tier1b', 'kind': 'combo-ref', 'comboName': f'pool/tier1b/{category}', 'weight': 0}] if 1 in refs else []) + [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs if t != 1])),
-                'context_length': 163840 if family == 'local' else 262144, 'context_cache_protection': False,
+                'context_length': 163840 if (family == 'local' or category == 'fast') else 262144, 'context_cache_protection': False,
                 'config': {k:v for k,v in config_for(existing.get(name), nestedComboMode='execute',
                     tierRouting={'defaultTier': 1, 'maximumTier': ceiling if family == 'hybrid' else 1}).items() if k != 'queueDepth'}}
     return plan
