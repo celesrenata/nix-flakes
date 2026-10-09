@@ -35,6 +35,8 @@ MLX = 'llama-cpp/mlx-qwen3.8-27b-4bit'
 GLM = 'llama-cpp/ds4-glm53'
 # Dedicated 9B reader model (NOT a coder): the 4070 Ti Super ollama reader.
 READER4070 = 'ollama-local/qwen3.5-reader:9b'
+# Fast tier little coder: 4070 Ti Super ollama 9B (vision + agentic programming / code reading).
+FAST9B = 'ollama-local/LisyNeko/qwen3.8-9b-coder:latest'
 # Per-category tier-1 target overrides. Categories NOT listed here keep the shared
 # [5090/MLX/IQ3/GLM] slot layout driven by WEIGHTS (minimal blast radius: only
 # reader + code + tester are retargeted). Each entry is an ordered priority chain
@@ -46,8 +48,18 @@ TIER1_OVERRIDES = {
     # Coder chain: 5090 Qwen3.8 NVFP4 (131072) -> m5max GLM-5.3 (speed-first overflow)
     # -> 4070 Ti Super Qwen3.8 IQ3 (147456, unchanged). Replaces MLX with GLM in the
     # local priority chain for code + tester only (reviewer keeps its own GLM blend).
-    'code': [(QWEN5090, 55), (GLM, 24), (IQ3, 21)],
-    'tester': [(QWEN5090, 55), (GLM, 24), (IQ3, 21)],
+    # 27B fan-out (job1->5090, job2->4070Ti, job3->5090): weighted 2:1 across the two
+    # local 27B GPUs. GLM is a dedicated job-4 overflow step in the code/tester root
+    # chains (after this pool, before the free/low-cost cloud tiers), not inline here.
+    # Round-robin [5090, 4070, 5090] gives a deterministic 2:1 interleave (job1->5090,
+    # job2->4070, job3->5090) instead of the old weighted RANDOM draw, which bunched
+    # 3+ consecutive 5090 picks. The 5090 appears twice so the cyclic counter yields
+    # two 5090 per one 4070 without ever starving the 4070 (weight is a tie-break only).
+    'code': [(QWEN5090, 1), (IQ3, 1), (QWEN5090, 1)],
+    'tester': [(QWEN5090, 1), (IQ3, 1), (QWEN5090, 1)],
+    # Fast chain: new little 9B coder primary -> one slot of the UNCHANGED 5090 27B as
+    # overflow (priority order; weights are tie-break, the 5090 keeps its own role/model).
+    'fast': [(FAST9B, 70), (QWEN5090, 30)],
 }
 # Admission checks the uncompressed conversation. Zoo resends its complete
 # task transcript, so the raw prompt can exceed 256K even though chatCore then
@@ -70,7 +82,21 @@ OVERRIDE_POLICIES = {
     IQ3: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     GLM: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     READER4070: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
+    FAST9B: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
 }
+
+# Categories whose cloud (tier 2+) overflow is restricted to FREE online providers only,
+# regardless of the active mode. 'fast' must never spend money: it overflows past local
+# capacity only to the free set (:free models + Mistral free-allowance), never paid Bedrock/OpenAI.
+FREE_ONLY_CLOUD_CATEGORIES = {'fast'}
+# Per-category tier-1 concurrencyPerModel. Default is 1 (one in-flight request per
+# device, the cross-lane arbiter default). 'fast' runs 2 per member -> 2 on the 5090 +
+# 2 on the 4070 Ti Super 9B = 4 concurrent fast requests. NOTE: the 5090 vllm provider
+# cap is maxConcurrent 2 (esnixi/vllm.nix --max-num-seqs 2), shared with the coder, so
+# fast can consume both 5090 slots and compete with code for the card.
+TIER1_CONCURRENCY = {'fast': 2}
+def is_free_cloud(model):
+    return model.endswith(':free') or model in ('mistral/codestral-latest', 'mistral/mistral-code-latest')
 # Existing, verified provider model IDs. Never derive credit tiers from rounded display names.
 CLOUD = {
     # OpenRouter free requests share a daily account quota; changing model IDs
@@ -186,6 +212,7 @@ def build(mode, existing):
             if tier != 1:
                 targets = [(m,w) for m,w in targets if not m.startswith('kiro/')]
                 if tier in order: targets = [(m,w) for m,w in targets if allowed_cloud(mode,m)]
+                if category in FREE_ONLY_CLOUD_CATEGORIES: targets = [(m,w) for m,w in targets if is_free_cloud(m)]
             if not targets: continue
             if tier == 1 and category in TIER1_OVERRIDES:
                 # Only publish policies for the models actually in this overridden pool.
@@ -195,13 +222,18 @@ def build(mode, existing):
             if category == 'planner':
                 for policy in target_policies.values():
                     policy['maxInputTokens'] = PLANNER_RAW_WINDOW
-            strategy = 'priority' if tier == 1 else 'round-robin'
+            # code/tester tier-1 interleave the two 27B GPUs via deterministic round-robin
+            # (cyclic counter over [5090, 4070, 5090]); every other tier-1 pool keeps strict priority.
+            rr_gpu_pool = tier == 1 and category in ('code', 'tester')
+            strategy = 'round-robin' if rr_gpu_pool else ('priority' if tier == 1 else 'round-robin')
             if tier == 1 and category == 'planner':
                 description = 'Tier 1 planner: M5 DS4 GLM only'
             elif tier == 1 and category == 'reader':
                 description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
             elif tier == 1 and category in TIER1_OVERRIDES:
-                description = f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority'
+                description = (f'Tier 1 {category}: 5090 Qwen3.8 / 4070 Qwen3.8 IQ3 round-robin 2:1 interleave + session sticky'
+                               if category in ('code', 'tester')
+                               else f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority')
             elif tier == 1:
                 description = f'Tier 1 {category}: 5090 > M5 MLX > 4070 Qwen priority'
             else:
@@ -210,8 +242,24 @@ def build(mode, existing):
                 'strategy': strategy, 'models': [model_step(category,tier,i,m,w) for i,(m,w) in enumerate(targets)],
                 'context_length': (PLANNER_RAW_WINDOW if category == 'planner' else 163840) if tier == 1 else 1000000,
                 'context_cache_protection': False,
-                'config': config_for(existing.get(name), weightedRoundRobin=tier != 1, concurrencyPerModel=1 if tier == 1 else 4,
-                    **({'weightedTargetPolicies': target_policies} if tier == 1 else {}))}
+                'config': config_for(existing.get(name), concurrencyPerModel=(TIER1_CONCURRENCY.get(category, 1) if tier == 1 else 4),
+                    **({'weightedRoundRobin': tier != 1} if not rr_gpu_pool else {}),
+                    # GPU round-robin pools keep sessions pinned to their warm card (KV-cache reuse: ~6x on follow-up turns),
+                    # so NEW sessions interleave 5090/4070 while a continuing conversation does not re-prefill on the other GPU.
+                    **({'disableSessionStickiness': False} if rr_gpu_pool else {}),
+                    **({'weightedTargetPolicies': target_policies} if (tier == 1 and not rr_gpu_pool) else {}))}
+    # Dedicated GLM job-4 overflow pools for the weighted 27B coder categories. GLM
+    # is a separate escalation step (NOT inline in the tier-1 weighted pool), referenced
+    # as a combo-ref by the local/hybrid roots after tier 1 and before any cloud tier.
+    for category in ('code', 'tester'):
+        name = f'pool/tier1b/{category}'
+        plan[name] = {'name': name,
+            'description': f'{category.capitalize()} high-context overflow: GLM-5.3 1M local before cloud',
+            'strategy': 'priority',
+            'models': [model_step(category, '1b', 'glm', GLM, 100)],
+            'context_length': PLANNER_RAW_WINDOW,
+            'context_cache_protection': False,
+            'config': config_for(existing.get(name), concurrencyPerModel=1, queueTimeoutMs=15000)}
     # Pools exist before any root points at them. Direct local category routes share the same physical reservations.
     for category in WEIGHTS:
         for family in ('local', 'hybrid'):
@@ -219,7 +267,7 @@ def build(mode, existing):
             tiers = [1] if family == 'local' else order
             refs = [t for t in tiers if f'pool/tier{t}/{category}' in plan]
             plan[name] = {'name': name, 'description': f'{category} routing: {mode if family == "hybrid" else "local-only"}; per-task X-OmniRoute-Tier',
-                'strategy': 'priority', 'models': [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs],
+                'strategy': 'priority', 'models': ([{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs] if category not in ('code', 'tester') else ([{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': f'pool/tier1/{category}', 'weight': 0}] + ([{'id': f'{family}-{category}-tier1b', 'kind': 'combo-ref', 'comboName': f'pool/tier1b/{category}', 'weight': 0}] if 1 in refs else []) + [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs if t != 1])),
                 'context_length': 163840 if family == 'local' else 262144, 'context_cache_protection': False,
                 'config': {k:v for k,v in config_for(existing.get(name), nestedComboMode='execute',
                     tierRouting={'defaultTier': 1, 'maximumTier': ceiling if family == 'hybrid' else 1}).items() if k != 'queueDepth'}}
