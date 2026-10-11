@@ -232,12 +232,12 @@ def build(mode, existing):
             strategy = 'round-robin' if rr_gpu_pool else ('priority' if tier == 1 else 'round-robin')
             if tier == 1 and category == 'planner': description = 'Tier 1 planner: M5 DS4 GLM only'
             elif tier == 1 and category == 'reader': description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
-            elif tier == 1 and category in cascade: description = f'Tier 1 {category}: 5090 Qwen3.8 / 4070 Qwen3.8 IQ3 round-robin 2:1 interleave'
+            elif tier == 1 and category in cascade: description = f'Tier 1 {category}: 5090 / 4070 IQ3 / M5 Uzu / 5090 four-slot cascade'
             elif tier == 1 and category in TIER1_OVERRIDES: description = f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority'
             else: description = f'Tier {tier} {category}: capacity-aware weighted round robin'
             overrides = {'concurrencyPerModel': TIER1_CONCURRENCY.get(category, 1) if tier == 1 else 4}
             if tier != 1: overrides.update(weightedRoundRobin=True, targetTimeoutMs=60000)
-            elif rr_gpu_pool: overrides.update(queueDepth=0, queueTimeoutMs=1000, targetTimeoutMs=600000, concurrencyPerModel=2, disableSessionStickiness=True, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)
+            elif rr_gpu_pool: overrides.update(queueDepth=0, queueTimeoutMs=1000, targetTimeoutMs=600000, concurrencyPerModel=1, disableSessionStickiness=True, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)
             else: overrides['weightedTargetPolicies'] = target_policies
             plan[name] = {'name': name, 'description': description, 'strategy': strategy,
                 'models': [model_step(category,tier,i,m,w) for i,(m,w) in enumerate(targets)],
@@ -248,22 +248,16 @@ def build(mode, existing):
         if len(parts) == 3 and parts[0] == 'pool' and parts[1] in {'tier2', 'tier3', 'tier4', 'tier5'} and name not in plan:
             plan[name] = projection(before)
             plan[name]['config']['targetTimeoutMs'] = 60000
-    for category in ('code', 'research'):
-        name = f'pool/tier1b/{category}'
-        plan[name] = {'name': name, 'description': f'{category.capitalize()} high-context overflow: GLM-5.3 1M local before cloud',
-            'strategy': 'round-robin', 'models': [model_step(category, '1b', 'glm', GLM, 100)],
-            'context_length': PLANNER_RAW_WINDOW, 'context_cache_protection': False,
-            'config': config_for(existing.get(name), concurrencyPerModel=1, queueDepth=0, queueTimeoutMs=1000, targetTimeoutMs=600000, disableSessionStickiness=True, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)}
     if existing.get('pool/tier1b/tester'): plan['pool/tier1b/tester'] = projection(existing['pool/tier1b/tester'])
     for category in WEIGHTS:
         for family in ('local', 'hybrid'):
             name = f'{family}/{category}'
-            if category != 'research' and existing.get(name):
+            if category not in cascade and existing.get(name):
                 plan[name] = projection(existing[name]); continue
             tiers = [1] if family == 'local' else order
             refs = [t for t in tiers if f'pool/tier{t}/{category}' in plan]
             if category in cascade:
-                models = [{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': f'pool/tier1/{category}', 'weight': 0}, {'id': f'{family}-{category}-tier1b', 'kind': 'combo-ref', 'comboName': f'pool/tier1b/{category}', 'weight': 0}]
+                models = [{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': f'pool/tier1/{category}', 'weight': 0}]
                 if family == 'hybrid': models += [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs if t != 1]
             else:
                 models = [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs]
