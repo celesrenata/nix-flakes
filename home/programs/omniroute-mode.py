@@ -33,6 +33,8 @@ QWEN5090 = 'vllm/qwen3.8-27b-nvfp4'
 IQ3 = 'ollama-local/qwen3.8:27b-iq3-code144k'
 MLX = 'llama-cpp/mlx-qwen3.8-27b-4bit'
 GLM = 'llama-cpp/ds4-glm53'
+# M5 Max coder (Uzu Qwen3.8-27B-S, SSD-streamed, coexists resident with GLM planner).
+UZU = 'llama-cpp/qwen3.8-27b-uzu'
 # Dedicated 9B reader model (NOT a coder): the 4070 Ti Super ollama reader.
 READER4070 = 'ollama-local/qwen3.5-reader:9b'
 # Fast tier little coder: 4070 Ti Super ollama 9B (vision + agentic programming / code reading).
@@ -79,6 +81,7 @@ POLICIES = {
 # do not gain extra weightedTargetPolicies keys (which would drift their live combos).
 OVERRIDE_POLICIES = {
     QWEN5090: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
+    UZU: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     IQ3: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     GLM: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     READER4070: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
@@ -124,7 +127,7 @@ MODES = {
     'tiered': ([1, 2, 3, 4, 5], 5),
 }
 FIELDS = ('name', 'description', 'strategy', 'models', 'config', 'context_length', 'context_cache_protection')
-OBSOLETE = {'healthCheckEnabled', 'healthCheckTimeoutMs', 'timeoutMs', 'queueDepth'}
+OBSOLETE = {'healthCheckEnabled', 'healthCheckTimeoutMs', 'timeoutMs'}
 # Shared GPU pool: each connection's maxConcurrent is OmniRoute's persisted
 # per-device semaphore, the cross-lane arbiter so code/research/planner don't
 # over-dispatch the same card. 5090 vLLM runs 2 sequences (esnixi/vllm.nix
@@ -133,9 +136,9 @@ OBSOLETE = {'healthCheckEnabled', 'healthCheckTimeoutMs', 'timeoutMs', 'queueDep
 # down to 1 and spills. M5 GLM is a single slot. (M5 reader connection retired.)
 PROVIDER_POLICIES = {
     CONNECTIONS['vllm']: {'maxConcurrent': 2},
-    CONNECTIONS['ollama-local']: {'maxConcurrent': 4},
+    CONNECTIONS['ollama-local']: {'maxConcurrent': 1},
     # Both M5 models share the mutually-exclusive local-model-proxy.
-    CONNECTIONS['llama-cpp']: {'maxConcurrent': 1},
+    CONNECTIONS['llama-cpp']: {'maxConcurrent': 2},  # GLM planner + Uzu coder, one slot each
 }
 
 def request(base, path, data=None, method=None):
@@ -168,8 +171,6 @@ def live_combos(base):
 def projection(combo):
     if not combo: return None
     result = {key: copy.deepcopy(combo[key]) for key in FIELDS if key in combo}
-    # PUT strips this legacy field. Weighted execution enforces zero queuing itself.
-    if isinstance(result.get('config'), dict): result['config'].pop('queueDepth', None)
     return result
 
 def config_for(before, **overrides):
@@ -198,13 +199,20 @@ def allowed_cloud(mode, model):
 def build(mode, existing):
     order, ceiling = MODES[mode]
     plan = {}
+    cascade = {'code', 'research'}
     for category, (vllm, iq3, mlx, glm) in WEIGHTS.items():
-        # Inactive tiers stay installed for inspection, but roots only reference permitted pools.
         for tier in range(1, 6):
             name = f'pool/tier{tier}/{category}'
-            if tier == 1 and category in TIER1_OVERRIDES:
-                # Retargeted tier-1 chain (reader/code/tester): use the explicit
-                # per-category model set instead of the shared [5090/MLX/IQ3/GLM] slots.
+            if tier == 1 and category not in cascade and existing.get(name):
+                plan[name] = projection(existing[name])
+                continue
+            if tier != 1 and existing.get(name):
+                plan[name] = projection(existing[name])
+                plan[name]['config']['targetTimeoutMs'] = 60000
+                continue
+            if tier == 1 and category in cascade:
+                targets = [(QWEN5090, 1), (IQ3, 1), (UZU, 1), (QWEN5090, 1)]
+            elif tier == 1 and category in TIER1_OVERRIDES:
                 targets = list(TIER1_OVERRIDES[category])
             else:
                 targets = [(QWEN5090,vllm), (MLX,mlx), (IQ3,iq3), (GLM,glm)] if tier == 1 else CLOUD[tier]
@@ -214,65 +222,57 @@ def build(mode, existing):
                 if tier in order: targets = [(m,w) for m,w in targets if allowed_cloud(mode,m)]
                 if category in FREE_ONLY_CLOUD_CATEGORIES: targets = [(m,w) for m,w in targets if is_free_cloud(m)]
             if not targets: continue
-            if tier == 1 and category in TIER1_OVERRIDES:
-                # Only publish policies for the models actually in this overridden pool.
+            if tier == 1 and (category in TIER1_OVERRIDES or category in cascade):
                 target_policies = {model: copy.deepcopy(OVERRIDE_POLICIES[model]) for model, _ in targets}
             else:
                 target_policies = copy.deepcopy(POLICIES)
             if category == 'planner':
-                for policy in target_policies.values():
-                    policy['maxInputTokens'] = PLANNER_RAW_WINDOW
-            # code/tester tier-1 interleave the two 27B GPUs via deterministic round-robin
-            # (cyclic counter over [5090, 4070, 5090]); every other tier-1 pool keeps strict priority.
-            rr_gpu_pool = tier == 1 and category in ('code', 'tester')
+                for policy in target_policies.values(): policy['maxInputTokens'] = PLANNER_RAW_WINDOW
+            rr_gpu_pool = tier == 1 and category in cascade
             strategy = 'round-robin' if rr_gpu_pool else ('priority' if tier == 1 else 'round-robin')
-            if tier == 1 and category == 'planner':
-                description = 'Tier 1 planner: M5 DS4 GLM only'
-            elif tier == 1 and category == 'reader':
-                description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
-            elif tier == 1 and category in TIER1_OVERRIDES:
-                description = (f'Tier 1 {category}: 5090 Qwen3.8 / 4070 Qwen3.8 IQ3 round-robin 2:1 interleave + session sticky'
-                               if category in ('code', 'tester')
-                               else f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority')
-            elif tier == 1:
-                description = f'Tier 1 {category}: 5090 > M5 MLX > 4070 Qwen priority'
-            else:
-                description = f'Tier {tier} {category}: capacity-aware weighted round robin'
-            plan[name] = {'name': name, 'description': description,
-                'strategy': strategy, 'models': [model_step(category,tier,i,m,w) for i,(m,w) in enumerate(targets)],
+            if tier == 1 and category == 'planner': description = 'Tier 1 planner: M5 DS4 GLM only'
+            elif tier == 1 and category == 'reader': description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
+            elif tier == 1 and category in cascade: description = f'Tier 1 {category}: 5090 Qwen3.8 / 4070 Qwen3.8 IQ3 round-robin 2:1 interleave'
+            elif tier == 1 and category in TIER1_OVERRIDES: description = f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority'
+            else: description = f'Tier {tier} {category}: capacity-aware weighted round robin'
+            overrides = {'concurrencyPerModel': TIER1_CONCURRENCY.get(category, 1) if tier == 1 else 4}
+            if tier != 1: overrides.update(weightedRoundRobin=True, targetTimeoutMs=60000)
+            elif rr_gpu_pool: overrides.update(queueDepth=0, queueTimeoutMs=1000, targetTimeoutMs=600000, concurrencyPerModel=2, disableSessionStickiness=True, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)
+            else: overrides['weightedTargetPolicies'] = target_policies
+            plan[name] = {'name': name, 'description': description, 'strategy': strategy,
+                'models': [model_step(category,tier,i,m,w) for i,(m,w) in enumerate(targets)],
                 'context_length': (PLANNER_RAW_WINDOW if category == 'planner' else 163840) if tier == 1 else 1000000,
-                'context_cache_protection': False,
-                'config': config_for(existing.get(name), concurrencyPerModel=(TIER1_CONCURRENCY.get(category, 1) if tier == 1 else 4),
-                    **({'weightedRoundRobin': tier != 1} if not rr_gpu_pool else {}),
-                    # GPU round-robin pools keep sessions pinned to their warm card (KV-cache reuse: ~6x on follow-up turns),
-                    # so NEW sessions interleave 5090/4070 while a continuing conversation does not re-prefill on the other GPU.
-                    **({'disableSessionStickiness': False} if rr_gpu_pool else {}),
-                    **({'weightedTargetPolicies': target_policies} if (tier == 1 and not rr_gpu_pool) else {}))}
-    # Dedicated GLM job-4 overflow pools for the weighted 27B coder categories. GLM
-    # is a separate escalation step (NOT inline in the tier-1 weighted pool), referenced
-    # as a combo-ref by the local/hybrid roots after tier 1 and before any cloud tier.
-    for category in ('code', 'tester'):
+                'context_cache_protection': False, 'config': config_for(existing.get(name), **overrides)}
+    for name, before in existing.items():
+        parts = name.split('/')
+        if len(parts) == 3 and parts[0] == 'pool' and parts[1] in {'tier2', 'tier3', 'tier4', 'tier5'} and name not in plan:
+            plan[name] = projection(before)
+            plan[name]['config']['targetTimeoutMs'] = 60000
+    for category in ('code', 'research'):
         name = f'pool/tier1b/{category}'
-        plan[name] = {'name': name,
-            'description': f'{category.capitalize()} high-context overflow: GLM-5.3 1M local before cloud',
-            'strategy': 'priority',
-            'models': [model_step(category, '1b', 'glm', GLM, 100)],
-            'context_length': PLANNER_RAW_WINDOW,
-            'context_cache_protection': False,
-            'config': config_for(existing.get(name), concurrencyPerModel=1, queueTimeoutMs=15000)}
-    # Pools exist before any root points at them. Direct local category routes share the same physical reservations.
+        plan[name] = {'name': name, 'description': f'{category.capitalize()} high-context overflow: GLM-5.3 1M local before cloud',
+            'strategy': 'round-robin', 'models': [model_step(category, '1b', 'glm', GLM, 100)],
+            'context_length': PLANNER_RAW_WINDOW, 'context_cache_protection': False,
+            'config': config_for(existing.get(name), concurrencyPerModel=1, queueDepth=0, queueTimeoutMs=1000, targetTimeoutMs=600000, disableSessionStickiness=True, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)}
+    if existing.get('pool/tier1b/tester'): plan['pool/tier1b/tester'] = projection(existing['pool/tier1b/tester'])
     for category in WEIGHTS:
         for family in ('local', 'hybrid'):
             name = f'{family}/{category}'
+            if category != 'research' and existing.get(name):
+                plan[name] = projection(existing[name]); continue
             tiers = [1] if family == 'local' else order
             refs = [t for t in tiers if f'pool/tier{t}/{category}' in plan]
+            if category in cascade:
+                models = [{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': f'pool/tier1/{category}', 'weight': 0}, {'id': f'{family}-{category}-tier1b', 'kind': 'combo-ref', 'comboName': f'pool/tier1b/{category}', 'weight': 0}]
+                if family == 'hybrid': models += [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs if t != 1]
+            else:
+                models = [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs]
+            root_overrides = {'nestedComboMode': 'execute', 'tierRouting': {'defaultTier': 1, 'maximumTier': ceiling if family == 'hybrid' else 1}}
+            if category in cascade: root_overrides['failoverBeforeRetry'] = True
             plan[name] = {'name': name, 'description': f'{category} routing: {mode if family == "hybrid" else "local-only"}; per-task X-OmniRoute-Tier',
-                'strategy': 'priority', 'models': ([{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs] if category not in ('code', 'tester') else ([{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': f'pool/tier1/{category}', 'weight': 0}] + ([{'id': f'{family}-{category}-tier1b', 'kind': 'combo-ref', 'comboName': f'pool/tier1b/{category}', 'weight': 0}] if 1 in refs else []) + [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs if t != 1])),
-                'context_length': 163840 if (family == 'local' or category == 'fast') else 262144, 'context_cache_protection': False,
-                'config': {k:v for k,v in config_for(existing.get(name), nestedComboMode='execute',
-                    tierRouting={'defaultTier': 1, 'maximumTier': ceiling if family == 'hybrid' else 1}).items() if k != 'queueDepth'}}
+                'strategy': 'priority', 'models': models, 'context_length': 163840 if (family == 'local' or category == 'fast') else 262144,
+                'context_cache_protection': False, 'config': config_for(existing.get(name), **root_overrides)}
     return plan
-
 def write_json(path, data):
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     temp = path.with_name(path.name + '.tmp')
