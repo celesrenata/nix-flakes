@@ -203,6 +203,7 @@ def build(mode, existing):
     for category, (vllm, iq3, mlx, glm) in WEIGHTS.items():
         for tier in range(1, 6):
             name = f'pool/tier{tier}/{category}'
+            if tier == 1 and category == 'research': continue  # Code and research share one physical local-capacity pool.
             if tier == 1 and category not in cascade and existing.get(name):
                 plan[name] = projection(existing[name])
                 continue
@@ -232,7 +233,7 @@ def build(mode, existing):
             strategy = 'round-robin' if rr_gpu_pool else ('priority' if tier == 1 else 'round-robin')
             if tier == 1 and category == 'planner': description = 'Tier 1 planner: M5 DS4 GLM only'
             elif tier == 1 and category == 'reader': description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
-            elif tier == 1 and category in cascade: description = f'Tier 1 {category}: 5090 / 4070 IQ3 / M5 Uzu / 5090 four-slot cascade'
+            elif tier == 1 and category in cascade: description = 'Tier 1 shared code/research: 5090 / 4070 IQ3 / M5 Uzu / 5090 four-slot cascade'
             elif tier == 1 and category in TIER1_OVERRIDES: description = f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority'
             else: description = f'Tier {tier} {category}: capacity-aware weighted round robin'
             overrides = {'concurrencyPerModel': TIER1_CONCURRENCY.get(category, 1) if tier == 1 else 4}
@@ -257,7 +258,7 @@ def build(mode, existing):
             tiers = [1] if family == 'local' else order
             refs = [t for t in tiers if f'pool/tier{t}/{category}' in plan]
             if category in cascade:
-                models = [{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': f'pool/tier1/{category}', 'weight': 0}]
+                models = [{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': 'pool/tier1/code', 'weight': 0}]
                 if family == 'hybrid': models += [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs if t != 1]
             else:
                 models = [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs]
