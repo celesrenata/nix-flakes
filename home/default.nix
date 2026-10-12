@@ -23,6 +23,7 @@
     ./programs/comfyui.nix          # ComfyUI AI image generation service
     ./programs/lvra.nix
     ./programs/development.nix      # Development tools (VSCode, Git, Python, etc.)
+    ./programs/vscode-zoo.nix      # VSCode + custom Zoo parallel tools
     ./programs/media.nix            # Media applications (OBS, players, editors)
     ./programs/productivity.nix     # Productivity tools (browsers, file managers)
     ./programs/terminal.nix         # Terminal emulators and CLI tools

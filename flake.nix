@@ -209,6 +209,7 @@
           ./esnixi/lvra.nix
           ./esnixi/vllm-proxy.nix
           ./esnixi/lan-mouse.nix
+          ./esnixi/omniroute-wireguard.nix
           #./esnixi/exo.nix                            # Disabled: requires exo flake input
           #./esnixi/dcgm-exporter.nix                  # Disabled: dcgm-exporter not in nixpkgs
 
@@ -237,6 +238,17 @@
     };
 
   in {
+    # Standalone Home Manager target for the Ubuntu VM development host.
+    homeConfigurations."celes@ubuntu26" = home-manager.lib.homeManagerConfiguration {
+      pkgs = mkPkgs {
+        system = "x86_64-linux";
+        backend = "cpu";
+        groups = [ "common" "development" ];
+      };
+      extraSpecialArgs = { inherit inputs; };
+      modules = [ ./home/ubuntu26.nix ];
+    };
+
     # Development environments for various projects
     devShells.x86_64-linux.default =
       let
