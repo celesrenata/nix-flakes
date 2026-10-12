@@ -206,6 +206,13 @@ in
           "tests/server/auth/providers/test_supabase.py"
         ];
       });
+      # anyio 4.14.2's check phase is nondeterministic with this pin's
+      # Python 3.12/3.14 asyncio and OpenSSL stack (TLS, thread-count, and
+      # unhandled-thread warnings fail on different runs). Runtime code is
+      # unaffected; remove this once nixpkgs carries a stable check fix.
+      anyio = pyprev.anyio.overridePythonAttrs (_: {
+        doCheck = false;
+      });
     })
   ];
 }

@@ -1,12 +1,12 @@
-# Virtualisation configuration for Nigel (Lenovo ideacentre AIO 700-27ISH)
-# Intel HD Graphics 530 passed through to Windows VM via vfio-pci
-# Windows runs in Docker container via dockurr/windows with Intel GPU acceleration
+# Virtualisation configuration for Nigel (Ryzen AM5 desktop)
+# Docker + QEMU/KVM; AMD IOMMU available for optional GPU/device passthrough.
+# Windows runs in a Docker container via dockurr/windows.
 
 { config, lib, pkgs, ... }:
 
 {
   config = lib.mkIf config.my.profiles.virtualization.enable {
-    # ── Docker with Intel GPU passthrough support ────────────────────────
+    # ── Docker (btrfs backend) ──────────────────────────────────────────
     virtualisation.docker = {
       enable = true;
       enableOnBoot = true;
@@ -15,7 +15,7 @@
       package = pkgs.docker;
     };
 
-    # ── QEMU/KVM for GPU passthrough ────────────────────────────────────
+    # ── QEMU/KVM ─────────────────────────────────────────────────────────
     virtualisation.libvirtd = {
       enable = true;
       qemu = {
@@ -28,19 +28,19 @@
     programs.virt-manager.enable = true;
     users.users.celes.extraGroups = [ "libvirtd" "kvm" ];
 
-    # ── Intel GPU passthrough via vfio-pci ──────────────────────────────
-    boot.kernelModules = [ "kvm-intel" "kvm" "vfio-pci" "vfio" "vfio_iommu" ];
+    # ── AMD virtualisation + VFIO for optional passthrough ──────────────
+    boot.kernelModules = [ "kvm-amd" "kvm" "vfio-pci" "vfio" "vfio_iommu" ];
 
     boot.extraModprobeConfig = ''
-      # Bind Intel HD Graphics 530 to vfio-pci for VM passthrough
-      # PCI ID for Skylake GT2 (HD Graphics 530) = 8086:1912
-      # Verify with: lspci -nn | grep "VGA" | grep Intel
-      options vfio-pci ids=8086:1912
-      options kvm_intel nested=1
+      # Nested virtualisation on AMD (SVM).
+      options kvm_amd nested=1
+      # To pass a discrete GPU/device into a VM, bind it to vfio-pci here, e.g.:
+      #   options vfio-pci ids=10de:xxxx,10de:yyyy
+      # Find the IDs with: lspci -nn | grep -Ei "VGA|Audio"
     '';
 
     boot.kernelParams = [
-      "intel_iommu=on"
+      "amd_iommu=on"
       "iommu=pt"
     ];
 

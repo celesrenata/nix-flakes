@@ -620,6 +620,18 @@ class SwitcherTests(unittest.TestCase):
             self.assertIsNone(SW.active_model)
             self.assertIs(SW.switching, False)
 
+    def test_z0_nix_coder_prefix_cache_and_coupled_invariants(self):
+        coder = _nix_block("vllm")
+        self.assertIsNotNone(coder)
+        for expected in (
+            '--enable-prefix-caching', 'idleSeconds = "0";',
+            'kvCacheMemory = 5905580032;', 'kvOffloadingSize = 32;',
+            'maxModelLen = "163840";', 'maxNumSeqs = "2";',
+            '--max-num-batched-tokens 5760',
+        ):
+            self.assertIn(expected, coder)
+        self.assertRegex(coder, r'--speculative-config .*num_speculative_tokens.*:3')
+
     def test_z_nix_switcher_env_and_coder_gate(self):
         self.assertNotIn("restart =", _nix_block("vllm"))
         # The coder KV budget is measured against a non-resident reader; pin it.

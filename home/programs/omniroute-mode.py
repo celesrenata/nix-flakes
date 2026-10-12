@@ -69,7 +69,7 @@ TIER1_OVERRIDES = {
 # Each physical GPU has one target. The old balanced/full names were two aliases
 # for the 5090's single request slot and inflated its share in round robin.
 RAW_HYBRID_WINDOW = 524288
-PLANNER_RAW_WINDOW = 1048576
+PLANNER_RAW_WINDOW = 32768
 POLICIES = {
     QWEN5090: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
     IQ3: {'capacityUnits': 1, 'maxInputTokens': RAW_HYBRID_WINDOW},
@@ -206,6 +206,11 @@ def build(mode, existing):
             if tier == 1 and category == 'research': continue  # Code and research share one physical local-capacity pool.
             if tier == 1 and category not in cascade and existing.get(name):
                 plan[name] = projection(existing[name])
+                if category == 'planner':
+                    plan[name]['context_length'] = PLANNER_RAW_WINDOW
+                    plan[name]['config'].update(queueDepth=0, queueTimeoutMs=1000, concurrencyPerModel=1, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)
+                    policies = plan[name]['config'].get('weightedTargetPolicies', {})
+                    if GLM in policies: policies[GLM]['maxInputTokens'] = PLANNER_RAW_WINDOW
                 continue
             if tier != 1 and existing.get(name):
                 plan[name] = projection(existing[name])
@@ -230,7 +235,7 @@ def build(mode, existing):
             if category == 'planner':
                 for policy in target_policies.values(): policy['maxInputTokens'] = PLANNER_RAW_WINDOW
             rr_gpu_pool = tier == 1 and category in cascade
-            strategy = 'round-robin' if rr_gpu_pool else ('priority' if tier == 1 else 'round-robin')
+            strategy = 'priority' if rr_gpu_pool else ('priority' if tier == 1 else 'round-robin')
             if tier == 1 and category == 'planner': description = 'Tier 1 planner: M5 DS4 GLM only'
             elif tier == 1 and category == 'reader': description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
             elif tier == 1 and category in cascade: description = 'Tier 1 shared code/research: 5090 / 4070 IQ3 / M5 Uzu / 5090 four-slot cascade'
@@ -249,12 +254,17 @@ def build(mode, existing):
         if len(parts) == 3 and parts[0] == 'pool' and parts[1] in {'tier2', 'tier3', 'tier4', 'tier5'} and name not in plan:
             plan[name] = projection(before)
             plan[name]['config']['targetTimeoutMs'] = 60000
-    if existing.get('pool/tier1b/tester'): plan['pool/tier1b/tester'] = projection(existing['pool/tier1b/tester'])
+    if existing.get('pool/tier1b/tester'):
+        plan['pool/tier1b/tester'] = projection(existing['pool/tier1b/tester'])
+        plan['pool/tier1b/tester']['context_length'] = PLANNER_RAW_WINDOW
+        plan['pool/tier1b/tester']['config'].update(queueDepth=0, queueTimeoutMs=1000, concurrencyPerModel=1, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)
     for category in WEIGHTS:
         for family in ('local', 'hybrid'):
             name = f'{family}/{category}'
             if category not in cascade and existing.get(name):
-                plan[name] = projection(existing[name]); continue
+                plan[name] = projection(existing[name])
+                if category == 'planner': plan[name]['context_length'] = PLANNER_RAW_WINDOW
+                continue
             tiers = [1] if family == 'local' else order
             refs = [t for t in tiers if f'pool/tier{t}/{category}' in plan]
             if category in cascade:
@@ -265,7 +275,7 @@ def build(mode, existing):
             root_overrides = {'nestedComboMode': 'execute', 'tierRouting': {'defaultTier': 1, 'maximumTier': ceiling if family == 'hybrid' else 1}}
             if category in cascade: root_overrides['failoverBeforeRetry'] = True
             plan[name] = {'name': name, 'description': f'{category} routing: {mode if family == "hybrid" else "local-only"}; per-task X-OmniRoute-Tier',
-                'strategy': 'priority', 'models': models, 'context_length': 163840 if (family == 'local' or category == 'fast') else 262144,
+                'strategy': 'priority', 'models': models, 'context_length': PLANNER_RAW_WINDOW if category == 'planner' else (163840 if (family == 'local' or category == 'fast') else 262144),
                 'context_cache_protection': False, 'config': config_for(existing.get(name), **root_overrides)}
     return plan
 def write_json(path, data):
@@ -403,7 +413,7 @@ def main():
     for tier,targets in CLOUD.items():
         if tier in order:
             print('Tier',tier,':',', '.join(f'{m} ({w})' for m,w in targets if allowed_cloud(args.preset,m)))
-    print('5090 MTP: one 131072-context request (fixed kvCacheMemory ~4.45 GiB). 4070 IQ3: one 147456-context request. M5 MLX: 131072; M5 DS4: 163840; one shared slot.')
+    print('5090 MTP: one 131072-context request (fixed kvCacheMemory ~4.45 GiB). 4070 IQ3: one 147456-context request. M5 MLX: 131072; M5 DS4: 32768; one shared slot.')
     changes=sum(not same(v,live.get(n)) for n,v in plan.items())
     provider_changes=sum(not same(change['before'],change['after']) for change in providers.values())
     for change in providers.values():

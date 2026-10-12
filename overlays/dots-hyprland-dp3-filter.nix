@@ -24,11 +24,16 @@ inputs: final: prev: {
       "$out/.config/quickshell/modules/bar/UtilButtons.qml" \
       "$out/.config/quickshell/ii/modules/bar/UtilButtons.qml"; do
       if [ -f "$file" ]; then
-        substituteInPlace "$file" \
-          --replace-fail 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode light --noswitch`);' \
-                         'Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", "light", "--noswitch"]);' \
-          --replace-fail 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode dark --noswitch`);' \
-                         'Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", "dark", "--noswitch"]);'
+        if grep -Fq 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode light --noswitch`);' "$file"; then
+          substituteInPlace "$file" \
+            --replace-fail 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode light --noswitch`);' \
+                           'Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", "light", "--noswitch"]);'
+        fi
+        if grep -Fq 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode dark --noswitch`);' "$file"; then
+          substituteInPlace "$file" \
+            --replace-fail 'Hyprland.dispatch(`exec ''${Directories.wallpaperSwitchScriptPath} --mode dark --noswitch`);' \
+                           'Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", "dark", "--noswitch"]);'
+        fi
       fi
     done
 
