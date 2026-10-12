@@ -78,10 +78,14 @@
     # Desktop intelligence MCP server (Hyprland + Quickshell + system tools)
     ii-desktop-mcp.url = "github:celesrenata/hyprmcp/ii-desktop-mcp";
     ii-desktop-mcp.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Menagerie (Zoo Code) VS Code extension — built from source, HM/NixOS/darwin modules
+    menagerie.url = "github:celesrenata/menagerie";
+    menagerie.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ii-desktop-mcp, hyprland, hyprland-plugins, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ii-desktop-mcp, menagerie, hyprland, hyprland-plugins, ... }:
   let
     lib = nixpkgs.lib;
 
@@ -248,6 +252,7 @@
           ./home/programs/ii-desktop-mcp.nix
           ./esnixi/hyprland.nix
           ii-desktop-mcp.homeManagerModules.default
+          menagerie.homeManagerModules.default
         ];
       };
 
@@ -349,6 +354,7 @@
           ./home/programs/ii-desktop-mcp.nix
           ./vm-x86/hyprland.nix
           ii-desktop-mcp.homeManagerModules.default
+          menagerie.homeManagerModules.default
         ];
       };
 
@@ -390,6 +396,7 @@
           ./home/programs/ii-desktop-mcp.nix
           ./vm/hyprland.nix
           ii-desktop-mcp.homeManagerModules.default
+          menagerie.homeManagerModules.default
         ];
       };
     };
