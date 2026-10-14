@@ -8,8 +8,6 @@
     boot = {
       loader = {
         systemd-boot.enable = true;
-        # Keep EFI-space use bounded: each generation copies kernel + initrd to ESP.
-        systemd-boot.configurationLimit = 3;
         efi.canTouchEfiVariables = true;
       };
       supportedFilesystems = [ "ntfs" "nfs" "btrfs" "ext4" "cifs" ];
@@ -41,9 +39,12 @@
         options nvidia_drm modeset=1 fbdev=1
       '';
 
-      # NVIDIA is loaded after the root filesystem mounts via boot.kernelModules.
-      # Keeping it out of the initrd avoids embedding large NVIDIA modules and
-      # firmware in every EFI-stored initrd (and reduces ESP exhaustion risk).
+      initrd.kernelModules = [
+        "nvidia"
+        "nvidia_modeset"
+        "nvidia_uvm"
+        "nvidia_drm"
+      ];
     };
 
     hardware.graphics.enable = true;
