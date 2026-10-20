@@ -7,10 +7,11 @@
   # vllm-switcher was retired (Option 2b), so OmniRoute reaches the coder
   # directly on 8010 rather than through the switcher's 8011 front door.
   my.engines.qwen3Native.enable = true;
-  # Concurrency 4: the engine batches decode/verify across requests (its GEMMs
-  # handle up to 64 rows = 8 reqs x 8 spec tokens, so 4 is well inside the
-  # envelope). MAX_TOKENS_FIT=1 sizes the KV pool to what the 4-seq state leaves.
-  my.engines.qwen3Native.maxSeqs = 4;
+  # Concurrency 3: one slot per OmniRoute user (3 people). The engine batches
+  # decode/verify across slots; fewer slots = more GPU per active request (lower
+  # latency), and with the prefix cache on, slots free fast as shared prefixes
+  # restore. MAX_TOKENS_FIT=1 sizes the KV pool to what the 3-seq state leaves.
+  my.engines.qwen3Native.maxSeqs = 3;
 
   services.nginx = {
     enable = true;
