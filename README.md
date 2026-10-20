@@ -32,7 +32,7 @@ hosts = {
 | **development** | GCC 13, CMake, Meson, Ninja, Node.js, Java, TypeScript, AWS CLI + CDK, k3s, Helm + plugins (secrets/diff/s3/git), helmfile, kustomize, kompose, kubevirt, krew, ccache, codex (AI coding agent), uv/pipx, nil (Nix LSP) |
 | **videoEditing** | Kdenlive, ffmpeg-full, mkvtoolnix, darktable, Blender |
 | **virtualization** | Docker (btrfs backend), QEMU/KVM + libvirtd + virt-manager, nested virtualization, IOMMU/GPU passthrough, Windows 11 container (dockurr/windows) with RDP + WinApps for seamless M365/Adobe app integration, bridge/macvlan networking |
-| **ai** | Ollama (CUDA, flash attention, 262K context, auto-loaded Qwen 3.6 models), vLLM (NVFP4 quantized serving on port 8000), Open WebUI (port 8776), CUDA toolkit, PyTorch + torchvision + torchaudio, transformers, diffusers, accelerate, HuggingFace model management, model directory ownership management |
+| **ai** | Ollama (CUDA, flash attention, 262K context, auto-loaded Qwen 3.6 models), vLLM (Qwen3.8-27B NVFP4 weights **and** NVFP4 KV cache on sm120 via FlashInfer 0.7.2, MTP speculative decoding, 163K context, loopback port 8010; selectable NVIDIA or all-NVFP4 Minima checkpoint), Open WebUI (port 8776), CUDA toolkit, PyTorch + torchvision + torchaudio, transformers, diffusers, accelerate, HuggingFace model management, model directory ownership management |
 
 ### Overlay Groups
 

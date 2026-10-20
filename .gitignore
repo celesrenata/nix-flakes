@@ -32,3 +32,4 @@ hardware-configuration.nix.bak
 
 # Python bytecode
 __pycache__/
+tmp/

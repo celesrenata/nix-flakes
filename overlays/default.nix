@@ -123,6 +123,7 @@
         });
       })
     (import ./vllm.nix)
+    (import ./qwen3-27b-5090.nix)
     (import ./tensorrt.nix)
     (import ./ollama.nix)
     (import ./xformers-bin-0_0_28_post3.nix)

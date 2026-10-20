@@ -1,6 +1,58 @@
 { config, lib, pkgs, pkgsAccel, ... }:
 
 let
+  # ── Coder checkpoint knob ───────────────────────────────────────────────
+  # The HF weights the primary (and DR fallback) coder serves. Both options are
+  # NVFP4, compressed-tensors (no --load-format change), and vision/MTP-capable,
+  # and both are served under the SAME name "qwen3.8-27b-nvfp4" on port 8010 at
+  # 163840 context / 2 seqs -- so vllm-switch.py and test_vllm_switch.py are
+  # unaffected by the choice. If you switch to Minima, also update the two
+  # hf_id/ALIASES lines in vllm-switch.py (metadata only; the served name and
+  # all switch.py-coupled fields stay the same).
+  #
+  #   gdnfp4  = "juzbox/Qwen3.8-27B-NVFP4-GDN"  (DEFAULT)
+  #     The nvidia checkpoint with the 48 GDN linear-attention projections
+  #     (in_proj_qkv / in_proj_z / out_proj) ALSO quantized to NVFP4 (GPTQ from
+  #     the BF16 original); MLP, lm_head, the 16 attention layers (FP8),
+  #     embeddings, the MTP head and vision tower are NVIDIA's tensors unchanged.
+  #     Format is ModelOpt MIXED_PRECISION (quant_method modelopt, group 16), so
+  #     it loads on our patched vLLM with no --load-format change. Decode reads
+  #     14.14 GiB of weights/token vs the nvidia checkpoint's 16.40 (~2.26 GiB
+  #     less = the decode-bandwidth win), 19.50 GB on disk vs 21.92. Measured
+  #     7-15% faster vLLM decode than nvidia with EQUAL GSM8K (95.7 vs 94.7) and
+  #     BFCL v3 (89.8 vs 89.1) -- tool calling is preserved precisely because the
+  #     ATTENTION projections stay FP8 (quantizing attention, not GDN, is what
+  #     costs parallel tool calls; see the juzbox card + mkyt/qwen3-27b-5090
+  #     decisions.md). Fused in_proj_qkv/in_proj_z share one weight global scale,
+  #     which vLLM already handles (keeps the largest of a fused layer). This is
+  #     the fastest checkpoint that keeps nvidia-level quality + full tool calls.
+  #   nvidia  = "nvidia/Qwen3.8-27B-NVFP4"  (fallback)
+  #     NVIDIA ModelOpt mixed-precision: NVFP4 on MLP + lm_head, FP8 on the
+  #     self-attention AND the 48 GDN linear-attention layers; ships NO
+  #     calibrated KV scales (its card serves fp8 KV). With our nvfp4 KV this
+  #     runs at scale 1.0, which the Minima paper measures as a ~3x-larger
+  #     long-context KV penalty on a quantized model vs calibrated scales.
+  #   minima  = "minima-ai/mnma_qwen3.8_27b_nvfp4"
+  #     All 496 linear layers NVFP4 W4A4 INCLUDING the GDN block, PLUS calibrated
+  #     static per-tensor FP8 KV scales (arXiv 2609.04098). Smallest weights in
+  #     its cohort (17.5 GiB -> frees VRAM for a larger nvfp4 KV pool), fastest
+  #     prefill (+14-19% at 8K: GDN GEMMs run on 4-bit tensor cores, not FP8),
+  #     and matches BF16 within seed noise on 6 suites. The calibrated scales
+  #     make --kv-cache-dtype nvfp4 honest rather than scale-1.0, and are
+  #     per-tensor TENSOR-strategy, which our vllm-sm120-nvfp4-kv.patch requires
+  #     for num_bits=4 (it rejects per-head). All-NVFP4 (attention included) is
+  #     measured to cost parallel tool calls, so gdnfp4 is preferred for the
+  #     coding agent; minima is the pick if KV-scale-correctness matters more.
+  coderCheckpoints = {
+    gdnfp4 = "juzbox/Qwen3.8-27B-NVFP4-GDN";
+    nvidia = "nvidia/Qwen3.8-27B-NVFP4";
+    minima = "minima-ai/mnma_qwen3.8_27b_nvfp4";
+  };
+  # Default is the GDN-NVFP4 checkpoint: fastest vLLM decode at nvidia-level
+  # quality + full tool calling, and 2.26 GiB/token less weight bandwidth. Flip
+  # to coderCheckpoints.nvidia to roll back to the stock NVIDIA weights.
+  coderCheckpoint = coderCheckpoints.gdnfp4;
+
   cuda13Packages = pkgs.cudaPackages_13_3.overrideScope (_: previous: {
     cccl = previous.cccl.overrideAttrs (old: {
       # CUDA 13.3 already contains this nixpkgs fix; reapplying it fails.
@@ -31,7 +83,7 @@ let
   };
   quackKernels = pkgs.python314Packages."quack-kernels";
   flashinferPython = lib.findFirst (p: lib.hasInfix "flashinfer-python" (p.name or "")) (throw "vLLM dependency set does not contain FlashInfer") pkgsAccel.vllm.requiredPythonModules;
-  # FlashInfer 0.6.18 provides set_autotune_process_group in its current
+  # FlashInfer 0.7.2 provides set_autotune_process_group in its current
   # flashinfer.autotuner package; the former compatibility copy is obsolete.
   vllmPythonPath = lib.concatStringsSep ":" ([ "${pynvmlShim}" "${pkgsAccel.vllm}/lib/python3.14/site-packages" "${pkgsAccel.python3Packages.torch}/lib/python3.14/site-packages" "${quackKernels}/lib/python3.14/site-packages" ] ++ (map (p: "${p}/lib/python3.14/site-packages") pkgsAccel.vllm.requiredPythonModules));
   # tvm-ffi C++ headers needed by flashinfer JIT compilation
@@ -174,7 +226,7 @@ in
   };
 
   systemd.services.vllm = mkVllmService {
-    model = "nvidia/Qwen3.8-27B-NVFP4";
+    model = coderCheckpoint;
     servedModel = "qwen3.8-27b-nvfp4";
     leaseWrap = true;
     # The sole 5090 sleep-mode tenant; only the fallback, which binds the same port
@@ -189,25 +241,51 @@ in
     gpuMemoryUtilization = "0.92";
     # The built-in MTP head is substantially faster than DFlash2 on this
     # target while preserving the full production context.
-    # 2 concurrent sequences. maxModelLen, maxNumSeqs and port are COUPLED to
+    # 1 concurrent sequence. maxModelLen, maxNumSeqs and port are COUPLED to
     # vllm-switch.py MODELS["qwen3.8-27b-nvfp4"] and ["qwen3.8-27b-nvfp4-balanced"]
     # (context == maxModelLen, max_requests == maxNumSeqs, port == port);
     # test_vllm_switch.py parses this block and asserts them. Change them together.
     port = "8010";
-    # 5.5 GiB nvfp4 KV = 105 hybrid blocks of 2848 tokens (104 usable). Each sequence
-    # also holds 15 GDN state blocks (3 groups x (2 + 3 MTP spec)), so without a shared
-    # prefix it fits 3 x 54K or 2 x 57K (4 x 57K with a ~40K shared Zoo prefix).
-    # One max-length 163840 sequence = 58 blocks + 15 GDN state = 73 of 104 usable (maxNumSeqs now 2). Peak
-    # free is ~1.0 GiB as the sole 5090 tenant (29708 + 512 MiB of 32202 MiB usable).
+    # 6.0 GiB nvfp4 KV, pinned. Reclaims the VRAM that dropping maxNumSeqs 2 -> 1
+    # frees (halved GDN spec-state buffer, the batch-size-2 CUDA-graph decode
+    # capture, and the second prefill block's activation scratch after
+    # --max-num-batched-tokens 5760 -> 2912) back INTO the KV pool instead of
+    # leaving it idle -- the box was at ~97% util with only ~1.3 GiB free, so the
+    # headroom is reinvested as deeper prefix-cache / effective-window depth for
+    # the single sequence. +0.5 GiB (5.5 -> 6.0 GiB) is a deliberately
+    # CONSERVATIVE first claim: the batched-tokens drop + the removed batch-2
+    # graph alone exceed 0.5 GiB before counting the halved GDN state, so this
+    # stays comfortably under what 1 seq frees and cannot trip the 0.92 startup
+    # gate (which refuses to boot rather than OOM-after-load). To claim the rest:
+    # deploy, read the engine's "Available KV cache memory: X GiB" / gpu_worker
+    # free-VRAM-after-profiling line, and raise this pin by the measured remainder.
+    # One max-length 163840 sequence = 58 blocks + 15 GDN state; the 5.5 GiB pool
+    # already reported ~1.44x concurrency at full length (a single full-window
+    # request was the practical ceiling), so the extra blocks serve the prefix
+    # cache / offload tier, not single-request capacity.
     # 32 GiB of host RAM is a pinned CPU tier (native OffloadingConnector) for
     # evicted prefix-cache blocks. Upstream #45268 reports sleep mode + native
     # offload crashing after a wake; if that hits, drop kvOffloadingSize.
-    kvCacheMemory = 5905580032;
+    kvCacheMemory = 6442450944;
     kvOffloadingSize = 32;
     maxModelLen = "163840";
-    maxNumSeqs = "2";
-    # 5760 = 2 x 2848-token blocks (mamba align mode cuts prefill chunks to block multiples) + 64 slots for the other seqs MTP decode tokens.
-    extraArgs = "--enable-prefix-caching --language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --max-num-batched-tokens 5760 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
+    maxNumSeqs = "1";
+    # 2912 = 1 x 2848-token block (mamba align mode cuts prefill chunks to block multiples) + 64 slots for this seq's MTP decode tokens.
+    # --mamba-ssm-cache-dtype float32: keep the GDN (Gated DeltaNet) recurrent
+    #   state in fp32 rather than letting it fall to the model dtype. This is
+    #   NVIDIA's own SGLang recipe for Qwen3.8-27B (--mamba-ssm-dtype float32)
+    #   and the long-context fidelity knob measured in the adrienbrault 5090
+    #   bundle: fp32 vs bf16 state is 0.05-0.1 top-1 points, and the recurrence
+    #   summarizes the whole 163K window, so the state precision -- not the KV
+    #   dtype -- sets the long-context quality floor. Cheap: the SSM state is a
+    #   fixed-size per-sequence matrix, not per-token KV.
+    # NOTE: do NOT enable FlashInfer autotune (--kernel-config
+    #   enable_flashinfer_autotune / VLLM_FLASHINFER_AUTOTUNE) with MTP + nvfp4
+    #   KV on sm120: upstream (vllm#46329, chengye75-star) found the autotune
+    #   benchmark can land inside CUDA-graph capture and deterministically
+    #   crash the boot ("operation not permitted when stream is capturing").
+    #   We leave it off (the default), which is why it is absent here.
+    extraArgs = "--enable-prefix-caching --language-model-only --linear-backend cutlass --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --mamba-ssm-cache-dtype float32 --max-num-batched-tokens 2912 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}'";
   };
 
   # Dormant native disaster-recovery fallback reusing the same patched pkgsAccel.vllm
@@ -215,7 +293,7 @@ in
   # wantedBy = [ ] (the autoStart=false analog); binds the same 127.0.0.1:8010 so it
   # conflicts with the coder. Operator-started only.
   systemd.services.vllm-5090-fallback = mkVllmService {
-    model = "nvidia/Qwen3.8-27B-NVFP4";
+    model = coderCheckpoint;
     servedModel = "qwen3.8-27b-nvfp4";
     leaseWrap = true;
     conflicts = [ "vllm.service" ];
@@ -223,7 +301,7 @@ in
     gpuMemoryUtilization = "0.75";
     maxModelLen = "24576";
     maxNumSeqs = "1";
-    extraArgs = "--language-model-only --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice";
+    extraArgs = "--language-model-only --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --mamba-ssm-cache-dtype float32";
   };
 
   sops.secrets.vllm_switcher_token = {

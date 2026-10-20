@@ -318,11 +318,12 @@ class SwitcherTests(unittest.TestCase):
             t.start()
         for t in threads:
             t.join(5)
-        self.assertEqual(results, [True, True])
+        # max_requests=1: exactly one concurrent acquire is admitted, the other
+        # is refused -- but neither triggers a switch (same served unit).
+        self.assertEqual(sorted(results), [False, True])
         with SW.switch_condition:
-            self.assertEqual(SW.active_requests, 2)
+            self.assertEqual(SW.active_requests, 1)
         self.assertEqual(self.lifecycle(), [])
-        h.release_model()
         h.release_model()
 
     def test_j_release_and_acquire_stamp_last_activity(self):
@@ -363,31 +364,18 @@ class SwitcherTests(unittest.TestCase):
         SW.LOCK_WAIT_SECONDS = 0.2
         self._seed_active(self.CODER, age=0)
         h = self._handler()
-        self.assertEqual(SW.MODELS[self.CODER]["max_requests"], 2)
-        # Admit max_requests concurrent requests across both coder aliases (they
-        # share one engine and the single active_requests counter).
-        ids = [self.CODER, SW.BALANCED_MODEL_ID]
-        self.assertEqual(len(ids), SW.MODELS[self.CODER]["max_requests"])
-        results = []
-        results_lock = threading.Lock()
-
-        def worker(mid):
-            ok = h.acquire_model(mid)
-            with results_lock:
-                results.append(ok)
-
-        threads = [threading.Thread(target=worker, args=(mid,)) for mid in ids]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join(5)
-        self.assertEqual(results, [True] * len(ids))
+        self.assertEqual(SW.MODELS[self.CODER]["max_requests"], 1)
+        # One concurrent request is admitted; the coder's two aliases share one
+        # engine and the single active_requests counter, so the second request
+        # (via either alias) is refused with a 409 while the first is in flight.
+        self.assertTrue(h.acquire_model(self.CODER))
         with SW.switch_condition:
-            self.assertEqual(SW.active_requests, len(ids))
+            self.assertEqual(SW.active_requests, 1)
+        # Second concurrent acquire -> 409, and it must not trigger a switch.
+        self.assertFalse(h.acquire_model(SW.BALANCED_MODEL_ID))
         self.assertFalse(h.acquire_model(self.CODER))
         self.assertEqual(self.lifecycle(), [])
-        for _ in range(len(ids)):
-            h.release_model()
+        h.release_model()
         with SW.switch_condition:
             self.assertEqual(SW.active_requests, 0)
             self.assertEqual(SW.active_model, self.CODER)
@@ -625,9 +613,9 @@ class SwitcherTests(unittest.TestCase):
         self.assertIsNotNone(coder)
         for expected in (
             '--enable-prefix-caching', 'idleSeconds = "0";',
-            'kvCacheMemory = 5905580032;', 'kvOffloadingSize = 32;',
-            'maxModelLen = "163840";', 'maxNumSeqs = "2";',
-            '--max-num-batched-tokens 5760',
+            'kvCacheMemory = 6442450944;', 'kvOffloadingSize = 32;',
+            'maxModelLen = "163840";', 'maxNumSeqs = "1";',
+            '--max-num-batched-tokens 2912',
         ):
             self.assertIn(expected, coder)
         self.assertRegex(coder, r'--speculative-config .*num_speculative_tokens.*:3')
@@ -635,7 +623,7 @@ class SwitcherTests(unittest.TestCase):
     def test_z_nix_switcher_env_and_coder_gate(self):
         self.assertNotIn("restart =", _nix_block("vllm"))
         # The coder KV budget is measured against a non-resident reader; pin it.
-        self.assertIn("kvCacheMemory = 5905580032;", _nix_block("vllm"))
+        self.assertIn("kvCacheMemory = 6442450944;", _nix_block("vllm"))
         self.assertIn('gpuMemoryUtilization = "0.92";', _nix_block("vllm"))
         here = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(here, "vllm.nix")) as f:

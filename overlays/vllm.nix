@@ -263,16 +263,33 @@ let
         dontUsePytestCheck = true;
       });
 
+      # FlashInfer 0.7.2 (vs the previous 0.6.18 pin) is the NVFP4-KV speed
+      # unlock for the sm120 Qwen3.8-27B serving path:
+      #   * SM120 NVFP4 prefill tile-repack (#5239, in 0.7.1): NVFP4-KV causal
+      #     prefill drops from ~1.7-1.8x slower than FP8 (vllm#50416) to parity
+      #     (1.00-1.05x TTFT at 4k/16k/32k on a 5090).
+      #   * NVFP4 split-KV gate scoped to the VO-split plan shape
+      #     (flashinfer#4993): the old gate force-disabled split-KV for NVFP4 on
+      #     sm12x, making one CTA walk the whole KV on short-query/long-KV
+      #     shapes (chunked-prefill tails and MTP verify steps) -- measured as a
+      #     ~5-10x decode collapse at 100K-185K with MTP on, recovered to within
+      #     7% of FP8 by handing split-KV back. Qwen3.8-27B's full-attention
+      #     layers are symmetric head_dim 256, exactly the shape #4993 restores.
+      #   * 0.7.2 also carries the SM120/SM121 NVFP4 DeepSeek-V4 sparse-MLA and
+      #     W4A8 MegaMoE backends (unused here but part of the same line).
+      # Kernels JIT-compile on first start on sm120, so the bump is primarily
+      # the Python wrapper + tile-repack/split-KV logic, not a from-scratch
+      # recompile of every cubin.
       flashinfer-python = pyprev.flashinfer-python.overridePythonAttrs (old: {
         __noChroot = true;
         nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ prev.distcc prev.ccache ];
-        version = "0.6.18";
+        version = "0.7.2";
         src = prev.fetchFromGitHub {
           owner = "flashinfer-ai";
           repo = "flashinfer";
-          tag = "v0.6.18";
+          tag = "v0.7.2";
           fetchSubmodules = true;
-          hash = "sha256-EjJFhL97s07pbV4Fn8aky0SJirCbpo+tjww8aXZRec8=";
+          hash = "sha256-wWcx74VrmkgT3U3y+mfqSwe4H9D37W5qhevgm7H5RIQ=";
         };
         dependencies = (old.dependencies or []) ++ [ pyprev.requests ];
         pythonRemoveDeps = (old.pythonRemoveDeps or []) ++ [
@@ -282,6 +299,13 @@ let
           # attention path; nixpkgs has no cuda-python package for this Python.
           "cuda-python"
           "nccl4py"
+          # 0.7.x adds a cuDNN-frontend floor (>=1.31.0, cutedsl extra) for the
+          # optional cuDNN linear-attention / auto decode routes. On sm120 we
+          # drive GDN via the Triton/FLA prefill + cutlass linear backend and
+          # NVFP4 attention via FA2/XQA, none of which take the cuDNN route, so
+          # drop the metadata dep rather than pull a cutedsl-extra wheel this
+          # Python has no package for.
+          "nvidia-cudnn-frontend"
         ];
         dontCheckPythonMetadata = true;
       });

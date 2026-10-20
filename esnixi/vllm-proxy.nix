@@ -1,7 +1,7 @@
 { ... }:
 
 {
-  imports = [ ./vllm.nix ./comfy-worker.nix ./vllm-idle.nix ];
+  imports = [ ./vllm.nix ./comfy-worker.nix ./vllm-idle.nix ./qwen3-engine.nix ];
 
   services.nginx = {
     enable = true;
