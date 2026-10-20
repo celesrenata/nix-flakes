@@ -72,6 +72,21 @@ in
       description = "Concurrent requests (MAX_SEQS). 1 matches the single-seq vLLM coder.";
     };
 
+    stateHostCacheGiB = lib.mkOption {
+      type = lib.types.int;
+      default = 32;
+      description = ''
+        GiB of pinned host RAM for the prefix cache (STATE_HOST_CACHE) -- GDN
+        state checkpoints that let a growing agent conversation / a repeated long
+        document restore instead of re-prefilling. One checkpoint is ~144 MiB
+        (48-layer fp32 GDN state), so this holds ~GiB*7 checkpoints. Sized for a
+        multi-user OmniRoute service (3 people x several agents x deep histories):
+        32 GiB (~220 checkpoints) keeps the shared system-prompt/tools prefix and
+        many live conversations warm across turns. Pinned (unswappable) host RAM;
+        the box has ~103 GiB available, so 32 leaves ample headroom. 0 disables.
+      '';
+    };
+
     port = lib.mkOption {
       type = lib.types.str;
       default = "8010";
@@ -83,13 +98,13 @@ in
     # The weights dir (gdnfp4 checkpoint + DFlash2 draft) is the vLLM model cache;
     # prefetched out of band, same as the vLLM coder (HF_HUB_OFFLINE at serve).
     systemd.services.qwen3-native-engine = {
-      description = "mkyt/qwen3-27b-5090 native engine (coder; served as qwen3.8-27b-nvfp4)";
+      description = "mkyt/qwen3-27b-5090 native engine (primary 5090 coder; served as qwen3.8-27b-nvfp4)";
       after = [ "network.target" "arcane-gpu-lock.service" ];
       requires = [ "arcane-gpu-lock.service" ];
-      # One engine owns the 5090 at a time: never co-resident with the vLLM coder
-      # or its fallback.
+      # Sole 5090 coder (the vllm-switcher was retired; vLLM is kept only as an
+      # operator-started rollback fallback). One engine owns the card at a time.
       conflicts = [ "vllm.service" "vllm-5090-fallback.service" ];
-      wantedBy = [ ];  # operator/switcher-started, like the vLLM fallback
+      wantedBy = [ "multi-user.target" ];  # autostart: this is the primary coder now
 
       environment = {
         SERVED_MODEL_NAME = "qwen3.8-27b-nvfp4";
@@ -100,6 +115,18 @@ in
         Q27_DRAFT_QUANT = "fp4";
         # Text coder: no vision tower (the :8011 container handles images).
         VISION = "off";
+        # Prefix cache: GiB of pinned-host GDN-state checkpoints. Upstream
+        # compose.yaml defaults this to 4; the engine's INTERNAL default when the
+        # var is absent is 0 ("prefix cache off"), which is what the startup log
+        # showed ("state cache host 0.000 GiB ... prefix cache off") -> every
+        # 107-125K agent-history prompt was fully re-prefilled (cached=0, 13-30s
+        # TTFT). Sized up to stateHostCacheGiB (default 32) for the 3-person
+        # OmniRoute workload so many deep concurrent conversations stay warm
+        # across turns (one checkpoint ~144 MiB; 32 GiB ~= 220 checkpoints).
+        STATE_HOST_CACHE = toString cfg.stateHostCacheGiB;
+        # Checkpoint stride (upstream default): a checkpoint every 8192 tokens
+        # in addition to the message-boundary ones the scheduler plans.
+        CHECKPOINT_INTERVAL = "8192";
         MAX_TOKENS = toString cfg.maxTokens;
         MAX_TOKENS_FIT = "1";
         MAX_SEQS = toString cfg.maxSeqs;
@@ -110,6 +137,10 @@ in
         TRANSFORMERS_OFFLINE = "1";
         PYTHONPATH = pythonPath;
         LD_LIBRARY_PATH = ldPath;
+        # q27lib.py's ctypes binding defaults LIB_PATH to the sandbox build dir
+        # (/build/engine/libq27.so), which does not exist at runtime; point it at
+        # the installed shared object.
+        Q27_LIB = "${engine.passthru.libq27}/lib/libq27.so";
         ARCANE_GPU_LOCK = "/run/arcane-gpu/5090.lock";
       };
 

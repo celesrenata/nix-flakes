@@ -304,20 +304,30 @@ in
     extraArgs = "--language-model-only --reasoning-parser qwen3 --tool-call-parser qwen3_xml --enable-auto-tool-choice --mamba-ssm-cache-dtype float32";
   };
 
-  sops.secrets.vllm_switcher_token = {
+  # ── vLLM switcher (RETIRED under Option 2b: native engine is sole coder) ──
+  # The mkyt native engine replaced vLLM as the 5090 coder and serves its own
+  # OpenAI/Anthropic API directly on 8010 (nginx 2701 -> 8010; it also serves
+  # /metrics on 8010 for the 9091 proxy). The switcher's job -- authenticated
+  # front door, name-routing, sleep/wake arbitration -- is therefore gone, and
+  # the engine has no sleep mode anyway (shared-5090 safety is the flock lease,
+  # which every tenant takes independently). All switcher pieces below are gated
+  # on the engine being DISABLED, so this is a zero-rewrite rollback: set
+  # my.engines.qwen3Native.enable = false and the switcher (and vLLM coder)
+  # return exactly as before.
+  sops.secrets.vllm_switcher_token = lib.mkIf (!config.my.engines.qwen3Native.enable) {
     sopsFile = ../secrets/secrets.yaml;
     owner = "root";
     group = "root";
     mode = "0400";
   };
 
-  users.users.vllm-switcher = {
+  users.users.vllm-switcher = lib.mkIf (!config.my.engines.qwen3Native.enable) {
     isSystemUser = true;
     group = "vllm-switcher";
   };
-  users.groups.vllm-switcher = { };
+  users.groups.vllm-switcher = lib.mkIf (!config.my.engines.qwen3Native.enable) { };
 
-  security.sudo.extraRules = [
+  security.sudo.extraRules = lib.mkIf (!config.my.engines.qwen3Native.enable) [
     {
       users = [ "vllm-switcher" ];
       commands = [
@@ -328,7 +338,7 @@ in
     }
   ];
 
-  systemd.services.vllm-switcher = {
+  systemd.services.vllm-switcher = lib.mkIf (!config.my.engines.qwen3Native.enable) {
     description = "Authenticated automatic vLLM model switcher for the RTX 5090";
     after = [ "network.target" ];
     wantedBy = [ "multi-user.target" ];
