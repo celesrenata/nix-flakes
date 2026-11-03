@@ -59,17 +59,34 @@ in
 
     maxTokens = lib.mkOption {
       type = lib.types.int;
-      default = 163840;
+      default = 262144;
       description = ''
-        Context ceiling (MAX_TOKENS). >= the 163840 production baseline; the
-        engine lowers it to what the VRAM budget fits (MAX_TOKENS_FIT=1). Set to
-        262144 to probe the full native context once the baseline is confirmed.'';
+        Context ceiling (MAX_TOKENS). The model supports the full 262144-token
+        context. MAX_TOKENS_FIT=1 still applies the engine's VRAM-fit check;
+        KV admission queues concurrent requests when the fixed pool is full.'';
     };
 
     maxSeqs = lib.mkOption {
       type = lib.types.int;
       default = 1;
       description = "Concurrent requests (MAX_SEQS). 1 matches the single-seq vLLM coder.";
+    };
+
+    kvPoolTokens = lib.mkOption {
+      type = lib.types.int;
+      default = 624896;
+      description = ''
+        KV_POOL_TOKENS: fixed GPU KV pool size (engine default 0 = fill all free
+        VRAM). NOTE the hardware limit: at MAX_SEQS=4 the fixed non-KV device
+        cost is ~17.9 GiB (measured from the engine plan), and the budget is
+        ~29.0 GiB, so the pool maxes at ~648K tokens = 3.96 full-context -- a
+        full 4 x 163840 (655360) does NOT fit and the engine refuses to start
+        (device pools exceed budget). 624896 (~3.81 full-context, ~91% device)
+        is the largest pool that boots with a ~0.4 GiB safety margin. A fixed
+        KV_POOL_TOKENS overrides MAX_TOKENS_FIT auto-shrink, so it must be set
+        below the budget. Lower it (e.g. 513216 ~= 83% device) for more free
+        VRAM; 0 restores auto-fill (~95%).
+      '';
     };
 
     stateHostCacheGiB = lib.mkOption {
@@ -130,6 +147,9 @@ in
         MAX_TOKENS = toString cfg.maxTokens;
         MAX_TOKENS_FIT = "1";
         MAX_SEQS = toString cfg.maxSeqs;
+        # Cap the KV pool instead of auto-filling the card (engine default 0 =
+        # all free VRAM ~= 95% device). kvPoolTokens caps total device at ~83%.
+        KV_POOL_TOKENS = toString cfg.kvPoolTokens;
         HOME = "/var/lib/vllm";
         HF_HOME = "${config.my.paths.vllmModels}";
         HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";

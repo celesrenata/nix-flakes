@@ -3,12 +3,20 @@
 {
   config = lib.mkIf config.my.profiles.development.enable {
     # Development programs
-    programs.ccache.enable = true;
+    # NOTE: programs.ccache.enable is intentionally NOT used. The nixpkgs ccache
+    # module creates a setgid security.wrappers.nix-ccache around a Perl script
+    # (nix-ccache.pl), which the newer ensureWrapperIntegrity assertion rejects
+    # ("not an ELF! This is a security risk."). We don't use that stats wrapper
+    # or the packageNames overlay path anyway — our ccache usage is driven
+    # directly from build overlays (ollama/vllm/distcc) via
+    # CMAKE_*_COMPILER_LAUNCHER=ccache with a per-build CCACHE_DIR, so we only
+    # need the ccache binary on PATH.
     programs.nh.enable = true;
     programs.java.enable = true;
     environment.systemPackages = with pkgs; [
       # Compilers and build tools
       gcc13
+      ccache
       cmake
       meson
       ninja

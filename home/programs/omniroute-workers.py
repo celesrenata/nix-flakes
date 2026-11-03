@@ -27,7 +27,7 @@ def list_zoo_chats():
     return module.list_chats()
 
 LANES = {
-    "code": ("local/5090", "esnixi", 2),
+    "code": ("local/5090", "esnixi", 4),
     "fast": ("local/4070ti", "gremlin-1", 1),
     "long": ("local/m5max", "stabulous", 1),
 }
@@ -241,7 +241,7 @@ TASK_SCHEMA = {"type": "object", "properties": {
 }, "required": ["id", "lane", "prompt"], "additionalProperties": False}
 TOOLS = [
     {"name": "list_zoo_chats", "description": "Read current Zoo chats, task IDs, mode/model, checklist progress and parent links from native Task Board snapshots. Includes freshness; stale boards are not live execution evidence. Open Zoo: Show Task Board to publish snapshots.", "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}},
-    {"name": "start_parallel_tasks", "description": "Start 1–6 independent inference tasks concurrently. Supply context explicitly. code uses esnixi RTX 5090 (2 slots); fast uses gremlin-1 Ornith (1 slot); long uses stabulous GLM 160K (1 slot). Workers return analysis or proposed code; they cannot read files, run tools, or edit. Returns immediately. Use different lanes to engage multiple GPUs, then collect every result with get_parallel_tasks. No automatic cloud fallback.", "inputSchema": {"type": "object", "properties": {"tasks": {"type": "array", "minItems": 1, "maxItems": 6, "items": TASK_SCHEMA}}, "required": ["tasks"], "additionalProperties": False}},
+    {"name": "start_parallel_tasks", "description": "Start 1–6 independent inference tasks concurrently. Supply context explicitly. code uses esnixi RTX 5090 (4 slots); fast uses gremlin-1 Ornith (1 slot); long uses stabulous GLM 160K (1 slot). Workers return analysis or proposed code; they cannot read files, run tools, or edit. Returns immediately. Use different lanes to engage multiple GPUs, then collect every result with get_parallel_tasks. No automatic cloud fallback.", "inputSchema": {"type": "object", "properties": {"tasks": {"type": "array", "minItems": 1, "maxItems": 6, "items": TASK_SCHEMA}}, "required": ["tasks"], "additionalProperties": False}},
     {"name": "get_parallel_tasks", "description": "Read a batch's results and timing. Poll while doing useful parent work; unfinished jobs continue in the background. Results remain for one hour in this server session.", "inputSchema": {"type": "object", "properties": {"batch_id": {"type": "string"}}, "required": ["batch_id"], "additionalProperties": False}},
     {"name": "cancel_parallel_tasks", "description": "Cancel queued tasks and signal running streams to close on their next event (bounded by the HTTP timeout).", "inputSchema": {"type": "object", "properties": {"batch_id": {"type": "string"}}, "required": ["batch_id"], "additionalProperties": False}},
 ]

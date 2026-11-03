@@ -26,6 +26,7 @@ CONNECTIONS = {
     'ollama-local': 'b20e0770-3e14-40c1-87cd-85c34b34381a',
     'llama-cpp': '70b82fc9-6f96-41ac-aa16-8da6099dd7ac',
     'mistral': '9a8095cb-3d53-4327-8c11-5f81f0f904fe',
+    'openrouter': 'ddfe7ed8-16fc-47b5-9632-885912e5c78e',
     'bedrock': 'd4a9a6e4-d054-498a-8fde-aa35dc4dc506',
     'xai': 'b0c69392-b661-44d5-9a35-fabf47d5569b',
 }
@@ -115,6 +116,16 @@ CLOUD = {
         ('bedrock/us.anthropic.claude-sonnet-4-6', 25)],
     5: [('bedrock/global.anthropic.claude-opus-5-5', 40), ('bedrock/global.openai.gpt-5.6-sol', 25),
         ('xai/grok-4.6', 15), ('openai/gpt-5.6-terra', 10), ('openai/gpt-5.6-sol', 10)],
+}
+# Code and research have an explicit three-tier spend contract. Tier 2 is
+# fail-closed free-only; tier 3 is the only paid stage. Grok 4.6 uses the
+# executor's supported default Flex behavior (no invented route field).
+CODE_RESEARCH_CLOUD = {
+    2: [('mistral/codestral-latest', 1), ('mistral/mistral-code-latest', 1),
+        ('openrouter/qwen/qwen3.8-27b:free', 1)],
+    3: [('bedrock/qwen.qwen3-coder-30b-a3b-v1:0', 1),
+        ('bedrock/qwen.qwen3-coder-next', 1), ('bedrock/global.xai.grok-4.6', 1),
+        ('bedrock/global.openai.gpt-5.6-luna', 1)],
 }
 MODES = {
     'local-only': ([1], 1),
@@ -212,7 +223,7 @@ def build(mode, existing):
                     policies = plan[name]['config'].get('weightedTargetPolicies', {})
                     if GLM in policies: policies[GLM]['maxInputTokens'] = PLANNER_RAW_WINDOW
                 continue
-            if tier != 1 and existing.get(name):
+            if tier != 1 and not (category in cascade and tier in CODE_RESEARCH_CLOUD) and existing.get(name):
                 plan[name] = projection(existing[name])
                 plan[name]['config']['targetTimeoutMs'] = 60000
                 continue
@@ -220,6 +231,8 @@ def build(mode, existing):
                 targets = [(QWEN5090, 1), (IQ3, 1), (UZU, 1), (QWEN5090, 1)]
             elif tier == 1 and category in TIER1_OVERRIDES:
                 targets = list(TIER1_OVERRIDES[category])
+            elif category in cascade and tier in CODE_RESEARCH_CLOUD:
+                targets = CODE_RESEARCH_CLOUD[tier]
             else:
                 targets = [(QWEN5090,vllm), (MLX,mlx), (IQ3,iq3), (GLM,glm)] if tier == 1 else CLOUD[tier]
             targets = [(model, weight) for model, weight in targets if weight > 0]
@@ -235,14 +248,18 @@ def build(mode, existing):
             if category == 'planner':
                 for policy in target_policies.values(): policy['maxInputTokens'] = PLANNER_RAW_WINDOW
             rr_gpu_pool = tier == 1 and category in cascade
-            strategy = 'priority' if rr_gpu_pool else ('priority' if tier == 1 else 'round-robin')
+            strict_cascade_cloud = category in cascade and tier in CODE_RESEARCH_CLOUD
+            strategy = 'priority' if tier == 1 or strict_cascade_cloud else 'round-robin'
             if tier == 1 and category == 'planner': description = 'Tier 1 planner: M5 DS4 GLM only'
             elif tier == 1 and category == 'reader': description = 'Tier 1 reader: 4070 Ti Super 9B ollama reader'
-            elif tier == 1 and category in cascade: description = 'Tier 1 shared code/research: 5090 / 4070 IQ3 / M5 Uzu / 5090 four-slot cascade'
+            elif tier == 1 and category in cascade: description = 'Tier 1 shared code/research: priority 5090 / 4070 IQ3 / M5 Uzu / 5090 fill order'
             elif tier == 1 and category in TIER1_OVERRIDES: description = f'Tier 1 {category}: 5090 Qwen3.8 > M5 GLM > 4070 Qwen3.8 IQ3 priority'
+            elif strict_cascade_cloud and tier == 2: description = f'Tier 2 {category}: fail-closed free providers only'
+            elif strict_cascade_cloud: description = f'Tier 3 {category}: low-budget Bedrock with Grok Flex default'
             else: description = f'Tier {tier} {category}: capacity-aware weighted round robin'
             overrides = {'concurrencyPerModel': TIER1_CONCURRENCY.get(category, 1) if tier == 1 else 4}
-            if tier != 1: overrides.update(weightedRoundRobin=True, targetTimeoutMs=60000)
+            if strict_cascade_cloud: overrides.update(queueDepth=0, queueTimeoutMs=1000, weightedRoundRobin=False, targetTimeoutMs=60000, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)
+            elif tier != 1: overrides.update(weightedRoundRobin=True, targetTimeoutMs=60000)
             elif rr_gpu_pool: overrides.update(queueDepth=0, queueTimeoutMs=1000, targetTimeoutMs=600000, concurrencyPerModel=1, disableSessionStickiness=True, disablePromptCacheAffinity=True, failFastOnAccountCapacity=True, failoverBeforeRetry=True)
             else: overrides['weightedTargetPolicies'] = target_policies
             plan[name] = {'name': name, 'description': description, 'strategy': strategy,
@@ -265,14 +282,15 @@ def build(mode, existing):
                 plan[name] = projection(existing[name])
                 if category == 'planner': plan[name]['context_length'] = PLANNER_RAW_WINDOW
                 continue
-            tiers = [1] if family == 'local' else order
+            tiers = [1] if family == 'local' else ([1, 2, 3] if category in cascade else order)
             refs = [t for t in tiers if f'pool/tier{t}/{category}' in plan]
             if category in cascade:
                 models = [{'id': f'{family}-{category}-tier1', 'kind': 'combo-ref', 'comboName': 'pool/tier1/code', 'weight': 0}]
                 if family == 'hybrid': models += [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs if t != 1]
             else:
                 models = [{'id': f'{family}-{category}-tier{t}', 'kind': 'combo-ref', 'comboName': f'pool/tier{t}/{category}', 'weight': 0} for t in refs]
-            root_overrides = {'nestedComboMode': 'execute', 'tierRouting': {'defaultTier': 1, 'maximumTier': ceiling if family == 'hybrid' else 1}}
+            maximum_tier = 3 if family == 'hybrid' and category in cascade else (ceiling if family == 'hybrid' else 1)
+            root_overrides = {'nestedComboMode': 'execute', 'tierRouting': {'defaultTier': 1, 'maximumTier': maximum_tier}}
             if category in cascade: root_overrides['failoverBeforeRetry'] = True
             plan[name] = {'name': name, 'description': f'{category} routing: {mode if family == "hybrid" else "local-only"}; per-task X-OmniRoute-Tier',
                 'strategy': 'priority', 'models': models, 'context_length': PLANNER_RAW_WINDOW if category == 'planner' else (163840 if (family == 'local' or category == 'fast') else 262144),
@@ -335,6 +353,7 @@ def apply_plan(base, state_path, state, live, plan, mode, providers):
             actual={key: connection.get(key) for key in change['after']}
             if not same(actual, change['after']): raise RuntimeError('Provider readback mismatch: ' + change['name'])
             write_json(backup,record)
+        write_json(backup,record)
         state = {'version':2, 'active_mode':mode, 'last':record['after'],
             'providers':record['provider_after'], 'last_backup':str(backup)}
         write_json(state_path,state)
