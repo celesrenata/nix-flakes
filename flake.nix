@@ -35,6 +35,13 @@
     onetrainer-flake.url = "github:celesrenata/OneTrainer-flake/dev";
     onetrainer-flake.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Native C++/CUDA inference engine (libq27.so) for Qwen3.8-27B on an
+    # RTX 5090 -- the bespoke SM120 engine that replaces vLLM as the 5090
+    # coder. Builds the engine + the runtime Python env + the frontend files;
+    # installed as the `qwen27b` NixOS service via esnixi/qwen3-engine.nix.
+    qwen27b.url = "github:celesrenata/qwen3-27b-5090";
+    qwen27b.inputs.nixpkgs.follows = "nixpkgs";
+
     # Window managers and desktop environments
     hyprland.url = "github:hyprwm/Hyprland";                     # Official Hyprland flake (0.56)
     hyprland.inputs.nixpkgs.follows = "nixpkgs";
@@ -85,7 +92,7 @@
   };
 
   # Flake outputs - defines the actual configurations and development environments
-  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, cline-cli, kiro-cli, ii-desktop-mcp, menagerie, hyprland, hyprland-plugins, ... }:
+  outputs = inputs@{ nixpkgs, anyrun, home-manager, dream2nix, niri, nixgl, nix-gl-host, protontweaks, nix-vscode-extensions, dots-hyprland, dots-hyprland-source, sops-nix, hyte-touch-infinite-flakes, nix-comfyui, onetrainer-flake, qwen27b, cline-cli, kiro-cli, ii-desktop-mcp, menagerie, hyprland, hyprland-plugins, ... }:
   let
     lib = nixpkgs.lib;
 

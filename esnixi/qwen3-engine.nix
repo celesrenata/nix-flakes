@@ -1,59 +1,42 @@
-{ config, lib, pkgs, pkgsAccel, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
-# qwen3-engine.nix -- the mkyt/qwen3-27b-5090 bespoke C++/CUDA engine
-# (libq27.so + its HTTP server) as a SELECTABLE alternative to the vLLM coder.
+# qwen3-engine.nix -- the qwen3-27b-5090 native engine as the 5090 coder.
+# Thin wrapper around the upstream flake's NixOS module
+# (inputs.qwen27b.nixosModules.qwen27b), applying the machine-specific
+# contract: port 8010 (the vllm-switcher / OmniRoute wire identity), the
+# gpu_launch.py flock lease, Conflicts=vllm.service, the vllm user, the
+# vLLM model dir, and the measured concurrency / KV / prefix-cache values.
 #
-# Why it exists: on one RTX 5090 (SM120) it benchmarks ~2-2.8x vLLM single-
-# request decode and holds a 605K-token KV pool / full 262144 context, on the
-# same gdnfp4 weights + NVFP4 KV + DFlash2 the vLLM coder uses. This unit lets
-# you A/B it against the vLLM coder on real agent tasks and keep whichever wins.
+# The upstream flake (celesrenata/qwen3-27b-5090) builds:
+#   engine    -- libq27.so + q27-sfcheck (CUDA 13.3 + CUTLASS v4.8, sm_120a)
+#   serve     -- Python 3.12 env (torch, torchvision, transformers, safetensors,
+#                numpy, pillow)
+#   repoFiles -- the runtime tree (frontend/, engine/python/, reference/)
 #
-# It is DEFAULT OFF (my.engines.qwen3Native.enable = false): vLLM stays the
-# primary coder, OmniRoute/Menagerie and the rollback generation are untouched,
-# until you deliberately flip the knob and benchmark. When enabled it:
-#   * serves the OpenAI/Anthropic API on 127.0.0.1:8010 under the served name
-#     "qwen3.8-27b-nvfp4" -- the SAME port + identity the vllm-switcher and
-#     OmniRoute expect, so it is a drop-in for the vLLM coder on the wire;
-#   * takes the shared 5090 via the same gpu_launch.py flock lease as vLLM,
-#     BEFORE loading CUDA weights, and conflicts with vllm.service (one engine
-#     owns the card at a time);
-#   * runs text-only (VISION=off) to match the --language-model-only vLLM coder
-#     -- the vision container (port 8011) is unchanged and still handles images;
-#   * reads the gdnfp4 weights + DFlash2 draft from the vLLM model dir.
-#
-# The frontend's API server is required (it is the only way to drive libq27.so,
-# which is a ctypes C-ABI library, not a server); it is run with the minimum
-# env it needs and nothing more.
+# The flake module defaults follow the upstream README; this wrapper overrides
+# them for the esnixi 3-person OmniRoute workload.
 
 let
   cfg = config.my.engines.qwen3Native;
-  engine = pkgsAccel.qwen3-27b-5090-engine;
-  share = "${engine.passthru.libq27}/share/qwen3-27b-5090";
-  frontendPython = engine.passthru.frontendPython;
+
+  # The upstream flake's engine packages.
+  q27 = inputs.qwen27b.packages."x86_64-linux";
 
   # Same flock-lease wrapper + runtime helpers the vLLM unit and the vision
   # container use: take an exclusive flock on the 5090 lock, mark the fd
   # inheritable, then exec the server so the kernel releases the lease on exit.
   gpuLaunch = ./gpu_launch.py;
-
-  # CUDA 13.3 runtime libs libq27.so links against (cudart) + the NVIDIA driver.
-  ldPath = lib.concatStringsSep ":" [
-    "${engine.passthru.libq27}/lib" # libq27.so
-    "${pkgs.cudaPackages_13_3.cuda_cudart}/lib"
-    "${config.hardware.nvidia.package}/lib"
-  ];
-
-  # The frontend puts frontend/, engine/python and reference/ on sys.path.
-  pythonPath = lib.concatStringsSep ":" [
-    "${share}/frontend"
-    "${share}/engine-python"
-    "${share}/reference"
-  ];
 in
 {
+  # Always import the upstream module. Its `config` is guarded by
+  # `services.qwen27b.enable` (the upstream module's own flag), so this is a
+  # no-op when we leave that flag unset — the unit is only created when we
+  # set `services.qwen27b.enable = true` below (under `cfg.enable`).
+  imports = [ inputs.qwen27b.nixosModules.qwen27b ];
+
   options.my.engines.qwen3Native = {
     enable = lib.mkEnableOption ''
-      the mkyt/qwen3-27b-5090 native C++/CUDA engine as the 5090 coder, in place
+      the qwen3-27b-5090 native C++/CUDA engine as the 5090 coder, in place
       of vLLM (mutually exclusive with vllm.service). Default off: a benchmark
       candidate, not the production default'';
 
@@ -68,8 +51,8 @@ in
 
     maxSeqs = lib.mkOption {
       type = lib.types.int;
-      default = 1;
-      description = "Concurrent requests (MAX_SEQS). 1 matches the single-seq vLLM coder.";
+      default = 4;
+      description = "Concurrent requests (MAX_SEQS). 4 = one slot per OmniRoute user.";
     };
 
     kvPoolTokens = lib.mkOption {
@@ -77,15 +60,15 @@ in
       default = 624896;
       description = ''
         KV_POOL_TOKENS: fixed GPU KV pool size (engine default 0 = fill all free
-        VRAM). NOTE the hardware limit: at MAX_SEQS=4 the fixed non-KV device
-        cost is ~17.9 GiB (measured from the engine plan), and the budget is
-        ~29.0 GiB, so the pool maxes at ~648K tokens = 3.96 full-context -- a
-        full 4 x 163840 (655360) does NOT fit and the engine refuses to start
-        (device pools exceed budget). 624896 (~3.81 full-context, ~91% device)
-        is the largest pool that boots with a ~0.4 GiB safety margin. A fixed
-        KV_POOL_TOKENS overrides MAX_TOKENS_FIT auto-shrink, so it must be set
-        below the budget. Lower it (e.g. 513216 ~= 83% device) for more free
-        VRAM; 0 restores auto-fill (~95%).
+        VRAM). NOTE the hardware limit: with MAX_TOKENS=262144 and
+        MAX_SEQS=4, the per-request KV reservation plus the fixed pool must
+        fit under the device budget (~29.52 GiB). The measured reliable
+        ceiling under the budget is ~681500 tokens; 624896 (~91% device) is
+        the largest fixed pool that boots with a ~0.4 GiB safety margin for
+        4 concurrent full-context requests. A fixed KV_POOL_TOKENS overrides
+        MAX_TOKENS_FIT auto-shrink, so it must be set below the budget.
+        Lower it (e.g. 513216 ~= 83% device) for more free VRAM; 0 restores
+        auto-fill (~95%).
       '';
     };
 
@@ -94,13 +77,14 @@ in
       default = 32;
       description = ''
         GiB of pinned host RAM for the prefix cache (STATE_HOST_CACHE) -- GDN
-        state checkpoints that let a growing agent conversation / a repeated long
-        document restore instead of re-prefilling. One checkpoint is ~144 MiB
-        (48-layer fp32 GDN state), so this holds ~GiB*7 checkpoints. Sized for a
-        multi-user OmniRoute service (3 people x several agents x deep histories):
-        32 GiB (~220 checkpoints) keeps the shared system-prompt/tools prefix and
-        many live conversations warm across turns. Pinned (unswappable) host RAM;
-        the box has ~103 GiB available, so 32 leaves ample headroom. 0 disables.
+        state checkpoints that let a growing agent conversation / a repeated
+        long document restore instead of re-prefilling. One checkpoint is
+        ~144 MiB (48-layer fp32 GDN state), so this holds ~GiB*7 checkpoints.
+        Sized for a multi-user OmniRoute service (3 people x several agents x
+        deep histories): 32 GiB (~220 checkpoints) keeps the shared
+        system-prompt/tools prefix and many live conversations warm across
+        turns. Pinned (unswappable) host RAM; the box has ~103 GiB available,
+        so 32 leaves ample headroom. 0 disables.
       '';
     };
 
@@ -112,80 +96,43 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # The weights dir (gdnfp4 checkpoint + DFlash2 draft) is the vLLM model cache;
-    # prefetched out of band, same as the vLLM coder (HF_HUB_OFFLINE at serve).
-    systemd.services.qwen3-native-engine = {
-      description = "mkyt/qwen3-27b-5090 native engine (primary 5090 coder; served as qwen3.8-27b-nvfp4)";
-      after = [ "network.target" "arcane-gpu-lock.service" ];
+
+    services.qwen27b = {
+      enable = true;
+      # Upstream flake packages.
+      engine = q27.engine;
+      serve = q27.serve;
+      files = q27.repoFiles;
+      # Machine contract (overrides the flake module's README defaults). The
+      # port comes from execStart below (the switcher's loopback port).
+      servedModelName = "qwen3.8-27b-nvfp4";
+      vision = "off";  # text coder; the :8011 container handles images
+      stateHostCacheGiB = cfg.stateHostCacheGiB;
+      maxSeqs = cfg.maxSeqs;
+      maxTokens = cfg.maxTokens;
+      kvPoolTokens = cfg.kvPoolTokens;
+      user = "vllm";
+      modelPath = config.my.paths.vllmModels;
+      # 5090 GPU lease: gpu_launch.py acquires it (via ARCANE_GPU_LOCK) before
+      # the server loads CUDA weights, same pattern as the vLLM unit.
+      gpuLockFile = "/run/arcane-gpu/5090.lock";
       requires = [ "arcane-gpu-lock.service" ];
-      # Sole 5090 coder (the vllm-switcher was retired; vLLM is kept only as an
-      # operator-started rollback fallback). One engine owns the card at a time.
       conflicts = [ "vllm.service" "vllm-5090-fallback.service" ];
-      wantedBy = [ "multi-user.target" ];  # autostart: this is the primary coder now
-
-      environment = {
-        SERVED_MODEL_NAME = "qwen3.8-27b-nvfp4";
-        # gdnfp4 weights + DFlash2 draft resolved by qwen27b.weights from HF cache.
-        WEIGHTS = "gdnfp4";
-        KV_DTYPE = "nvfp4";
-        SPEC = "dflash2";
-        Q27_DRAFT_QUANT = "fp4";
-        # Text coder: no vision tower (the :8011 container handles images).
-        VISION = "off";
-        # Prefix cache: GiB of pinned-host GDN-state checkpoints. Upstream
-        # compose.yaml defaults this to 4; the engine's INTERNAL default when the
-        # var is absent is 0 ("prefix cache off"), which is what the startup log
-        # showed ("state cache host 0.000 GiB ... prefix cache off") -> every
-        # 107-125K agent-history prompt was fully re-prefilled (cached=0, 13-30s
-        # TTFT). Sized up to stateHostCacheGiB (default 32) for the 3-person
-        # OmniRoute workload so many deep concurrent conversations stay warm
-        # across turns (one checkpoint ~144 MiB; 32 GiB ~= 220 checkpoints).
-        STATE_HOST_CACHE = toString cfg.stateHostCacheGiB;
-        # Checkpoint stride (upstream default): a checkpoint every 8192 tokens
-        # in addition to the message-boundary ones the scheduler plans.
-        CHECKPOINT_INTERVAL = "8192";
-        MAX_TOKENS = toString cfg.maxTokens;
-        MAX_TOKENS_FIT = "1";
-        MAX_SEQS = toString cfg.maxSeqs;
-        # Cap the KV pool instead of auto-filling the card (engine default 0 =
-        # all free VRAM ~= 95% device). kvPoolTokens caps total device at ~83%.
-        KV_POOL_TOKENS = toString cfg.kvPoolTokens;
-        HOME = "/var/lib/vllm";
-        HF_HOME = "${config.my.paths.vllmModels}";
+      extraPath = [ pkgs.python3 ];
+      extraEnv = {
         HF_TOKEN_PATH = "${config.sops.secrets.huggingface_token.path}";
-        HF_HUB_OFFLINE = "1";
-        TRANSFORMERS_OFFLINE = "1";
-        PYTHONPATH = pythonPath;
-        LD_LIBRARY_PATH = ldPath;
-        # q27lib.py's ctypes binding defaults LIB_PATH to the sandbox build dir
-        # (/build/engine/libq27.so), which does not exist at runtime; point it at
-        # the installed shared object.
-        Q27_LIB = "${engine.passthru.libq27}/lib/libq27.so";
-        ARCANE_GPU_LOCK = "/run/arcane-gpu/5090.lock";
+        HOME = "/var/lib/vllm";
       };
-
-      path = [ pkgs.bash frontendPython ];
-
-      serviceConfig = {
-        Type = "simple";
-        User = "vllm";
-        Group = "vllm";
-        # Acquire the 5090 flock BEFORE server.py imports CUDA/loads libq27.so,
-        # then exec the API server bound to the switcher's loopback port.
-        ExecStart = ''
-          ${pkgs.python3}/bin/python3 ${gpuLaunch} \
-            ${frontendPython}/bin/python3 ${share}/frontend/server.py \
-            --host 127.0.0.1 --port ${cfg.port} \
-            --max-tokens ${toString cfg.maxTokens} \
-            --kv-dtype nvfp4 --spec dflash2
-        '';
-        Restart = "on-failure";
-        RestartSec = "10s";
-        TimeoutStopSec = "120s";
-      };
+      # Acquire the 5090 flock BEFORE server.py imports CUDA/loads
+      # libq27.so, then exec the API server bound to the switcher's
+      # loopback port.
+      execStart = ''
+        ${pkgs.python3}/bin/python3 ${gpuLaunch} \
+          ${q27.serve}/bin/python3 ${q27.repoFiles}/frontend/server.py \
+          --host 127.0.0.1 --port ${cfg.port} \
+          --max-tokens ${toString cfg.maxTokens} \
+          --kv-dtype nvfp4 --spec dflash2
+      '';
     };
-
-    # Firewall parity with the vLLM coder (loopback only, but the port is already
-    # opened by the ai profile; nothing extra needed here).
   };
 }

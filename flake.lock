@@ -1723,6 +1723,26 @@
         "type": "github"
       }
     },
+    "qwen27b": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793758023,
+        "narHash": "sha256-ZdsKCNw/mYOoDr+ZKGFr7XhfM7N6/Qvk1OGcoL5o4gQ=",
+        "owner": "celesrenata",
+        "repo": "qwen3-27b-5090",
+        "rev": "848c1594c02b344e5550132b77f2d00712289564",
+        "type": "github"
+      },
+      "original": {
+        "owner": "celesrenata",
+        "repo": "qwen3-27b-5090",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "ags": "ags",
@@ -1748,6 +1768,7 @@
         "nixpkgs-24_11": "nixpkgs-24_11",
         "onetrainer-flake": "onetrainer-flake",
         "protontweaks": "protontweaks",
+        "qwen27b": "qwen27b",
         "sops-nix": "sops-nix"
       }
     },
